@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Sign In')
+@section('title', 'Login - Risk Register')
 
 @section('content')
 <main class="main-content  mt-0">
@@ -11,32 +11,38 @@
             <div class="col-xl-4 col-lg-5 col-md-6 d-flex flex-column mx-auto">
               <div class="card card-plain mt-8">
                 <div class="card-header pb-0 text-left bg-transparent">
-                  <h3 class="font-weight-bolder text-info text-gradient">Welcome back</h3>
-                  <p class="mb-0">Enter your email and password to sign in</p>
+                  <h3 class="font-weight-bolder" style="color: #007774;">Welcome back</h3>
+                  <p class="mb-0">Masukan username dan password untuk login</p>
                 </div>
                 <div class="card-body">
-                  <form role="form">
-                    <label>Email</label>
+                  <form role="form" method="POST" action="{{ route('login.authenticate') }}">
+                    @csrf
+                    <label>Username</label>
                     <div class="mb-3">
-                      <input type="email" class="form-control" placeholder="Email" aria-label="Email" aria-describedby="email-addon">
+                      <input type="text" name="username" class="form-control" placeholder="Username" aria-label="Username" value="{{ old('username') }}" required>
+                      @error('username')
+                        <span class="text-danger text-xs">{{ $message }}</span>
+                      @enderror
                     </div>
                     <label>Password</label>
                     <div class="mb-3">
-                      <input type="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="password-addon">
+                      <input type="password" name="password" class="form-control" placeholder="Password" aria-label="Password" required>
+                      @error('password')
+                        <span class="text-danger text-xs">{{ $message }}</span>
+                      @enderror
                     </div>
                     <div class="form-check form-switch">
                       <input class="form-check-input" type="checkbox" id="rememberMe" checked="">
                       <label class="form-check-label" for="rememberMe">Remember me</label>
                     </div>
                     <div class="text-center">
-                      <button type="button" class="btn bg-gradient-info w-100 mt-4 mb-0">Sign in</button>
+                      <button type="submit" class="btn w-100 mt-4 mb-0" style="background-color: #007774; color: white;">Sign in</button>
                     </div>
                   </form>
                 </div>
                 <div class="card-footer text-center pt-0 px-lg-2 px-1">
                   <p class="mb-4 text-sm mx-auto">
-                    Don't have an account?
-                    <a href="{{ route('register') }}" class="text-info text-gradient font-weight-bold">Sign up</a>
+                    Masalah login? Hubungi Administrator.
                   </p>
                 </div>
               </div>
