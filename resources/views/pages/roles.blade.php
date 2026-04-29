@@ -115,35 +115,46 @@
     </div>
 
     <div class="col-md-8">
-        <div class="card mb-4">
+        <div class="card mb-4 border-radius-lg shadow-sm">
+            <div class="card-header pb-0 p-3">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <h6 class="mb-0 font-weight-bold text-sm">Daftar Role User</h6>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group input-group-sm w-100 w-lg-70 ms-auto">
+                            <span class="input-group-text"><i class="fa fa-search text-xs"></i></span>
+                            <input type="text" class="form-control ps-2" placeholder="Cari role..." id="searchTable">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="card-body px-0 pt-0 pb-2">
                 <div class="table-responsive p-0">
-                    <table class="table align-items-center mb-0">
+                    <table class="table align-items-center mb-0" id="mainTable">
                         <thead>
                             <tr>
                                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nama Role</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Role</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Deskripsi</th>
-                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
-                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($roles as $role)
+                            @forelse($roles as $role)
                             <tr>
                                 <td class="align-middle text-center">
                                     <span class="text-secondary text-xs font-weight-bold">{{ $loop->iteration + ($roles->currentPage() - 1) * $roles->perPage() }}</span>
                                 </td>
                                 <td>
-                                    <h6 class="mb-0 text-sm px-3">{{ $role->nama_role }}</h6>
+                                    <div class="d-flex px-2 py-1">
+                                        <div class="d-flex flex-column justify-content-center">
+                                            <h6 class="mb-0 text-sm">{{ $role->nama_role }}</h6>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
-                                    <p class="text-xs font-weight-bold mb-0 text-wrap" style="max-width: 300px;">{{ $role->deskripsi_role ?? '-' }}</p>
-                                </td>
-                                <td class="align-middle text-center text-sm">
-                                    <span class="badge badge-sm {{ $role->status_role == 'aktif' ? 'bg-gradient-primary' : 'bg-gradient-secondary' }}">
-                                        {{ ucfirst($role->status_role ?? 'aktif') }}
-                                    </span>
+                                    <p class="text-xs font-weight-bold mb-0">{{ $role->deskripsi_role ?? '-' }}</p>
                                 </td>
                                 <td class="align-middle text-center">
                                     <a href="javascript:;" class="btn-action btn-edit me-2" data-bs-toggle="tooltip" title="Edit role">
@@ -154,7 +165,16 @@
                                     </a>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-6">
+                                    <div class="empty-state py-4">
+                                        <h6 class="text-secondary font-weight-bold">Data Kosong</h6>
+                                        <p class="text-xs text-muted">Belum ada role yang terdaftar.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

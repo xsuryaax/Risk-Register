@@ -1,0 +1,104 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\IdentifikasiRisiko;
+use App\Models\KategoriRisiko;
+use App\Models\RuangLingkup;
+use App\Models\Unit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class RiskIdentificationController extends Controller
+{
+    public function index()
+    {
+        $data = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+            
+        return view('pages.identifikasi-risiko.index', compact('data'));
+    }
+
+    public function create()
+    {
+        $kategori = KategoriRisiko::all();
+        $ruangLingkup = RuangLingkup::all();
+        $units = Unit::all();
+        
+        return view('pages.identifikasi-risiko.create', compact('kategori', 'ruangLingkup', 'units'));
+    }
+
+    public function edit($id)
+    {
+        $risk = IdentifikasiRisiko::findOrFail($id);
+        $kategori = KategoriRisiko::all();
+        $ruangLingkup = RuangLingkup::all();
+        $units = Unit::all();
+        
+        return view('pages.identifikasi-risiko.edit', compact('risk', 'kategori', 'ruangLingkup', 'units'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'unit_id' => 'required',
+            'kegiatan' => 'required',
+            'tujuan_kegiatan' => 'required',
+            'kategori_risiko_id' => 'required',
+            'ruang_lingkup_id' => 'required',
+            'pernyataan_risiko' => 'required',
+            'sebab' => 'required',
+            'jenis_risiko' => 'required',
+            'dampak' => 'required',
+        ]);
+
+        // Auto generate kode risiko
+        $count = IdentifikasiRisiko::count() + 1;
+        $kode = 'RSK-' . date('Y') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+
+        IdentifikasiRisiko::create([
+            'unit_id' => $request->unit_id,
+            'kegiatan' => $request->kegiatan,
+            'tujuan_kegiatan' => $request->tujuan_kegiatan,
+            'kode_risiko' => $kode,
+            'kategori_risiko_id' => $request->kategori_risiko_id,
+            'ruang_lingkup_id' => $request->ruang_lingkup_id,
+            'pernyataan_risiko' => $request->pernyataan_risiko,
+            'sebab' => $request->sebab,
+            'jenis_risiko' => $request->jenis_risiko,
+            'dampak' => $request->dampak,
+            'user_id' => Auth::id() ?? 1, // Fallback to 1 for testing
+        ]);
+
+        return redirect()->back()->with('success', 'Identifikasi risiko berhasil disimpan.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'unit_id' => 'required',
+            'kegiatan' => 'required',
+            'tujuan_kegiatan' => 'required',
+            'kategori_risiko_id' => 'required',
+            'ruang_lingkup_id' => 'required',
+            'pernyataan_risiko' => 'required',
+            'sebab' => 'required',
+            'jenis_risiko' => 'required',
+            'dampak' => 'required',
+        ]);
+
+        $risk = IdentifikasiRisiko::findOrFail($id);
+        $risk->update($request->all());
+
+        return redirect()->back()->with('success', 'Identifikasi risiko berhasil diperbarui.');
+    }
+
+    public function destroy($id)
+    {
+        $risk = IdentifikasiRisiko::findOrFail($id);
+        $risk->delete();
+
+        return redirect()->back()->with('success', 'Identifikasi risiko berhasil dihapus.');
+    }
+}

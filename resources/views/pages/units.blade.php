@@ -122,21 +122,34 @@
     </div>
 
     <div class="col-md-8">
-        <div class="card mb-4">
+        <div class="card mb-4 border-radius-lg shadow-sm">
+            <div class="card-header pb-0 p-3">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <h6 class="mb-0 font-weight-bold text-sm">Daftar Unit Kerja</h6>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group input-group-sm w-100 w-lg-70 ms-auto">
+                            <span class="input-group-text"><i class="fa fa-search text-xs"></i></span>
+                            <input type="text" class="form-control ps-2" placeholder="Cari unit..." id="searchTable">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="card-body px-0 pt-0 pb-2">
                 <div class="table-responsive p-0">
-                    <table class="table align-items-center mb-0">
+                    <table class="table align-items-center mb-0" id="mainTable">
                         <thead>
                             <tr>
                                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kode & Nama Unit</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Unit</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Deskripsi</th>
                                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
-                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($units as $unit)
+                            @forelse($units as $unit)
                             <tr>
                                 <td class="align-middle text-center">
                                     <span class="text-secondary text-xs font-weight-bold">{{ $loop->iteration + ($units->currentPage() - 1) * $units->perPage() }}</span>
@@ -166,7 +179,16 @@
                                     </a>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-6">
+                                    <div class="empty-state py-4">
+                                        <h6 class="text-secondary font-weight-bold">Data Kosong</h6>
+                                        <p class="text-xs text-muted">Belum ada unit kerja yang terdaftar.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

@@ -27,7 +27,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="javascript:;">
+                <a class="nav-link {{ request()->is('identifikasi-risiko*') ? 'active' : '' }}" href="{{ route('identifikasi-risiko.index') }}">
                     <div
                         class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="fa fa-search text-dark text-sm opacity-10"></i>
@@ -78,12 +78,35 @@
                 <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">MASTER DATA</h6>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="javascript:;">
-                    <div
-                        class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fa fa-database text-dark text-sm opacity-10"></i>
+                <a class="nav-link {{ request()->is('master/kategori-risiko*') ? 'active' : '' }}" href="{{ route('kategori-risiko.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fa fa-tags text-dark text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Master Resiko</span>
+                    <span class="nav-link-text ms-1">Kategori Risiko</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->is('master/ruang-lingkup*') ? 'active' : '' }}" href="{{ route('ruang-lingkup.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fa fa-crosshairs text-dark text-sm opacity-10"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Ruang Lingkup</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->is('master/probabilitas*') ? 'active' : '' }}" href="{{ route('probabilitas.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fa fa-clock text-dark text-sm opacity-10"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Skala Probabilitas</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->is('master/dampak*') ? 'active' : '' }}" href="{{ route('dampak.index') }}">
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fa fa-exclamation-triangle text-dark text-sm opacity-10"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Skala Dampak</span>
                 </a>
             </li>
 

@@ -411,16 +411,17 @@
 
     @include('layouts.partials.sidebar')
 
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg "
-        style="background-color: #e9ecef !important;">
+    <main class="main-content position-relative border-radius-lg d-flex flex-column"
+        style="background-color: #e9ecef !important; min-height: 100vh;">
 
         @include('layouts.partials.navbar')
 
-        <div class="container-fluid py-4">
+        <div class="container-fluid py-4 d-flex flex-column flex-grow-1" style="min-height: calc(100vh - 70px);">
+            <div class="flex-grow-1 pb-5">
+                @yield('content')
+            </div>
 
-            @yield('content')
-
-            <footer class="footer pt-3">
+            <footer class="footer py-3 mt-auto">
                 <div class="container-fluid">
                     <div class="row align-items-center justify-content-lg-between">
                         <div class="col-lg-6 mb-lg-0 mb-4">
@@ -488,6 +489,31 @@
     <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
     <script src="{{ asset('style/assets/js/soft-ui-dashboard.min.js?v=1.1.0') }}"></script>
     @stack('js')
+    <!-- Global Search Script -->
+    <script>
+        document.addEventListener('keyup', function(e) {
+            if (e.target && e.target.id === 'searchTable') {
+                const value = e.target.value.toLowerCase();
+                const table = document.getElementById('mainTable');
+                if (!table) return;
+                
+                const rows = table.getElementsByTagName('tr');
+
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    // Skip if it's the empty state row
+                    if (row.querySelector('.empty-state')) continue;
+                    
+                    const text = row.innerText.toLowerCase();
+                    if (text.includes(value)) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

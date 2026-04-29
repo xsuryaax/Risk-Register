@@ -6,6 +6,10 @@ use Illuminate\Http\Request;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\KategoriRisiko;
+use App\Models\RuangLingkup;
+use App\Models\Probabilitas;
+use App\Models\Dampak;
 
 class MasterDataController extends Controller
 {
@@ -97,5 +101,129 @@ class MasterDataController extends Controller
         }
 
         return redirect()->back()->with('success', 'Hak akses berhasil diperbarui!');
+    }
+
+    // Kategori Risiko
+    public function kategoriRisiko()
+    {
+        $data = KategoriRisiko::paginate(10)->onEachSide(1);
+        $stats = [
+            'total' => KategoriRisiko::count(),
+            'aktif' => KategoriRisiko::where('status_kategori', 'aktif')->count(),
+            'non_aktif' => KategoriRisiko::where('status_kategori', 'non-aktif')->count(),
+        ];
+        return view('pages.kategori-risiko', compact('data', 'stats'));
+    }
+
+    public function storeKategoriRisiko(Request $request)
+    {
+        KategoriRisiko::create($request->all());
+        return redirect()->back()->with('success', 'Kategori Risiko berhasil ditambahkan!');
+    }
+
+    public function updateKategoriRisiko(Request $request, $id)
+    {
+        $item = KategoriRisiko::findOrFail($id);
+        $item->update($request->all());
+        return redirect()->back()->with('success', 'Kategori Risiko berhasil diperbarui!');
+    }
+
+    public function destroyKategoriRisiko($id)
+    {
+        KategoriRisiko::findOrFail($id)->delete();
+        return redirect()->back()->with('success', 'Kategori Risiko berhasil dihapus!');
+    }
+
+    // Ruang Lingkup
+    public function ruangLingkup()
+    {
+        $data = RuangLingkup::paginate(10)->onEachSide(1);
+        $stats = [
+            'total' => RuangLingkup::count(),
+            'aktif' => RuangLingkup::where('status_ruang_lingkup', 'aktif')->count(),
+            'non_aktif' => RuangLingkup::where('status_ruang_lingkup', 'non-aktif')->count(),
+        ];
+        return view('pages.ruang-lingkup', compact('data', 'stats'));
+    }
+
+    public function storeRuangLingkup(Request $request)
+    {
+        RuangLingkup::create($request->all());
+        return redirect()->back()->with('success', 'Ruang Lingkup berhasil ditambahkan!');
+    }
+
+    public function updateRuangLingkup(Request $request, $id)
+    {
+        $item = RuangLingkup::findOrFail($id);
+        $item->update($request->all());
+        return redirect()->back()->with('success', 'Ruang Lingkup berhasil diperbarui!');
+    }
+
+    public function destroyRuangLingkup($id)
+    {
+        RuangLingkup::findOrFail($id)->delete();
+        return redirect()->back()->with('success', 'Ruang Lingkup berhasil dihapus!');
+    }
+
+    // Probabilitas
+    public function probabilitas()
+    {
+        $data = Probabilitas::orderBy('nilai_probabilitas', 'asc')->paginate(10)->onEachSide(1);
+        $stats = [
+            'total' => Probabilitas::count(),
+            'aktif' => Probabilitas::where('status_probabilitas', 'aktif')->count(),
+            'non_aktif' => Probabilitas::where('status_probabilitas', 'non-aktif')->count(),
+        ];
+        return view('pages.probabilitas', compact('data', 'stats'));
+    }
+
+    public function storeProbabilitas(Request $request)
+    {
+        Probabilitas::create($request->all());
+        return redirect()->back()->with('success', 'Skala Probabilitas berhasil ditambahkan!');
+    }
+
+    public function updateProbabilitas(Request $request, $id)
+    {
+        $item = Probabilitas::findOrFail($id);
+        $item->update($request->all());
+        return redirect()->back()->with('success', 'Skala Probabilitas berhasil diperbarui!');
+    }
+
+    public function destroyProbabilitas($id)
+    {
+        Probabilitas::findOrFail($id)->delete();
+        return redirect()->back()->with('success', 'Skala Probabilitas berhasil dihapus!');
+    }
+
+    // Dampak
+    public function dampak()
+    {
+        $data = Dampak::orderBy('nilai_dampak', 'asc')->paginate(10)->onEachSide(1);
+        $stats = [
+            'total' => Dampak::count(),
+            'aktif' => Dampak::where('status_dampak', 'aktif')->count(),
+            'non_aktif' => Dampak::where('status_dampak', 'non-aktif')->count(),
+        ];
+        return view('pages.dampak', compact('data', 'stats'));
+    }
+
+    public function storeDampak(Request $request)
+    {
+        Dampak::create($request->all());
+        return redirect()->back()->with('success', 'Skala Dampak berhasil ditambahkan!');
+    }
+
+    public function updateDampak(Request $request, $id)
+    {
+        $item = Dampak::findOrFail($id);
+        $item->update($request->all());
+        return redirect()->back()->with('success', 'Skala Dampak berhasil diperbarui!');
+    }
+
+    public function destroyDampak($id)
+    {
+        Dampak::findOrFail($id)->delete();
+        return redirect()->back()->with('success', 'Skala Dampak berhasil dihapus!');
     }
 }

@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_hak_akses', function (Blueprint $table) {
+        Schema::create('tbl_dampak', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('role_id')->constrained('tbl_roles')->onDelete('cascade');
-            $table->string('menu_key');
+            $table->string('nama_dampak'); // Misal: Sangat Rendah, Rendah, dst
+            $table->integer('nilai_dampak'); // 1-5
+            $table->text('keterangan')->nullable();
+            $table->enum('status_dampak', ['aktif', 'non-aktif'])->default('aktif');
             $table->timestamps();
         });
     }
@@ -24,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_hak_akses');
+        Schema::dropIfExists('tbl_dampak');
     }
 };
