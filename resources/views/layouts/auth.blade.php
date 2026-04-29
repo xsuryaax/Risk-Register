@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('style/assets/img/apple-icon.png') }}">
-  <link rel="icon" type="image/png" href="{{ asset('style/assets/img/favicon.png') }}">
+  <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('img/favicon_azra.png') }}">
+  <link rel="icon" type="image/png" href="{{ asset('img/favicon_azra.png') }}">
   <title>
     @yield('title', 'Soft UI Dashboard 3')
   </title>
@@ -18,6 +18,7 @@
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <!-- CSS Files -->
   <link id="pagestyle" href="{{ asset('style/assets/css/soft-ui-dashboard.css?v=1.1.0') }}" rel="stylesheet" />
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
   <style>
     html {
       font-size: 14px;
@@ -31,10 +32,11 @@
       padding: 0.5rem;
     }
   </style>
+  @stack('css')
 </head>
 
 
-<body class="">
+<body class="@yield('body-class')">
   <div class="container position-sticky z-index-sticky top-0">
     <div class="row">
       <div class="col-12">
@@ -84,6 +86,7 @@
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="{{ asset('style/assets/js/soft-ui-dashboard.min.js?v=1.1.0') }}"></script>
+  @stack('js')
 </body>
 
 </html>
