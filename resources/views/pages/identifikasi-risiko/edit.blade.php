@@ -26,19 +26,6 @@
                                     </th>
                                 </tr>
                                 <tr>
-                                    <td class="label-cell"><label class="mb-0">Unit Kerja</label></td>
-                                    <td class="input-cell text-start">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fa fa-building text-xs text-primary"></i></span>
-                                            <select name="unit_id" class="tom-select" required>
-                                                @foreach($units as $unit)
-                                                    <option value="{{ $unit->id }}" {{ $risk->unit_id == $unit->id ? 'selected' : '' }}>{{ $unit->nama_unit }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td class="label-cell"><label class="mb-0">Kegiatan</label></td>
                                     <td class="input-cell text-start">
                                         <textarea name="kegiatan" class="form-control" rows="2" required style="resize: none;">{{ $risk->kegiatan }}</textarea>

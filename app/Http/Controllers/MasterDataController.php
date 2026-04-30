@@ -45,9 +45,15 @@ class MasterDataController extends Controller
         return view('pages.units', compact('units', 'stats', 'nextCode'));
     }
 
-    public function users()
+    public function users(Request $request)
     {
-        $users = User::with(['role', 'unit'])->paginate(10)->onEachSide(1);
+        $query = User::with(['role', 'unit']);
+        
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
+        }
+
+        $users = $query->paginate(10)->onEachSide(1)->withQueryString();
         $roles = Role::where('status_role', 'aktif')->get();
         $units = Unit::where('status_unit', 'aktif')->get();
         $stats = [
@@ -115,17 +121,28 @@ class MasterDataController extends Controller
         return view('pages.kategori-risiko', compact('data', 'stats'));
     }
 
+    public function createKategoriRisiko()
+    {
+        return view('pages.master.kategori-form');
+    }
+
     public function storeKategoriRisiko(Request $request)
     {
         KategoriRisiko::create($request->all());
-        return redirect()->back()->with('success', 'Kategori Risiko berhasil ditambahkan!');
+        return redirect()->route('kategori-risiko.index')->with('success', 'Kategori Risiko berhasil ditambahkan!');
+    }
+
+    public function editKategoriRisiko($id)
+    {
+        $item = KategoriRisiko::findOrFail($id);
+        return view('pages.master.kategori-form', compact('item'));
     }
 
     public function updateKategoriRisiko(Request $request, $id)
     {
         $item = KategoriRisiko::findOrFail($id);
         $item->update($request->all());
-        return redirect()->back()->with('success', 'Kategori Risiko berhasil diperbarui!');
+        return redirect()->route('kategori-risiko.index')->with('success', 'Kategori Risiko berhasil diperbarui!');
     }
 
     public function destroyKategoriRisiko($id)
@@ -146,17 +163,28 @@ class MasterDataController extends Controller
         return view('pages.ruang-lingkup', compact('data', 'stats'));
     }
 
+    public function createRuangLingkup()
+    {
+        return view('pages.master.ruang-lingkup-form');
+    }
+
     public function storeRuangLingkup(Request $request)
     {
         RuangLingkup::create($request->all());
-        return redirect()->back()->with('success', 'Ruang Lingkup berhasil ditambahkan!');
+        return redirect()->route('ruang-lingkup.index')->with('success', 'Ruang Lingkup berhasil ditambahkan!');
+    }
+
+    public function editRuangLingkup($id)
+    {
+        $item = RuangLingkup::findOrFail($id);
+        return view('pages.master.ruang-lingkup-form', compact('item'));
     }
 
     public function updateRuangLingkup(Request $request, $id)
     {
         $item = RuangLingkup::findOrFail($id);
         $item->update($request->all());
-        return redirect()->back()->with('success', 'Ruang Lingkup berhasil diperbarui!');
+        return redirect()->route('ruang-lingkup.index')->with('success', 'Ruang Lingkup berhasil diperbarui!');
     }
 
     public function destroyRuangLingkup($id)
@@ -177,17 +205,28 @@ class MasterDataController extends Controller
         return view('pages.probabilitas', compact('data', 'stats'));
     }
 
+    public function createProbabilitas()
+    {
+        return view('pages.master.probabilitas-form');
+    }
+
     public function storeProbabilitas(Request $request)
     {
         Probabilitas::create($request->all());
-        return redirect()->back()->with('success', 'Skala Probabilitas berhasil ditambahkan!');
+        return redirect()->route('probabilitas.index')->with('success', 'Skala Probabilitas berhasil ditambahkan!');
+    }
+
+    public function editProbabilitas($id)
+    {
+        $item = Probabilitas::findOrFail($id);
+        return view('pages.master.probabilitas-form', compact('item'));
     }
 
     public function updateProbabilitas(Request $request, $id)
     {
         $item = Probabilitas::findOrFail($id);
         $item->update($request->all());
-        return redirect()->back()->with('success', 'Skala Probabilitas berhasil diperbarui!');
+        return redirect()->route('probabilitas.index')->with('success', 'Skala Probabilitas berhasil diperbarui!');
     }
 
     public function destroyProbabilitas($id)
@@ -208,17 +247,28 @@ class MasterDataController extends Controller
         return view('pages.dampak', compact('data', 'stats'));
     }
 
+    public function createDampak()
+    {
+        return view('pages.master.dampak-form');
+    }
+
     public function storeDampak(Request $request)
     {
         Dampak::create($request->all());
-        return redirect()->back()->with('success', 'Skala Dampak berhasil ditambahkan!');
+        return redirect()->route('dampak.index')->with('success', 'Skala Dampak berhasil ditambahkan!');
+    }
+
+    public function editDampak($id)
+    {
+        $item = Dampak::findOrFail($id);
+        return view('pages.master.dampak-form', compact('item'));
     }
 
     public function updateDampak(Request $request, $id)
     {
         $item = Dampak::findOrFail($id);
         $item->update($request->all());
-        return redirect()->back()->with('success', 'Skala Dampak berhasil diperbarui!');
+        return redirect()->route('dampak.index')->with('success', 'Skala Dampak berhasil diperbarui!');
     }
 
     public function destroyDampak($id)

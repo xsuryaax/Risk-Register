@@ -129,7 +129,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body px-0 pt-0 pb-2">
+            <div class="card-body px-0 pt-0 pb-2" id="tableContainer">
                 <div class="table-responsive p-0">
                     <table class="table align-items-center mb-0" id="mainTable">
                         <thead>
@@ -178,11 +178,13 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer py-4">
+                @if($roles->hasPages())
+                <div class="card-footer py-3">
                     <div class="d-flex justify-content-center">
                         {{ $roles->links() }}
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>

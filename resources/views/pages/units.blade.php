@@ -136,7 +136,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body px-0 pt-0 pb-2">
+            <div class="card-body px-0 pt-0 pb-2" id="tableContainer">
                 <div class="table-responsive p-0">
                     <table class="table align-items-center mb-0" id="mainTable">
                         <thead>
@@ -166,7 +166,7 @@
                                     <p class="text-xs font-weight-bold mb-0 text-wrap" style="max-width: 200px;">{{ $unit->deskripsi_unit ?? '-' }}</p>
                                 </td>
                                 <td class="align-middle text-center text-sm">
-                                    <span class="badge badge-sm {{ $unit->status_unit == 'aktif' ? 'bg-gradient-primary' : 'bg-gradient-secondary' }}">
+                                    <span class="badge badge-sm {{ $unit->status_unit == 'aktif' ? 'bg-primary' : 'bg-secondary' }}">
                                         {{ ucfirst($unit->status_unit) }}
                                     </span>
                                 </td>
@@ -192,11 +192,13 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer py-4">
+                @if($units->hasPages())
+                <div class="card-footer py-3">
                     <div class="d-flex justify-content-center">
                         {{ $units->links() }}
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>

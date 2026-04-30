@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_probabilitas'); // Misal: Sangat Jarang, Jarang, dst
             $table->integer('nilai_probabilitas'); // 1-5
+            $table->string('warna')->nullable(); 
             $table->text('keterangan')->nullable();
             $table->enum('status_probabilitas', ['aktif', 'non-aktif'])->default('aktif');
             $table->timestamps();

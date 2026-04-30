@@ -37,20 +37,7 @@
 
     <div class="col-md-8">
         <div class="card mb-4 border-radius-lg shadow-sm">
-            <div class="card-header pb-0 p-3">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <h6 class="mb-0 font-weight-bold text-sm">Daftar Ruang Lingkup</h6>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group input-group-sm w-100 w-lg-70 ms-auto">
-                            <span class="input-group-text"><i class="fa fa-search text-xs"></i></span>
-                            <input type="text" class="form-control ps-2" placeholder="Cari data..." id="searchTable">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body px-0 pt-0 pb-2">
+            <div class="card-body px-0 pt-3 pb-2" id="tableContainer">
                 <div class="table-responsive p-0">
                     <table class="table align-items-center mb-0" id="mainTable">
                         <thead>
@@ -71,7 +58,7 @@
                                     <h6 class="mb-0 text-sm px-3">{{ $item->nama_ruang_lingkup }}</h6>
                                 </td>
                                 <td>
-                                    <p class="text-xs font-weight-bold mb-0 text-wrap" style="max-width: 250px;">{{ $item->keterangan ?? '-' }}</p>
+                                    <p class="text-xs font-weight-bold mb-0 text-wrap">{{ $item->keterangan ?? '-' }}</p>
                                 </td>
 
                                 <td class="align-middle text-center">
@@ -104,11 +91,13 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer py-4">
+                @if($data->hasPages())
+                <div class="card-footer pb-0 pt-3">
                     <div class="d-flex justify-content-center">
                         {{ $data->links() }}
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>

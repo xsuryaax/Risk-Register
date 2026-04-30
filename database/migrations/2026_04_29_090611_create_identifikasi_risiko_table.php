@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tbl_identifikasi_risiko', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('unit_id')->constrained('units')->onDelete('cascade');
+            $table->foreignId('unit_id')->constrained('tbl_units')->onDelete('cascade');
             $table->text('kegiatan');
             $table->text('tujuan_kegiatan');
             $table->string('kode_risiko')->unique();
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('sebab');
             $table->string('jenis_risiko')->comment('UC or C');
             $table->text('dampak');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('tbl_users')->onDelete('cascade');
             $table->timestamps();
         });
     }

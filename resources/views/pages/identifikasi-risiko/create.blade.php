@@ -25,20 +25,6 @@
                                     </th>
                                 </tr>
                                 <tr>
-                                    <td class="label-cell"><label class="mb-0">Unit Kerja</label></td>
-                                    <td class="input-cell text-start">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fa fa-building text-xs text-primary"></i></span>
-                                            <select name="unit_id" class="tom-select" required>
-                                                <option value="" selected disabled>Pilih Unit Kerja</option>
-                                                @foreach($units as $unit)
-                                                    <option value="{{ $unit->id }}">{{ $unit->nama_unit }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td class="label-cell"><label class="mb-0">Kegiatan</label></td>
                                     <td class="input-cell text-start">
                                         <textarea name="kegiatan" class="form-control" rows="2" placeholder="Masukkan nama kegiatan..." required style="resize: none;"></textarea>
@@ -48,6 +34,13 @@
                                     <td class="label-cell"><label class="mb-0">Tujuan Kegiatan</label></td>
                                     <td class="input-cell text-start">
                                         <textarea name="tujuan_kegiatan" class="form-control" rows="2" placeholder="Masukkan tujuan kegiatan..." required style="resize: none;"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell"><label class="mb-0">Kode Risiko</label></td>
+                                    <td class="input-cell text-start">
+                                        <input type="text" name="kode_risiko" class="form-control" placeholder="Kosongkan jika belum tersedia (Otomatis)">
+                                        <small class="text-xs text-muted mt-1 d-block font-italic">* Belum tersusun sementara kosongkan</small>
                                     </td>
                                 </tr>
 

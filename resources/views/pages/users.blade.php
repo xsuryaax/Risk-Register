@@ -182,19 +182,25 @@
     <div class="col-md-8">
         <div class="card mb-4 border-radius-lg shadow-sm">
             <div class="card-header pb-0 p-3">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <h6 class="mb-0 font-weight-bold text-sm">Daftar Data User</h6>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div class="input-group input-group-sm mb-0" style="width: 250px;">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="fa fa-building text-xs"></i>
+                        </span>
+                        <select class="form-select border-start-0 ps-2 select-search" id="filterUnit" data-placeholder="Filter Unit...">
+                            <option value="">Semua Unit</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ $unit->nama_unit }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="col-6">
-                        <div class="input-group input-group-sm w-100 w-lg-70 ms-auto">
-                            <span class="input-group-text"><i class="fa fa-search text-xs"></i></span>
-                            <input type="text" class="form-control ps-2" placeholder="Cari user..." id="searchTable">
-                        </div>
+                    <div class="input-group input-group-sm mb-0" style="width: 250px;">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Cari user..." id="searchTable">
                     </div>
                 </div>
             </div>
-            <div class="card-body px-0 pt-0 pb-2">
+            <div class="card-body px-0 pt-0 pb-2" id="tableContainer">
                 <div class="table-responsive p-0">
                     <table class="table align-items-center mb-0" id="mainTable">
                         <thead>
@@ -230,7 +236,7 @@
                                     <span class="text-xs font-weight-bold">{{ $user->profesi ?? '-' }}</span>
                                 </td>
                                 <td class="align-middle text-center text-sm">
-                                    <span class="badge badge-sm {{ $user->status_user == 'aktif' ? 'bg-gradient-primary' : 'bg-gradient-secondary' }}">
+                                    <span class="badge badge-sm {{ $user->status_user == 'aktif' ? 'bg-primary' : 'bg-secondary' }}">
                                         {{ ucfirst($user->status_user) }}
                                     </span>
                                 </td>
@@ -259,11 +265,13 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer py-4">
+                @if($users->hasPages())
+                <div class="card-footer py-3">
                     <div class="d-flex justify-content-center">
                         {{ $users->links() }}
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>
@@ -275,6 +283,20 @@
     document.getElementById('formTambahUser').addEventListener('submit', function(e) {
         e.preventDefault();
         alert('Fitur AJAX Simpan User akan diimplementasikan pada langkah berikutnya!');
+    });
+
+    // Filter Unit Logic
+    document.getElementById('filterUnit').addEventListener('change', function() {
+        const unitId = this.value;
+        const url = new URL(window.location.href);
+        if (unitId) {
+            url.searchParams.set('unit_id', unitId);
+        } else {
+            url.searchParams.delete('unit_id');
+        }
+        
+        // Use the global AJAX loader
+        loadAjax(url.toString());
     });
 </script>
 @endpush

@@ -19,6 +19,11 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UnitSeeder::class,
             KaryawanSeeder::class,
+            KategoriRisikoSeeder::class,
+            RuangLingkupSeeder::class,
+            ProbabilitasSeeder::class,
+            DampakSeeder::class,
+            IdentifikasiRisikoSeeder::class,
         ]);
     }
 }

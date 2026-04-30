@@ -31,14 +31,14 @@
         .ts-wrapper .ts-control {
             border: 1px solid #d2d6da !important;
             border-radius: 0.5rem !important;
-            padding: 2px 12px !important;
+            padding: 0px 12px !important;
             font-size: 0.75rem !important;
             font-weight: 400 !important;
             color: #495057 !important;
             box-shadow: none !important;
             background-color: #fff !important;
             transition: all 0.2s ease;
-            min-height: 32px !important;
+            min-height: 31px !important;
             display: flex;
             align-items: center;
         }
@@ -135,11 +135,13 @@
         }
 
         /* Global Soft UI Overrides to remove Tacky Gradients */
-        .bg-primary,
-        .bg-gradient-primary {
-            background-color: #007774 !important;
-            background-image: none !important;
-        }
+        .bg-primary, .bg-gradient-primary { background-color: #007774 !important; background-image: none !important; }
+        .bg-secondary, .bg-gradient-secondary { background-color: #8392ab !important; background-image: none !important; }
+        .bg-success, .bg-gradient-success { background-color: #2dce89 !important; background-image: none !important; }
+        .bg-info, .bg-gradient-info { background-color: #11cdef !important; background-image: none !important; }
+        .bg-warning, .bg-gradient-warning { background-color: #fb6340 !important; background-image: none !important; }
+        .bg-danger, .bg-gradient-danger { background-color: #f5365c !important; background-image: none !important; }
+        .bg-dark, .bg-gradient-dark { background-color: #1c1c1c !important; background-image: none !important; }
 
         .btn-primary,
         .btn.bg-primary {
@@ -148,7 +150,7 @@
             border: none !important;
             text-transform: uppercase !important;
             font-size: 0.7rem !important;
-            letter-spacing: 1px !important;
+            letter-spacing: 0.5px !important;
             font-weight: 700 !important;
             padding: 12px 24px !important;
             border-radius: 8px !important;
@@ -161,6 +163,16 @@
             background-color: #005f5c !important;
             transform: translateY(-2px) !important;
             box-shadow: 0 7px 14px -3px rgba(0, 119, 116, 0.3), 0 4px 6px -2px rgba(0, 119, 116, 0.2) !important;
+        }
+
+        /* Custom Table Borders */
+        .table-bordered-light td, 
+        .table-bordered-light th {
+            border-right: 1px solid #e9ecef !important;
+        }
+        .table-bordered-light th:last-child, 
+        .table-bordered-light td:last-child {
+            border-right: none !important;
         }
 
         .btn-primary:active,
@@ -369,18 +381,36 @@
         }
 
         .page-link {
-            border-radius: 8px !important;
+            border-radius: 50% !important;
             border: 1px solid #e9ecef !important;
             color: #007774 !important;
-            padding: 0.4rem 0.8rem;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 600;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
         }
 
         .page-item.active .page-link {
             background-color: #007774 !important;
             border-color: #007774 !important;
             color: #ffffff !important;
-            /* Force white for active page */
+            box-shadow: 0 4px 6px -1px rgba(0, 119, 116, 0.3);
+        }
+
+        .page-item.disabled .page-link {
+            opacity: 0.5;
+            background-color: #f8f9fa;
+        }
+
+        .page-item:not(.active):not(.disabled) .page-link:hover {
+            background-color: #e9ecef;
+            color: #007774;
+            transform: translateY(-2px);
         }
 
         /* Aggressive Hide for "Showing X to Y" across Tailwind & Bootstrap */
@@ -444,8 +474,57 @@
     <script src="{{ asset('style/assets/js/core/bootstrap.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
+    <script src="{{ asset('style/assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
+    <script src="{{ asset('style/assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
+    <script src="{{ asset('style/assets/js/plugins/chartjs.min.js') }}"></script>
+    
+    <!-- Github buttons -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
+    <script src="{{ asset('style/assets/js/soft-ui-dashboard.min.js?v=1.1.0') }}"></script>
+
     <script>
+        // Global AJAX Navigation Function
+        function loadAjax(url, target = '#tableContainer') {
+            if ($(target).length) {
+                $(target).css('opacity', '0.5'); // Visual feedback
+                
+                $.ajax({
+                    url: url,
+                    type: 'get',
+                    success: function(data) {
+                        let html = $(data).find(target).html();
+                        $(target).html(html);
+                        $(target).css('opacity', '1');
+                        
+                        // Re-init tooltips
+                        if (window.bootstrap && bootstrap.Tooltip) {
+                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                                return new bootstrap.Tooltip(tooltipTriggerEl)
+                            })
+                        }
+
+                        // Update URL without reload
+                        window.history.pushState({}, '', url);
+                    }
+                });
+            } else {
+                window.location.href = url;
+            }
+        }
+
         $(document).ready(function() {
+            // Fix Sidebar Scroll Isolation
+            var win = navigator.platform.indexOf('Win') > -1;
+            if (win && document.querySelector('#sidenav-collapse-main')) {
+                var options = {
+                    damping: '0.5',
+                    continuousScrolling: false // Prevent scroll propagation to body
+                }
+                Scrollbar.init(document.querySelector('#sidenav-collapse-main'), options);
+            }
+
             $('.select-search').each(function() {
                 new TomSelect(this, {
                     create: false,
@@ -469,51 +548,31 @@
                     icon.removeClass('fa-eye-slash').addClass('fa-eye');
                 }
             });
-        });
-    </script>
 
-    <script src="{{ asset('style/assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
-    <script src="{{ asset('style/assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
-    <script src="{{ asset('style/assets/js/plugins/chartjs.min.js') }}"></script>
-    <script>
-        var win = navigator.platform.indexOf('Win') > -1;
-        if (win && document.querySelector('#sidenav-scrollbar')) {
-            var options = {
-                damping: '0.5'
-            }
-            Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
-        }
-    </script>
-    <!-- Github buttons -->
-    <script async defer src="https://buttons.github.io/buttons.js"></script>
-    <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
-    <script src="{{ asset('style/assets/js/soft-ui-dashboard.min.js?v=1.1.0') }}"></script>
-    @stack('js')
-    <!-- Global Search Script -->
-    <script>
-        document.addEventListener('keyup', function(e) {
-            if (e.target && e.target.id === 'searchTable') {
-                const value = e.target.value.toLowerCase();
-                const table = document.getElementById('mainTable');
-                if (!table) return;
+            // AJAX Pagination - Global Handler
+            $(document).on('click', '.pagination a', function(e) {
+                e.preventDefault();
+                loadAjax($(this).attr('href'));
+            });
+
+            // Global Search Script
+            $(document).on('keyup', '#searchTable', function() {
+                const value = $(this).val().toLowerCase();
+                const table = $('#mainTable');
+                if (!table.length) return;
                 
-                const rows = table.getElementsByTagName('tr');
-
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i];
-                    // Skip if it's the empty state row
-                    if (row.querySelector('.empty-state')) continue;
+                table.find('tbody tr').each(function() {
+                    const row = $(this);
+                    if (row.find('.empty-state').length) return;
                     
-                    const text = row.innerText.toLowerCase();
-                    if (text.includes(value)) {
-                        row.style.display = "";
-                    } else {
-                        row.style.display = "none";
-                    }
-                }
-            }
+                    const text = row.text().toLowerCase();
+                    row.toggle(text.indexOf(value) > -1);
+                });
+            });
         });
     </script>
+
+    @stack('js')
 </body>
 
 </html>

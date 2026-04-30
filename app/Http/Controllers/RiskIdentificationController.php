@@ -11,13 +11,18 @@ use Illuminate\Support\Facades\Auth;
 
 class RiskIdentificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup']);
+
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
+        }
+
+        $data = $query->orderBy('created_at', 'desc')->paginate(10);
+        $units = Unit::all();
             
-        return view('pages.identifikasi-risiko.index', compact('data'));
+        return view('pages.identifikasi-risiko.index', compact('data', 'units'));
     }
 
     public function create()
@@ -42,7 +47,6 @@ class RiskIdentificationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'unit_id' => 'required',
             'kegiatan' => 'required',
             'tujuan_kegiatan' => 'required',
             'kategori_risiko_id' => 'required',
@@ -53,12 +57,15 @@ class RiskIdentificationController extends Controller
             'dampak' => 'required',
         ]);
 
-        // Auto generate kode risiko
-        $count = IdentifikasiRisiko::count() + 1;
-        $kode = 'RSK-' . date('Y') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+        // Handle Kode Risiko
+        $kode = $request->kode_risiko;
+        if (empty($kode)) {
+            $count = IdentifikasiRisiko::count() + 1;
+            $kode = 'RSK-' . date('Y') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+        }
 
         IdentifikasiRisiko::create([
-            'unit_id' => $request->unit_id,
+            'unit_id' => Auth::user()->unit_id ?? 1,
             'kegiatan' => $request->kegiatan,
             'tujuan_kegiatan' => $request->tujuan_kegiatan,
             'kode_risiko' => $kode,
@@ -68,16 +75,15 @@ class RiskIdentificationController extends Controller
             'sebab' => $request->sebab,
             'jenis_risiko' => $request->jenis_risiko,
             'dampak' => $request->dampak,
-            'user_id' => Auth::id() ?? 1, // Fallback to 1 for testing
+            'user_id' => Auth::id() ?? 1,
         ]);
 
-        return redirect()->back()->with('success', 'Identifikasi risiko berhasil disimpan.');
+        return redirect()->route('identifikasi-risiko.index')->with('success', 'Identifikasi risiko berhasil disimpan.');
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'unit_id' => 'required',
             'kegiatan' => 'required',
             'tujuan_kegiatan' => 'required',
             'kategori_risiko_id' => 'required',
@@ -89,9 +95,9 @@ class RiskIdentificationController extends Controller
         ]);
 
         $risk = IdentifikasiRisiko::findOrFail($id);
-        $risk->update($request->all());
+        $risk->update($request->except('unit_id'));
 
-        return redirect()->back()->with('success', 'Identifikasi risiko berhasil diperbarui.');
+        return redirect()->route('identifikasi-risiko.index')->with('success', 'Identifikasi risiko berhasil diperbarui.');
     }
 
     public function destroy($id)
