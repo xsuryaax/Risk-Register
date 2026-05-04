@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             ProbabilitasSeeder::class,
             DampakSeeder::class,
             IdentifikasiRisikoSeeder::class,
+            AnalisisRisikoSeeder::class,
+            AnalisisKecukupanSeeder::class,
         ]);
     }
 }

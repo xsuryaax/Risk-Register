@@ -41,4 +41,14 @@ class IdentifikasiRisiko extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function analisis()
+    {
+        return $this->hasOne(AnalisisRisiko::class, 'identifikasi_risiko_id');
+    }
+
+    public function analisisKecukupan()
+    {
+        return $this->hasOne(AnalisisKecukupan::class, 'identifikasi_risiko_id');
+    }
 }

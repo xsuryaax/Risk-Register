@@ -60,8 +60,14 @@ class RiskIdentificationController extends Controller
         // Handle Kode Risiko
         $kode = $request->kode_risiko;
         if (empty($kode)) {
-            $count = IdentifikasiRisiko::count() + 1;
-            $kode = 'RSK-' . date('Y') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+            $prefix = 'RSK';
+            $rl = RuangLingkup::find($request->ruang_lingkup_id);
+            if ($rl && $rl->kode_prefix) {
+                $prefix = $rl->kode_prefix;
+            }
+            
+            $count = IdentifikasiRisiko::where('ruang_lingkup_id', $request->ruang_lingkup_id)->count() + 1;
+            $kode = $prefix . '-' . date('Y') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
         }
 
         IdentifikasiRisiko::create([

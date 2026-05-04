@@ -17,17 +17,7 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/tables', function () {
-        return view('tables');
-    })->name('tables');
 
-    Route::get('/billing', function () {
-        return view('billing');
-    })->name('billing');
-
-    Route::get('/profile', function () {
-        return view('profile');
-    })->name('profile');
 
     // Master Data
     Route::prefix('master')->group(function () {
@@ -73,6 +63,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/identifikasi-risiko/{id}/edit', [App\Http\Controllers\RiskIdentificationController::class, 'edit'])->name('identifikasi-risiko.edit');
     Route::put('/identifikasi-risiko/{id}', [App\Http\Controllers\RiskIdentificationController::class, 'update'])->name('identifikasi-risiko.update');
     Route::delete('/identifikasi-risiko/{id}', [App\Http\Controllers\RiskIdentificationController::class, 'destroy'])->name('identifikasi-risiko.destroy');
+
+    // Risk Analysis
+    Route::get('/analisis-risiko', [App\Http\Controllers\RiskAnalysisController::class, 'index'])->name('analisis-risiko.index');
+    Route::get('/analisis-risiko/{id}/edit', [App\Http\Controllers\RiskAnalysisController::class, 'edit'])->name('analisis-risiko.edit');
+    Route::post('/analisis-risiko/{id}', [App\Http\Controllers\RiskAnalysisController::class, 'store'])->name('analisis-risiko.store');
+
+    // Analisis Kecukupan
+    Route::get('/analisis-kecukupan', [App\Http\Controllers\AnalisisKecukupanController::class, 'index'])->name('analisis-kecukupan.index');
+    Route::get('/analisis-kecukupan/{id}/edit', [App\Http\Controllers\AnalisisKecukupanController::class, 'edit'])->name('analisis-kecukupan.edit');
+    Route::post('/analisis-kecukupan/{id}', [App\Http\Controllers\AnalisisKecukupanController::class, 'update'])->name('analisis-kecukupan.update');
 });
 
 

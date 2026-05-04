@@ -1,13 +1,16 @@
 <aside class="sidenav navbar navbar-vertical navbar-expand-xs my-3 fixed-start ms-3 bg-transparent" id="sidenav-main">
-    <div class="sidenav-header">
-        <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
-            aria-hidden="true" id="iconSidenav"></i>
-        <a class="navbar-brand m-0 d-flex align-items-center justify-content-center" href="{{ route('dashboard') }}">
+    <div class="sidenav-header d-flex align-items-center justify-content-between px-4">
+        <a class="navbar-brand m-0 d-flex align-items-center p-0" href="{{ route('dashboard') }}">
             <img src="{{ asset('img/favicon_azra.png') }}" class="navbar-brand-img h-100" alt="main_logo">
             <span class="ms-2 font-weight-bolder" style="color: #007774;">Risk Register</span>
         </a>
-
-
+        <a href="javascript:;" class="nav-link text-body p-0 d-xl-none" id="iconSidenav">
+            <div class="sidenav-toggler-inner">
+                <i class="sidenav-toggler-line"></i>
+                <i class="sidenav-toggler-line"></i>
+                <i class="sidenav-toggler-line"></i>
+            </div>
+        </a>
     </div>
     <hr class="horizontal dark mt-0">
     <div class="collapse navbar-collapse w-auto h-auto" id="sidenav-collapse-main">
@@ -36,7 +39,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="javascript:;">
+                <a class="nav-link {{ request()->is('analisis-risiko*') ? 'active' : '' }}" href="{{ route('analisis-risiko.index') }}">
                     <div
                         class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="fa fa-chart-pie text-dark text-sm opacity-10"></i>
@@ -45,7 +48,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="javascript:;">
+                <a class="nav-link {{ request()->is('analisis-kecukupan*') ? 'active' : '' }}" href="{{ route('analisis-kecukupan.index') }}">
                     <div
                         class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="fa fa-balance-scale text-dark text-sm opacity-10"></i>

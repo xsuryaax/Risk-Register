@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_ruang_lingkup', function (Blueprint $table) {
+        Schema::create('tbl_analisis_kecukupan', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_ruang_lingkup');
-            $table->string('kode_prefix', 5)->nullable();
-            $table->text('keterangan')->nullable();
-            $table->enum('status_ruang_lingkup', ['aktif', 'non-aktif'])->default('aktif');
+            $table->foreignId('identifikasi_risiko_id')->constrained('tbl_identifikasi_risiko')->onDelete('cascade');
+            $table->text('uraian_rencana')->nullable();
+            $table->string('jadwal')->nullable();
+            $table->string('pj_tindak_lanjut')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_ruang_lingkup');
+        Schema::dropIfExists('tbl_analisis_kecukupan');
     }
 };

@@ -1,0 +1,147 @@
+@extends('layouts.app')
+
+@section('title', 'Analisis Risiko - Risk Register')
+@section('breadcrumb', 'Menu Utama')
+@section('page_title', 'Analisis Risiko')
+@section('page_description', 'Langkah Kedua: Evaluasi pengendalian yang ada dan tentukan skor risiko.')
+
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4 border-radius-lg shadow-sm">
+            <div class="card-header pb-3 p-3">
+                <div class="row align-items-center mb-3">
+                    <div class="col-12">
+                        <div class="bg-gray-100 p-3 border-radius-lg">
+                            <h6 class="text-xs font-weight-bolder text-primary text-uppercase mb-2">Ket Kode Risiko:</h6>
+                            <div class="d-flex flex-wrap gap-3">
+                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">P</span> PASIEN</span>
+                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">S</span> STAF</span>
+                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">N</span> NAKES LAIN</span>
+                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">F</span> FASILITAS</span>
+                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">L</span> LINGKUNGAN</span>
+                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">B</span> BISNIS RS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <div class="input-group input-group-sm mb-3 mb-md-0" style="width: 250px;">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Cari kode atau risiko..." id="searchTable">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2" id="tableContainer">
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0 table-bordered-light" id="mainTable">
+                        <thead class="bg-light">
+                            <!-- Header Row 1 -->
+                            <tr>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">No</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 120px;">Kegiatan</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 80px;">Kode</th>
+                                <th colspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100">Pengendalian Yang Ada</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">P</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 border-right-red">D</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 border-right-red">TR</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 border-right-red">PR</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Pemilik</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Action</th>
+                            </tr>
+                            <!-- Header Row 2 -->
+                            <tr>
+                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top" style="width: 150px;">Uraian</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top">Desain</th>
+                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top">Efektifitas</th>
+                            </tr>
+                            <!-- Header Row 3 -->
+                            <tr>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-bottom">Ada/Tdk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($data as $item)
+                            <tr>
+                                <td class="align-middle text-start px-1">
+                                    <span class="text-dark text-xs font-weight-bold">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
+                                </td>
+                                <td class="px-1 text-start">
+                                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark" style="max-width: 120px;">{{ $item->kegiatan }}</p>
+                                </td>
+                                <td class="align-middle text-center px-1">
+                                    <span class="text-xs font-weight-bold text-primary">{{ $item->kode_risiko }}</span>
+                                </td>
+                                
+                                <td class="px-1 bg-gray-50 text-start">
+                                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 150px;">{{ $item->analisis->uraian_pengendalian ?? '-' }}</p>
+                                </td>
+                                <td class="align-middle text-center px-1 bg-gray-50">
+                                    <span class="text-xs text-dark">{{ $item->analisis->desain_pengendalian ?? '-' }}</span>
+                                </td>
+                                <td class="align-middle text-center px-1 bg-gray-50">
+                                    <span class="text-xs text-dark">{{ $item->analisis->efektifitas_pengendalian ?? '-' }}</span>
+                                </td>
+
+                                <td class="align-middle text-center px-1">
+                                    <span class="text-xs font-weight-bold text-dark">{{ $item->analisis->probabilitas->nilai_probabilitas ?? '-' }}</span>
+                                </td>
+                                <td class="align-middle text-center px-1 border-right-red">
+                                    <span class="text-xs font-weight-bold text-dark">{{ $item->analisis->dampak->nilai_dampak ?? '-' }}</span>
+                                </td>
+                                <td class="align-middle text-center px-1 border-right-red" style="{{ isset($item->analisis) ? 'background-color: '.($item->analisis->skor_risiko >= 20 ? '#dc3545' : ($item->analisis->skor_risiko >= 13 ? '#fd7e14' : ($item->analisis->skor_risiko >= 5 ? '#ffc107' : '#198754'))).';' : '' }}">
+                                    <span class="text-xs font-weight-bold {{ isset($item->analisis) ? 'text-white' : 'text-dark' }}">
+                                        {{ $item->analisis->skor_risiko ?? '-' }}
+                                    </span>
+                                </td>
+                                <td class="align-middle text-center px-1 border-right-red">
+                                    @if(isset($item->analisis))
+                                        <span class="text-xxs font-weight-bold text-dark">
+                                            {{ $item->analisis->peringkat_risiko }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-secondary">-</span>
+                                    @endif
+                                </td>
+                                <td class="align-middle text-center px-1">
+                                    <span class="text-xs text-dark">{{ $item->analisis->pemilik_risiko ?? '-' }}</span>
+                                </td>
+                                <td class="align-middle text-center px-1">
+                                    <a href="{{ route('analisis-risiko.edit', $item->id) }}" class="btn-action btn-edit" title="Evaluasi & Analisis">
+                                        <i class="fa {{ isset($item->analisis) ? 'fa-edit' : 'fa-plus' }}"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="12" class="text-center py-6 text-secondary text-xs">Belum ada data risiko.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                @if($data->hasPages())
+                <div class="card-footer py-3">
+                    <div class="d-flex justify-content-center">
+                        {{ $data->links() }}
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gray-50 { background-color: #fbfbfb !important; }
+    .uppercase { text-transform: uppercase; }
+    .border-right-red {
+        border-right: 1.5px solid #ff0000 !important;
+    }
+    /* Ensure the red border shows even with other table border classes */
+    #mainTable th.border-right-red, 
+    #mainTable td.border-right-red {
+        border-right: 1.5px solid #ff0000 !important;
+    }
+</style>
+@endsection

@@ -433,6 +433,27 @@
 
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Glassmorphism Sidebar for Mobile */
+        @media (max-width: 1199.98px) {
+            .sidenav {
+                background-color: rgba(255, 255, 255, 0.85) !important;
+                backdrop-filter: blur(12px) !important;
+                -webkit-backdrop-filter: blur(12px) !important;
+                border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+                margin: 0 !important;            /* Remove gaps around sidebar */
+                border-radius: 0 !important;     /* Remove rounded corners */
+                height: 100vh !important;        /* Full height */
+                max-height: 100vh !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                left: 0 !important;
+            }
+            .navbar-main .container-fluid {
+                flex-wrap: nowrap !important;
+            }
+        }
+    </style>
     @stack('css')
 </head>
 
