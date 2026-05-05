@@ -8,7 +8,7 @@
 <div class="row">
     <div class="col-12">
         <div class="card border-radius-lg shadow-sm border-0">
-            <div class="card-header bg-dark py-3">
+            <div class="card-header bg-primary py-3">
                 <h6 class="mb-0 text-white font-weight-bold text-center">Update Data Identifikasi: {{ $risk->kode_risiko }}</h6>
             </div>
             <div class="card-body p-0">

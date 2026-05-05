@@ -13,9 +13,7 @@ Route::post('/login', [AuthController::class, 'authenticate'])->name('login.auth
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
 
 
@@ -73,8 +71,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/analisis-kecukupan', [App\Http\Controllers\AnalisisKecukupanController::class, 'index'])->name('analisis-kecukupan.index');
     Route::get('/analisis-kecukupan/{id}/edit', [App\Http\Controllers\AnalisisKecukupanController::class, 'edit'])->name('analisis-kecukupan.edit');
     Route::post('/analisis-kecukupan/{id}', [App\Http\Controllers\AnalisisKecukupanController::class, 'update'])->name('analisis-kecukupan.update');
-});
+    // Daftar Lengkap
+    Route::get('/daftar-risiko', [App\Http\Controllers\DaftarRisikoController::class, 'index'])->name('daftar-risiko.index');
 
+    // Evaluasi Resiko (Residual Risk)
+    Route::get('/evaluasi-risiko', [App\Http\Controllers\EvaluasiRisikoController::class, 'index'])->name('evaluasi-risiko.index');
+    Route::get('/evaluasi-risiko/{id}/edit', [App\Http\Controllers\EvaluasiRisikoController::class, 'edit'])->name('evaluasi-risiko.edit');
+    Route::post('/evaluasi-risiko/{id}', [App\Http\Controllers\EvaluasiRisikoController::class, 'store'])->name('evaluasi-risiko.store');
+});
 
 
 

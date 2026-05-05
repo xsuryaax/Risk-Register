@@ -8,20 +8,83 @@ use App\Models\IdentifikasiRisiko;
 
 class AnalisisKecukupanSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // Ambil semua risiko yang sudah memiliki analisis
-        $risks = IdentifikasiRisiko::has('analisis')->get();
+        $identifikasi = IdentifikasiRisiko::all();
 
-        foreach ($risks as $risk) {
-            AnalisisKecukupan::updateOrCreate(
-                ['identifikasi_risiko_id' => $risk->id],
-                [
-                    'uraian_rencana' => 'Implementasi sistem monitoring otomatis dan pengawasan berkala melalui dashboard real-time.',
-                    'jadwal' => 'Triwulan III - 2026',
-                    'pj_tindak_lanjut' => 'Kepala Unit ' . ($risk->analisis->pemilik_risiko ?? 'Terkait'),
-                ]
-            );
+        if ($identifikasi->isEmpty()) {
+            return;
+        }
+
+        $kecukupanData = [
+            [
+                'kegiatan_idx' => 0,
+                'uraian' => 'Pengajuan pembelian anti virus lisensi',
+                'jadwal' => 'Tentative',
+                'pj' => 'SIRS',
+            ],
+            [
+                'kegiatan_idx' => 1,
+                'uraian' => 'Pembuatan SPO dan anjuran kepada user',
+                'jadwal' => 'Setiap bulan',
+                'pj' => 'SIRS',
+            ],
+            [
+                'kegiatan_idx' => 2,
+                'uraian' => 'Pengajuan pembelian sistem operasi dan microsoft office',
+                'jadwal' => 'Tentative',
+                'pj' => 'SIRS',
+            ],
+            [
+                'kegiatan_idx' => 3,
+                'uraian' => 'Panduan dan penjadwalan',
+                'jadwal' => 'Setiap bulan',
+                'pj' => 'SIRS',
+            ],
+            [
+                'kegiatan_idx' => 4,
+                'uraian' => 'Pembuatan SPO dan anjuran kepada user',
+                'jadwal' => 'Setiap bulan',
+                'pj' => 'SIRS',
+            ],
+            [
+                'kegiatan_idx' => 5,
+                'uraian' => 'Dibuatkan laporan sementara',
+                'jadwal' => 'Setiap bulan',
+                'pj' => 'SIRS',
+            ],
+            [
+                'kegiatan_idx' => 6,
+                'uraian' => 'Pembuatan SPO dan sosialisasi kepada user',
+                'jadwal' => 'Setiap bulan',
+                'pj' => 'SIRS',
+            ],
+            [
+                'kegiatan_idx' => 7,
+                'uraian' => 'Timetable rencana pelatihan kepda dokter',
+                'jadwal' => 'Setiap bulan',
+                'pj' => 'SIRS',
+            ],
+            [
+                'kegiatan_idx' => 8,
+                'uraian' => 'Membuata panduan dan SPO untuk mengatisipasi terjadinya pemadaman baik terencana maupun tidak terencana',
+                'jadwal' => 'Setiap bulan',
+                'pj' => 'SIRS',
+            ],
+        ];
+
+        foreach ($kecukupanData as $data) {
+            if (isset($identifikasi[$data['kegiatan_idx']])) {
+                AnalisisKecukupan::create([
+                    'identifikasi_risiko_id' => $identifikasi[$data['kegiatan_idx']]->id,
+                    'uraian_rencana' => $data['uraian'],
+                    'jadwal' => $data['jadwal'],
+                    'pj_tindak_lanjut' => $data['pj'],
+                ]);
+            }
         }
     }
 }

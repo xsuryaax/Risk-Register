@@ -441,9 +441,9 @@
                 backdrop-filter: blur(12px) !important;
                 -webkit-backdrop-filter: blur(12px) !important;
                 border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
-                margin: 0 !important;            /* Remove gaps around sidebar */
-                border-radius: 0 !important;     /* Remove rounded corners */
-                height: 100vh !important;        /* Full height */
+                margin: 0 !important;
+                border-radius: 0 !important;
+                height: 100vh !important;
                 max-height: 100vh !important;
                 top: 0 !important;
                 bottom: 0 !important;
@@ -452,6 +452,165 @@
             .navbar-main .container-fluid {
                 flex-wrap: nowrap !important;
             }
+        }
+
+        /* ===== SIDEBAR MINIMIZE SYSTEM (REFINED) ===== */
+        
+        /* Sidebar transition */
+        #sidenav-main {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden !important;
+        }
+
+        /* Toggle Button Visibility */
+        @media (min-width: 1200px) {
+            /* Hide sidebar toggle when mini */
+            body.sidebar-mini .sidebar-toggle-container {
+                display: none !important;
+            }
+            
+            /* Navbar toggle always available on desktop */
+            .navbar-toggle-container {
+                display: block !important;
+            }
+        }
+
+        /* Sidenav Toggler Style & Animation (Clearer) */
+        .sidenav-toggler-line {
+            background-color: #344767 !important; /* Standard Soft UI color for clarity */
+            transition: all 0.2s ease !important;
+        }
+        
+        .btn-sidebar-toggle {
+            cursor: pointer;
+            padding: 2px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-sidebar-toggle .sidenav-toggler-inner {
+            width: 18px !important; 
+        }
+        
+        .btn-sidebar-toggle .sidenav-toggler-line {
+            width: 18px !important;
+            height: 2px !important; /* Clearer weight */
+            margin-bottom: 4px !important;
+            border-radius: 2px;
+        }
+
+        /* Navbar Toggle Specific Alignment */
+        .navbar-toggle-container {
+            margin-top: 5px; /* Slight push to align with text baseline */
+        }
+        
+        .btn-sidebar-toggle:hover .sidenav-toggler-line {
+            background-color: #007774 !important;
+        }
+
+        /* Main content transition */
+        .main-content {
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Text elements transition for fade out */
+        .nav-link-text, .brand-text, .nav-category-text {
+            transition: opacity 0.3s ease, width 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* ===== MINIMIZED STATE ===== */
+        @media (min-width: 1200px) {
+            body.sidebar-mini #sidenav-main {
+                width: 80px !important;
+                min-width: 80px !important;
+                max-width: 80px !important;
+            }
+            body.sidebar-mini .main-content {
+                margin-left: 80px !important;
+            }
+            body.sidebar-mini .nav-link-text,
+            body.sidebar-mini .brand-text {
+                opacity: 0;
+                width: 0;
+                pointer-events: none;
+                visibility: hidden;
+            }
+            body.sidebar-mini .nav-category-text {
+                opacity: 0;
+                width: 0;
+                height: 0;
+                overflow: hidden;
+                pointer-events: none;
+                visibility: hidden;
+            }
+            body.sidebar-mini .sidenav-header {
+                justify-content: center !important;
+                padding: 0 !important;
+            }
+            body.sidebar-mini .sidenav-header .navbar-brand {
+                justify-content: center !important;
+                padding: 0 !important;
+            }
+            body.sidebar-mini .navbar-nav .nav-link {
+                justify-content: center !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            body.sidebar-mini .navbar-nav .nav-link .icon {
+                margin-right: 0 !important;
+                margin: 0 auto !important;
+            }
+            body.sidebar-mini .navbar-nav .nav-item.mt-3 {
+                margin-top: 0.5rem !important;
+            }
+            /* Toggle icon direction */
+            body.sidebar-mini #sidebarToggleIcon {
+                transform: rotate(180deg);
+            }
+            #sidebarToggleIcon {
+                transition: transform 0.3s ease;
+            }
+
+            /* Tooltip on hover for mini mode */
+            body.sidebar-mini .navbar-nav .nav-link {
+                position: relative;
+            }
+            body.sidebar-mini .navbar-nav .nav-link:hover::after {
+                content: attr(data-mini-title);
+                position: absolute;
+                left: calc(100% + 12px);
+                top: 50%;
+                transform: translateY(-50%);
+                background: #1c1c1c;
+                color: #fff;
+                padding: 5px 12px;
+                border-radius: 6px;
+                font-size: 0.7rem;
+                font-weight: 600;
+                white-space: nowrap;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                pointer-events: none;
+                animation: tooltipFadeIn 0.15s ease;
+            }
+            body.sidebar-mini .navbar-nav .nav-link:hover::before {
+                content: '';
+                position: absolute;
+                left: calc(100% + 6px);
+                top: 50%;
+                transform: translateY(-50%);
+                border: 5px solid transparent;
+                border-right-color: #1c1c1c;
+                z-index: 10001;
+                pointer-events: none;
+                animation: tooltipFadeIn 0.15s ease;
+            }
+        }
+
+        @keyframes tooltipFadeIn {
+            from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
+            to { opacity: 1; transform: translateY(-50%) translateX(0); }
         }
     </style>
     @stack('css')
@@ -589,6 +748,29 @@
                     const text = row.text().toLowerCase();
                     row.toggle(text.indexOf(value) > -1);
                 });
+            });
+        });
+
+        $(document).ready(function() {
+            // Restore state from localStorage
+            if (localStorage.getItem('sidebarMini') === 'true') {
+                document.body.classList.add('sidebar-mini');
+                $('.btn-sidebar-toggle').removeClass('active');
+            }
+
+            $('.btn-sidebar-toggle').on('click', function(e) {
+                e.preventDefault();
+                const isMini = document.body.classList.toggle('sidebar-mini');
+                
+                // Toggle active class for animation
+                if (isMini) {
+                    $('.btn-sidebar-toggle').removeClass('active');
+                } else {
+                    $('.btn-sidebar-toggle').addClass('active');
+                }
+                
+                // Persist state
+                localStorage.setItem('sidebarMini', isMini);
             });
         });
     </script>

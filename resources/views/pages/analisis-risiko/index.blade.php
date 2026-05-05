@@ -34,47 +34,47 @@
             </div>
             <div class="card-body px-0 pt-0 pb-2" id="tableContainer">
                 <div class="table-responsive p-0">
-                    <table class="table align-items-center mb-0 table-bordered-light" id="mainTable">
+                    <table class="table align-items-center mb-0 table-bordered-light table-compact-analisis" id="mainTable">
                         <thead class="bg-light">
                             <!-- Header Row 1 -->
                             <tr>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">No</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 120px;">Kegiatan</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 80px;">Kode</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-no">No</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-kegiatan">Kegiatan</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-kode">Kode</th>
                                 <th colspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100">Pengendalian Yang Ada</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">P</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 border-right-red">D</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 border-right-red">TR</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 border-right-red">PR</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Pemilik</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Action</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-num">P</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-num border-right-red">D</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-num border-right-red">TR</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-rank border-right-red">PR</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-pemilik">Pemilik</th>
+                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-action">Action</th>
                             </tr>
                             <!-- Header Row 2 -->
                             <tr>
-                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top" style="width: 150px;">Uraian</th>
-                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top">Desain</th>
-                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top">Efektifitas</th>
+                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top col-uraian">Uraian</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top col-desain">Desain</th>
+                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top col-efektif">Efektifitas</th>
                             </tr>
                             <!-- Header Row 3 -->
                             <tr>
-                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-bottom">Ada/Tdk</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-bottom col-desain">Ada/Tdk</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($data as $item)
                             <tr>
-                                <td class="align-middle text-start px-1">
+                                <td class="align-middle text-center px-1">
                                     <span class="text-dark text-xs font-weight-bold">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
                                 </td>
                                 <td class="px-1 text-start">
-                                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark" style="max-width: 120px;">{{ $item->kegiatan }}</p>
+                                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark">{{ $item->kegiatan }}</p>
                                 </td>
                                 <td class="align-middle text-center px-1">
                                     <span class="text-xs font-weight-bold text-primary">{{ $item->kode_risiko }}</span>
                                 </td>
                                 
                                 <td class="px-1 bg-gray-50 text-start">
-                                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 150px;">{{ $item->analisis->uraian_pengendalian ?? '-' }}</p>
+                                    <p class="text-xs mb-0 text-wrap text-dark">{{ $item->analisis->uraian_pengendalian ?? '-' }}</p>
                                 </td>
                                 <td class="align-middle text-center px-1 bg-gray-50">
                                     <span class="text-xs text-dark">{{ $item->analisis->desain_pengendalian ?? '-' }}</span>
@@ -90,14 +90,14 @@
                                     <span class="text-xs font-weight-bold text-dark">{{ $item->analisis->dampak->nilai_dampak ?? '-' }}</span>
                                 </td>
                                 <td class="align-middle text-center px-1 border-right-red" style="{{ isset($item->analisis) ? 'background-color: '.($item->analisis->skor_risiko >= 20 ? '#dc3545' : ($item->analisis->skor_risiko >= 13 ? '#fd7e14' : ($item->analisis->skor_risiko >= 5 ? '#ffc107' : '#198754'))).';' : '' }}">
-                                    <span class="text-xs font-weight-bold {{ isset($item->analisis) ? 'text-white' : 'text-dark' }}">
+                                    <span class="text-xs font-weight-bold text-dark">
                                         {{ $item->analisis->skor_risiko ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="align-middle text-center px-1 border-right-red">
                                     @if(isset($item->analisis))
                                         <span class="text-xxs font-weight-bold text-dark">
-                                            {{ $item->analisis->peringkat_risiko }}
+                                            {{ ucfirst(strtolower($item->analisis->peringkat_risiko)) }}
                                         </span>
                                     @else
                                         <span class="text-xs text-secondary">-</span>
@@ -107,7 +107,7 @@
                                     <span class="text-xs text-dark">{{ $item->analisis->pemilik_risiko ?? '-' }}</span>
                                 </td>
                                 <td class="align-middle text-center px-1">
-                                    <a href="{{ route('analisis-risiko.edit', $item->id) }}" class="btn-action btn-edit" title="Evaluasi & Analisis">
+                                    <a href="{{ route('analisis-risiko.edit', $item->id) }}" class="btn-action btn-edit" title="Evaluasi &amp; Analisis">
                                         <i class="fa {{ isset($item->analisis) ? 'fa-edit' : 'fa-plus' }}"></i>
                                     </a>
                                 </td>
@@ -138,10 +138,34 @@
     .border-right-red {
         border-right: 1.5px solid #ff0000 !important;
     }
-    /* Ensure the red border shows even with other table border classes */
     #mainTable th.border-right-red, 
     #mainTable td.border-right-red {
         border-right: 1.5px solid #ff0000 !important;
     }
+
+    /* Compact column widths for Analisis Risiko */
+    .table-compact-analisis {
+        table-layout: fixed;
+        width: 100%;
+    }
+    .col-no       { width: 22px; }
+    .col-kegiatan { width: 130px; }
+    .col-kode     { width: 75px; }
+    .col-uraian   { width: 80px; }
+    .col-desain   { width: 25px; }
+    .col-efektif  { width: 38px; }
+    .col-num      { width: 32px; }
+    .col-rank     { width: 65px; }
+    .col-pemilik  { width: 70px; }
+    .col-action   { width: 55px; }
+
+    .table-compact-analisis td,
+    .table-compact-analisis th {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        word-break: break-word;
+        padding: 0.2rem 0.15rem !important;
+    }
 </style>
 @endsection
+

@@ -49,12 +49,12 @@
                             </tr>
                             <!-- Header Row 2 -->
                             <tr>
-                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top" style="min-width: 250px;">Uraian Rencana (10)</th>
-                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top" style="width: 120px;">Jadwal (11)</th>
+                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top" style="min-width: 250px;">Uraian Rencana</th>
+                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top" style="width: 120px;">Jadwal</th>
                             </tr>
                             <!-- Header Row 3 -->
                             <tr>
-                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-bottom">Petugas (13)</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-bottom">Petugas</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -70,10 +70,10 @@
                                     <p class="text-xs font-weight-bold mb-0 text-wrap text-dark">{{ $item->kegiatan }}</p>
                                 </td>
 
-                                <td class="align-middle text-center px-1">
+                                <td class="align-middle text-center px-1" style="{{ isset($item->analisis) ? 'background-color: '.($item->analisis->skor_risiko >= 20 ? '#dc3545' : ($item->analisis->skor_risiko >= 13 ? '#fd7e14' : ($item->analisis->skor_risiko >= 5 ? '#ffc107' : '#198754'))).';' : '' }}">
                                     @if(isset($item->analisis))
-                                        <span class="badge badge-sm px-2 py-1" style="font-size: 9px; background-color: {{ $item->analisis->skor_risiko >= 20 ? '#dc3545' : ($item->analisis->skor_risiko >= 13 ? '#fd7e14' : ($item->analisis->skor_risiko >= 5 ? '#ffc107' : '#198754')) }}">
-                                            {{ strtoupper($item->analisis->peringkat_risiko) }}
+                                        <span class="text-xs font-weight-bold text-dark">
+                                            {{ ucfirst(strtolower($item->analisis->peringkat_risiko)) }}
                                         </span>
                                     @else
                                         <span class="text-xs text-secondary">-</span>

@@ -10,14 +10,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function run(): void
+    public function up(): void
     {
-        Schema::create('evaluasi_risiko', function (Blueprint $table) {
+        Schema::create('tbl_evaluasi_risiko', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('identifikasi_risiko_id')->constrained('identifikasi_risiko')->onDelete('cascade');
-            $table->text('uraian_rencana_pengendalian')->nullable();
-            $table->string('jadwal_pelaksanaan')->nullable();
-            $table->string('pj_tindak_lanjut')->nullable();
+            $table->foreignId('identifikasi_risiko_id')->constrained('tbl_identifikasi_risiko')->onDelete('cascade');
+            $table->foreignId('probabilitas_residu_id')->nullable()->constrained('tbl_probabilitas')->onDelete('set null');
+            $table->foreignId('dampak_residu_id')->nullable()->constrained('tbl_dampak')->onDelete('set null');
+            $table->integer('skor_residu')->nullable();
+            $table->string('peringkat_residu')->nullable();
+            $table->decimal('penurunan_persen', 5, 2)->nullable();
             $table->timestamps();
         });
     }

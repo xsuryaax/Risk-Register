@@ -2,6 +2,17 @@
     <div class="container-fluid py-1 px-3">
         <!-- Brand & Toggle Section -->
         <div class="d-flex align-items-center">
+            <!-- Desktop Hamburger Toggle -->
+            <div class="d-none d-xl-block navbar-toggle-container pe-3">
+                <div class="sidenav-toggler btn-sidebar-toggle" title="Toggle Sidebar">
+                    <div class="sidenav-toggler-inner">
+                        <i class="sidenav-toggler-line"></i>
+                        <i class="sidenav-toggler-line"></i>
+                        <i class="sidenav-toggler-line"></i>
+                    </div>
+                </div>
+            </div>
+
             <!-- Hamburger Menu on the Left (Mobile Only) -->
             <div class="d-xl-none pe-3 py-1">
                 <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">

@@ -51,4 +51,9 @@ class IdentifikasiRisiko extends Model
     {
         return $this->hasOne(AnalisisKecukupan::class, 'identifikasi_risiko_id');
     }
+
+    public function evaluasi()
+    {
+        return $this->hasOne(EvaluasiRisiko::class, 'identifikasi_risiko_id');
+    }
 }

@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             IdentifikasiRisikoSeeder::class,
             AnalisisRisikoSeeder::class,
             AnalisisKecukupanSeeder::class,
+            EvaluasiRisikoSeeder::class,
         ]);
     }
 }
