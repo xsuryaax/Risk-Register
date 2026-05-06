@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="card-body px-0 pt-0 pb-2" id="tableContainer">
-                    <div class="table-responsive p-0" style="max-height: 600px; overflow-y: auto;">
+                    <div class="p-0">
                         <table class="table align-items-center mb-0 table-bordered-light table-daftar" id="mainTable">
                             <thead class="bg-light sticky-top" style="z-index: 2;">
                                 <tr>
@@ -90,10 +90,12 @@
                                             <span
                                                 class="text-xs font-weight-bold text-dark">{{ $item->analisis->dampak->nilai_dampak ?? '-' }}</span>
                                         </td>
-                                        <td class="align-middle text-center"
-                                            style="{{ isset($item->analisis) ? 'background-color: ' . ($item->analisis->skor_risiko >= 20 ? '#dc3545' : ($item->analisis->skor_risiko >= 13 ? '#fd7e14' : ($item->analisis->skor_risiko >= 5 ? '#ffc107' : '#198754'))) . ';' : '' }}">
-                                            <span
-                                                class="text-xs font-weight-bold text-dark">{{ $item->analisis->skor_risiko ?? '-' }}</span>
+                                        @php
+                                            $rank = strtoupper($item->analisis->peringkat_risiko ?? '');
+                                            $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffff00' : '#198754'));
+                                        @endphp
+                                        <td class="align-middle text-center" style="{{ isset($item->analisis) ? 'background-color: '.$bgColor.';' : '' }}">
+                                            <span class="text-xs font-weight-bold text-dark">{{ $item->analisis->skor_risiko ?? '-' }}</span>
                                         </td>
                                         <td class="align-middle text-center">
                                             <span
@@ -122,6 +124,13 @@
                             </tbody>
                         </table>
                     </div>
+                    @if ($risikos->hasPages())
+                        <div class="card-footer py-3">
+                            <div class="d-flex justify-content-center">
+                                {{ $risikos->links() }}
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -137,27 +146,34 @@
         }
 
         .border-right-red {
-            border-right: 1.5px solid #ff0000 !important;
+            border-right: 1.5px solid #c00000 !important;
         }
 
         #mainTable th.border-right-red,
         #mainTable td.border-right-red {
-            border-right: 1.5px solid #ff0000 !important;
+            border-right: 1.5px solid #c00000 !important;
         }
 
         /* Daftar Lengkap compact table */
         .table-daftar {
-            table-layout: fixed;
+            table-layout: auto;
             width: 100%;
-            min-width: 900px;
         }
 
         .table-daftar td,
         .table-daftar th {
             padding: 0.2rem 0.2rem !important;
+            word-break: break-word;
+        }
+
+        .table-daftar th {
+            white-space: normal;
+            line-height: 1.2;
+        }
+
+        .table-daftar td {
             overflow: hidden;
             text-overflow: ellipsis;
-            word-break: break-word;
         }
 
         /* Column widths */
@@ -211,3 +227,6 @@
         });
     </script>
 @endsection
+
+
+

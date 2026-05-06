@@ -36,7 +36,7 @@
                                     <td class="label-cell"><label class="mb-0">Peringkat Risiko</label></td>
                                     <td class="input-cell text-start">
                                         <div class="d-flex align-items-center">
-                                            <span class="badge badge-sm me-2" style="background-color: {{ $identifikasi->analisis->skor_risiko >= 20 ? '#dc3545' : ($identifikasi->analisis->skor_risiko >= 13 ? '#fd7e14' : ($identifikasi->analisis->skor_risiko >= 5 ? '#ffc107' : '#198754')) }}">
+                                            <span class="badge badge-sm me-2" style="background-color: {{ $identifikasi->analisis->skor_risiko >= 20 ? '#c00000' : ($identifikasi->analisis->skor_risiko >= 13 ? '#ff9900' : ($identifikasi->analisis->skor_risiko >= 5 ? '#ffff00' : '#198754')) }}">
                                                 {{ $identifikasi->analisis->skor_risiko }}
                                             </span>
                                             <span class="text-xs font-weight-bold text-dark">{{ ucfirst(strtolower($identifikasi->analisis->peringkat_risiko)) }}</span>
@@ -110,3 +110,6 @@
     }
 </style>
 @endsection
+
+
+

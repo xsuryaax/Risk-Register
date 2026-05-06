@@ -22,4 +22,9 @@ class Unit extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function identifikasi()
+    {
+        return $this->hasMany(IdentifikasiRisiko::class, 'unit_id');
+    }
 }

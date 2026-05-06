@@ -137,11 +137,20 @@
         /* Global Soft UI Overrides to remove Tacky Gradients */
         .bg-primary, .bg-gradient-primary { background-color: #007774 !important; background-image: none !important; }
         .bg-secondary, .bg-gradient-secondary { background-color: #8392ab !important; background-image: none !important; }
-        .bg-success, .bg-gradient-success { background-color: #2dce89 !important; background-image: none !important; }
+        .bg-success, .bg-gradient-success { background-color: #198754 !important; background-image: none !important; }
         .bg-info, .bg-gradient-info { background-color: #11cdef !important; background-image: none !important; }
-        .bg-warning, .bg-gradient-warning { background-color: #fb6340 !important; background-image: none !important; }
-        .bg-danger, .bg-gradient-danger { background-color: #f5365c !important; background-image: none !important; }
+        .bg-warning, .bg-gradient-warning { background-color: #f59e0b !important; background-image: none !important; }
+        .bg-danger, .bg-gradient-danger { background-color: #ef4444 !important; background-image: none !important; }
         .bg-dark, .bg-gradient-dark { background-color: #1c1c1c !important; background-image: none !important; }
+        
+        /* Table Bottom Separator */
+        .table tbody tr:last-child td {
+            border-bottom: 2px solid #dee2e6 !important;
+        }
+        
+        .table-bordered-light td, .table-bordered-light th {
+            border: 1px solid #f1f5f9 !important;
+        }
 
         .btn-primary,
         .btn.bg-primary {
@@ -350,12 +359,13 @@
         }
 
         .btn-edit {
-            background-color: #ffc107 !important;
-            color: #fff !important;
+            background-color: #ffeb3b !important; /* Canary Yellow */
+            color: #000 !important;
         }
 
         .btn-delete {
-            background-color: #ff0000 !important;
+            background-color: #dc3545 !important; /* Standard Red */
+            color: #fff !important;
         }
 
         .btn-action:hover {
@@ -779,3 +789,6 @@
 </body>
 
 </html>
+
+
+

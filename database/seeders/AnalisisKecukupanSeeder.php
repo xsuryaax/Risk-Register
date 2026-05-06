@@ -74,6 +74,24 @@ class AnalisisKecukupanSeeder extends Seeder
                 'jadwal' => 'Setiap bulan',
                 'pj' => 'SIRS',
             ],
+            [
+                'kegiatan_idx' => 9,
+                'uraian' => 'Implementasi sistem backup otomatis terjadwal ke server storage terpisah',
+                'jadwal' => 'Mingguan',
+                'pj' => 'IT Admin',
+            ],
+            [
+                'kegiatan_idx' => 10,
+                'uraian' => 'Audit lisensi menyeluruh dan pengajuan anggaran lisensi bertahap',
+                'jadwal' => 'Kuartalan',
+                'pj' => 'IT Manager',
+            ],
+            [
+                'kegiatan_idx' => 11,
+                'uraian' => 'Pemasangan access control (fingerprint/card) di pintu ruang server',
+                'jadwal' => 'Satu Kali',
+                'pj' => 'GA & IT',
+            ],
         ];
 
         foreach ($kecukupanData as $data) {

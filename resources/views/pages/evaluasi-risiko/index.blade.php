@@ -56,7 +56,11 @@
                                 <td class="align-middle text-center bg-gray-50">
                                     <span class="text-xs text-dark">{{ $item->analisis->dampak->nilai_dampak ?? '-' }}</span>
                                 </td>
-                                <td class="align-middle text-center" style="{{ isset($item->analisis) ? 'background-color: '.($item->analisis->skor_risiko >= 20 ? '#dc3545' : ($item->analisis->skor_risiko >= 13 ? '#fd7e14' : ($item->analisis->skor_risiko >= 5 ? '#ffc107' : '#198754'))).';' : '' }}">
+                                @php
+                                    $rank = strtoupper($item->analisis->peringkat_risiko ?? '');
+                                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffff00' : '#198754'));
+                                @endphp
+                                <td class="align-middle text-center" style="{{ isset($item->analisis) ? 'background-color: '.$bgColor.';' : '' }}">
                                     <span class="text-xs font-weight-bold text-dark">{{ $item->analisis->skor_risiko ?? '-' }}</span>
                                 </td>
 
@@ -71,7 +75,11 @@
                                 <td class="align-middle text-center bg-info-soft">
                                     <span class="text-xs text-dark">{{ $item->evaluasi->dampak->nilai_dampak ?? '-' }}</span>
                                 </td>
-                                <td class="align-middle text-center" style="{{ isset($item->evaluasi) ? 'background-color: '.($item->evaluasi->skor_residu >= 20 ? '#dc3545' : ($item->evaluasi->skor_residu >= 13 ? '#fd7e14' : ($item->evaluasi->skor_residu >= 5 ? '#ffc107' : '#198754'))).';' : '' }}">
+                                @php
+                                    $resRank = strtoupper($item->evaluasi->peringkat_residu ?? '');
+                                    $resBgColor = $resRank == 'SANGAT TINGGI' ? '#c00000' : ($resRank == 'TINGGI' ? '#ff9900' : ($resRank == 'SEDANG' ? '#ffff00' : '#198754'));
+                                @endphp
+                                <td class="align-middle text-center" style="{{ isset($item->evaluasi) ? 'background-color: '.$resBgColor.';' : '' }}">
                                     <span class="text-xs font-weight-bold text-dark">{{ $item->evaluasi->skor_residu ?? '-' }}</span>
                                 </td>
                                 <td class="align-middle text-center">
@@ -126,14 +134,25 @@
     .col-tr { width: 35px; }
     .col-rank { width: 55px; }
     .col-pemilik { width: 90px; }
-    .col-penurunan { width: 50px; }
+    .col-penurunan { width: 80px; }
     .col-action { width: 55px; }
 
     .table-evaluasi td, .table-evaluasi th {
         padding: 0.3rem 0.2rem !important;
         word-break: break-word;
+    }
+
+    .table-evaluasi th {
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    .table-evaluasi td {
         overflow: hidden;
         text-overflow: ellipsis;
     }
 </style>
 @endsection
+
+
+

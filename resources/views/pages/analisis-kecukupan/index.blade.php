@@ -10,21 +10,6 @@
     <div class="col-12">
         <div class="card mb-4 border-radius-lg shadow-sm">
             <div class="card-header pb-3 p-3">
-                <div class="row align-items-center mb-3">
-                    <div class="col-12">
-                        <div class="bg-gray-100 p-3 border-radius-lg">
-                            <h6 class="text-xs font-weight-bolder text-primary text-uppercase mb-2">Ket Kode Risiko:</h6>
-                            <div class="d-flex flex-wrap gap-3">
-                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">P</span> PASIEN</span>
-                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">S</span> STAF</span>
-                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">N</span> NAKES LAIN</span>
-                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">F</span> FASILITAS</span>
-                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">L</span> LINGKUNGAN</span>
-                                <span class="text-xxs font-weight-bold text-dark"><span class="badge bg-secondary me-1">B</span> BISNIS RS</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
                     <div class="input-group input-group-sm mb-3 mb-md-0" style="width: 250px;">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
@@ -70,7 +55,11 @@
                                     <p class="text-xs font-weight-bold mb-0 text-wrap text-dark">{{ $item->kegiatan }}</p>
                                 </td>
 
-                                <td class="align-middle text-center px-1" style="{{ isset($item->analisis) ? 'background-color: '.($item->analisis->skor_risiko >= 20 ? '#dc3545' : ($item->analisis->skor_risiko >= 13 ? '#fd7e14' : ($item->analisis->skor_risiko >= 5 ? '#ffc107' : '#198754'))).';' : '' }}">
+                                @php
+                                    $rank = strtoupper($item->analisis->peringkat_risiko ?? '');
+                                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffff00' : '#198754'));
+                                @endphp
+                                <td class="align-middle text-center px-1" style="{{ isset($item->analisis) ? 'background-color: '.$bgColor.';' : '' }}">
                                     @if(isset($item->analisis))
                                         <span class="text-xs font-weight-bold text-dark">
                                             {{ ucfirst(strtolower($item->analisis->peringkat_risiko)) }}
@@ -124,14 +113,19 @@
 <style>
     .bg-gray-50 { background-color: #fbfbfb !important; }
     .border-right-red {
-        border-right: 1.5px solid #ff0000 !important;
+        border-right: 1.5px solid #c00000 !important;
     }
     .border-left-red {
-        border-left: 1.5px solid #ff0000 !important;
+        border-left: 1.5px solid #c00000 !important;
     }
     #mainTable th.border-right-red, 
     #mainTable td.border-right-red {
-        border-right: 1.5px solid #ff0000 !important;
+        border-right: 1.5px solid #c00000 !important;
     }
 </style>
 @endsection
+
+
+
+
+

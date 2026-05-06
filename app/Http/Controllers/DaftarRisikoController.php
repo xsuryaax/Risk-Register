@@ -14,8 +14,9 @@ class DaftarRisikoController extends Controller
             'ruangLingkup', 
             'analisis.probabilitas', 
             'analisis.dampak', 
-            'analisisKecukupan'
-        ])->get();
+            'analisisKecukupan',
+            'evaluasi'
+        ])->orderBy('created_at', 'desc')->paginate(10);
 
         return view('pages.daftar-risiko.index', compact('risikos'));
     }

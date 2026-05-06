@@ -85,6 +85,27 @@ class EvaluasiRisikoSeeder extends Seeder
                 'skor_residu' => 16,
                 'penurunan' => 0,
             ],
+            [
+                'kegiatan_idx' => 9,
+                'p_residu' => 2,
+                'd_residu' => 3,
+                'skor_residu' => 6,
+                'penurunan' => 60,
+            ],
+            [
+                'kegiatan_idx' => 10,
+                'p_residu' => 3,
+                'd_residu' => 2,
+                'skor_residu' => 6,
+                'penurunan' => 50,
+            ],
+            [
+                'kegiatan_idx' => 11,
+                'p_residu' => 1,
+                'd_residu' => 5,
+                'skor_residu' => 5,
+                'penurunan' => 50,
+            ],
         ];
 
         foreach ($evaluasiData as $data) {

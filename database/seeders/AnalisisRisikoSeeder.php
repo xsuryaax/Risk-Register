@@ -119,6 +119,39 @@ class AnalisisRisikoSeeder extends Seeder
                 'peringkat' => 'SANGAT TINGGI',
                 'pemilik' => 'SIRS',
             ],
+            [
+                'kegiatan_idx' => 9, // Backup database server
+                'uraian' => 'Hanya backup periodik manual',
+                'desain' => 'Ada',
+                'efektifitas' => 'Kurang Efektif',
+                'p' => 3,
+                'd' => 5,
+                'skor' => 15,
+                'peringkat' => 'TINGGI',
+                'pemilik' => 'IT Infrastructure',
+            ],
+            [
+                'kegiatan_idx' => 10, // Software bajakan
+                'uraian' => 'Monitoring berkala oleh IT',
+                'desain' => 'Ada',
+                'efektifitas' => 'Kurang Efektif',
+                'p' => 4,
+                'd' => 3,
+                'skor' => 12,
+                'peringkat' => 'TINGGI',
+                'pemilik' => 'Legal & Procurement',
+            ],
+            [
+                'kegiatan_idx' => 11, // Akses fisik ruang server
+                'uraian' => 'Pintu dikunci kunci fisik',
+                'desain' => 'Ada',
+                'efektifitas' => 'Efektif',
+                'p' => 2,
+                'd' => 5,
+                'skor' => 10,
+                'peringkat' => 'SEDANG',
+                'pemilik' => 'Security & IT',
+            ],
         ];
 
         foreach ($analisisData as $data) {

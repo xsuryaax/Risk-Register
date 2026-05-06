@@ -14,69 +14,90 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Basic Stats
+        // 1. Basic Stats & Risk Levels
         $totalRisks = IdentifikasiRisiko::count();
         $totalAnalyzed = AnalisisRisiko::count();
         $totalEvaluated = EvaluasiRisiko::count();
         
-        // 2. Control Performance (Based on Effectiveness in Analisis)
-        $controlPerformance = AnalisisRisiko::select('efektifitas_pengendalian', DB::raw('count(*) as total'))
-            ->groupBy('efektifitas_pengendalian')
-            ->get();
+        $levelStats = [
+            'SANGAT TINGGI' => AnalisisRisiko::where('peringkat_risiko', 'SANGAT TINGGI')->count(),
+            'TINGGI' => AnalisisRisiko::where('peringkat_risiko', 'TINGGI')->count(),
+            'SEDANG' => AnalisisRisiko::where('peringkat_risiko', 'SEDANG')->count(),
+            'RENDAH' => AnalisisRisiko::where('peringkat_risiko', 'RENDAH')->count(),
+        ];
 
-        // 3. Open Issues (Risks identified but not yet evaluated)
-        $openIssues = IdentifikasiRisiko::whereDoesntHave('evaluasi')->count();
-        $evaluatedIssues = $totalEvaluated;
+        // 2. Open vs Completed (Mitigation Status)
+        $completedRisks = $totalEvaluated;
+        $pendingRisks = IdentifikasiRisiko::whereDoesntHave('evaluasi')->count();
 
-        // 4. Heatmap Data (P x D)
+        // 3. Risk by Unit
+        $unitData = Unit::withCount('identifikasi')->get();
+
+        // 4. Trend Data (Last 6 Months)
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $monthFormat = $isSqlite ? "strftime('%m', created_at)" : "DATE_FORMAT(created_at, '%m')";
+        
+        $trendDataRaw = IdentifikasiRisiko::select(
+            DB::raw('count(*) as total'),
+            DB::raw("$monthFormat as month_num"),
+            DB::raw('max(created_at) as date')
+        )
+        ->groupBy('month_num')
+        ->orderBy('date', 'asc')
+        ->take(6)
+        ->get();
+
+        $trendData = $trendDataRaw->map(function($item) {
+            $months = [
+                '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr', 
+                '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Aug', 
+                '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec'
+            ];
+            $item->month = $months[$item->month_num] ?? $item->month_num;
+            return $item;
+        });
+
+        // 5. Heatmap (P x D)
         $heatmapRaw = AnalisisRisiko::with(['probabilitas', 'dampak'])->get();
         $heatmap = [];
-        $totalsByImpact = [1=>0, 2=>0, 3=>0, 4=>0, 5=>0];
-        $totalsByProb = [1=>0, 2=>0, 3=>0, 4=>0, 5=>0];
-
         for($p=1; $p<=5; $p++) {
             for($d=1; $d<=5; $d++) {
                 $heatmap[$p][$d] = 0;
             }
         }
-        
         foreach($heatmapRaw as $item) {
             $pVal = $item->probabilitas->nilai_probabilitas ?? null;
             $dVal = $item->dampak->nilai_dampak ?? null;
             if($pVal && $dVal && isset($heatmap[$pVal][$dVal])) {
                 $heatmap[$pVal][$dVal]++;
-                $totalsByImpact[$dVal]++;
-                $totalsByProb[$pVal]++;
             }
         }
 
-        // 5. Critical Risks (Top 10)
-        $criticalRisks = IdentifikasiRisiko::with(['analisis'])
+        // 6. Top Risks (Priority)
+        $criticalRisks = IdentifikasiRisiko::with(['analisis', 'evaluasi'])
             ->whereHas('analisis')
             ->get()
             ->sortByDesc(function($item) {
                 return $item->analisis->skor_risiko;
             })
-            ->take(10);
+            ->take(8);
 
-        // 6. Risk by Category (Stacked Data)
-        $categories = KategoriRisiko::with(['identifikasi.analisis'])->get();
-        $categoryData = $categories->map(function($cat) {
-            $risks = $cat->identifikasi;
-            return [
-                'name' => $cat->nama_kategori,
-                'extreme' => $risks->where('analisis.peringkat_risiko', 'SANGAT TINGGI')->count(),
-                'high' => $risks->where('analisis.peringkat_risiko', 'TINGGI')->count(),
-                'medium' => $risks->where('analisis.peringkat_risiko', 'SEDANG')->count(),
-                'low' => $risks->where('analisis.peringkat_risiko', 'RENDAH')->count(),
-            ];
+        // 7. Recent Activity (Unified Log)
+        $recentIdentifikasi = IdentifikasiRisiko::orderBy('created_at', 'desc')->take(5)->get()->map(function($item) {
+            return ['type' => 'ID', 'msg' => 'Identifikasi Baru', 'date' => $item->created_at, 'risk' => $item->kode_risiko];
+        });
+        $recentAnalisis = AnalisisRisiko::with('identifikasi')->orderBy('created_at', 'desc')->take(5)->get()->map(function($item) {
+            return ['type' => 'AN', 'msg' => 'Analisis Selesai', 'date' => $item->created_at, 'risk' => $item->identifikasi->kode_risiko ?? '-'];
+        });
+        $recentEvaluasi = EvaluasiRisiko::with('identifikasi')->orderBy('created_at', 'desc')->take(5)->get()->map(function($item) {
+            return ['type' => 'EV', 'msg' => 'Evaluasi Selesai', 'date' => $item->created_at, 'risk' => $item->identifikasi->kode_risiko ?? '-'];
         });
 
+        $activities = $recentIdentifikasi->concat($recentAnalisis)->concat($recentEvaluasi)->sortByDesc('date')->take(6);
+
         return view('dashboard', compact(
-            'totalRisks', 'totalAnalyzed', 'totalEvaluated',
-            'controlPerformance', 'openIssues', 'evaluatedIssues',
-            'heatmap', 'totalsByImpact', 'totalsByProb',
-            'criticalRisks', 'categoryData'
+            'totalRisks', 'levelStats', 'pendingRisks', 'completedRisks',
+            'unitData', 'trendData', 'heatmap', 'criticalRisks', 'activities'
         ));
     }
 }
