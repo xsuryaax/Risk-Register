@@ -1,12 +1,12 @@
 <aside class="sidenav navbar navbar-vertical navbar-expand-xs my-3 fixed-start ms-3 bg-transparent" id="sidenav-main">
 
-    <div class="sidenav-header d-flex align-items-center justify-content-between px-4">
-        <a class="navbar-brand m-0 d-flex align-items-center p-0" href="{{ route('dashboard') }}">
+    <div class="sidenav-header d-flex align-items-center justify-content-center px-4" style="position: relative;">
+        <a class="navbar-brand m-0 d-flex align-items-center justify-content-center p-0 w-100" href="{{ route('dashboard') }}">
             <img src="{{ asset('img/favicon_azra.png') }}" class="navbar-brand-img h-100" alt="main_logo">
             <span class="ms-2 font-weight-bolder brand-text" style="color: #007774;">Risk Register</span>
         </a>
 
-        <a href="javascript:;" class="nav-link text-body p-0 d-xl-none" id="iconSidenav">
+        <a href="javascript:;" class="nav-link text-body p-0 d-xl-none position-absolute" style="right: 1.5rem;" id="iconSidenav">
             <div class="sidenav-toggler-inner">
                 <i class="sidenav-toggler-line"></i>
                 <i class="sidenav-toggler-line"></i>

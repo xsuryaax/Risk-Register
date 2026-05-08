@@ -29,6 +29,14 @@
                 }
             @endphp
 
+            {{-- First Page / Ellipsis --}}
+            @if ($start > 1)
+                <li class="page-item"><a class="page-link" href="{{ $paginator->url(1) }}">1</a></li>
+                @if ($start > 2)
+                    <li class="page-item disabled" aria-disabled="true"><span class="page-link border-0">...</span></li>
+                @endif
+            @endif
+
             @for ($i = $start; $i <= $end; $i++)
                 @if ($i == $currentPage)
                     <li class="page-item active" aria-current="page"><span class="page-link">{{ $i }}</span></li>
@@ -36,6 +44,14 @@
                     <li class="page-item"><a class="page-link" href="{{ $paginator->url($i) }}">{{ $i }}</a></li>
                 @endif
             @endfor
+
+            {{-- Last Page / Ellipsis --}}
+            @if ($end < $lastPage)
+                @if ($end < $lastPage - 1)
+                    <li class="page-item disabled" aria-disabled="true"><span class="page-link border-0">...</span></li>
+                @endif
+                <li class="page-item"><a class="page-link" href="{{ $paginator->url($lastPage) }}">{{ $lastPage }}</a></li>
+            @endif
 
             {{-- Next Page Link --}}
             @if ($paginator->hasMorePages())

@@ -245,6 +245,43 @@
         .cursor-pointer {
             cursor: pointer !important;
         }
+
+        /* TomSelect Fixes */
+        .ts-control {
+            min-width: 130px !important; /* Default minimal width */
+            padding: 0.35rem 0.5rem !important;
+            border-radius: 8px !important;
+            font-size: 0.75rem !important;
+            border: 1px solid #d2d6da !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        /* Specific compact width for color filter */
+        .select-pewarna + .ts-wrapper .ts-control {
+            width: 140px !important;
+            min-width: 140px !important;
+        }
+        /* Flexible width for unit filter */
+        .select-filter:not(.select-pewarna) + .ts-wrapper .ts-control {
+            min-width: 180px !important;
+        }
+        .ts-wrapper.single .ts-control {
+            background-color: #fff !important;
+        }
+        .ts-dropdown {
+            min-width: 160px !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+        }
+        .color-indicator {
+            width: 25px;
+            height: 12px;
+            display: inline-block;
+            margin-right: 8px;
+            border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
     </style>
 
     <style>
@@ -360,7 +397,7 @@
 
         .btn-edit {
             background-color: #ffeb3b !important; /* Canary Yellow */
-            color: #000 !important;
+            color: #fff !important;
         }
 
         .btn-delete {
@@ -556,23 +593,56 @@
             }
             body.sidebar-mini .sidenav-header {
                 justify-content: center !important;
-                padding: 0 !important;
+                padding: 1.5rem 0 !important;
             }
             body.sidebar-mini .sidenav-header .navbar-brand {
                 justify-content: center !important;
                 padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            body.sidebar-mini .sidenav-header .navbar-brand img {
+                margin-right: 0 !important;
+            }
+            body.sidebar-mini .brand-text {
+                display: none !important;
             }
             body.sidebar-mini .navbar-nav .nav-link {
                 justify-content: center !important;
                 padding-left: 0 !important;
                 padding-right: 0 !important;
-            }
-            body.sidebar-mini .navbar-nav .nav-link .icon {
+                margin-left: 0 !important;
                 margin-right: 0 !important;
-                margin: 0 auto !important;
+            }
+            body.sidebar-mini .navbar-nav .nav-link .icon,
+            body.sidebar-mini .navbar-nav .nav-link .icon-shape {
+                margin: 0 !important;
+                left: 0;
+            }
+            body.sidebar-mini .navbar-nav .nav-link {
+                padding: 10px 0 !important;
+                display: flex !important;
+                justify-content: center !important;
+            }
+            body.sidebar-mini .icon-shape {
+                width: 32px !important;
+                height: 32px !important;
+                min-width: 32px !important;
+                min-height: 32px !important;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+            }
+            body.sidebar-mini .nav-item.mt-3 {
+                display: flex;
+                justify-content: center;
             }
             body.sidebar-mini .navbar-nav .nav-item.mt-3 {
                 margin-top: 0.5rem !important;
+            }
+            body.sidebar-mini .navbar-nav .nav-link.active {
+                background-color: transparent !important;
+                box-shadow: none !important;
             }
             /* Toggle icon direction */
             body.sidebar-mini #sidebarToggleIcon {
@@ -723,6 +793,41 @@
                         direction: "asc"
                     }
                 });
+            });
+
+            // Unified Filter Initialization
+            $('.select-filter').each(function() {
+                const isPewarna = $(this).hasClass('select-pewarna');
+                const config = {
+                    create: false,
+                    allowEmptyOption: true,
+                    // Enabled plugins: for non-pewarna, add dropdown_input to ensure search is visible
+                    plugins: isPewarna ? [] : ['dropdown_input'],
+                    controlInput: isPewarna ? null : undefined, 
+                };
+
+                if (isPewarna) {
+                    const colorMap = {
+                        'sangat tinggi': '#c00000',
+                        'tinggi': '#ff9900',
+                        'sedang': '#ffeb3b',
+                        'rendah': '#198754'
+                    };
+                    config.render = {
+                        option: function(data, escape) {
+                            if (!data.value) return '<div class="px-2 py-1">' + escape(data.text) + '</div>';
+                            var color = colorMap[data.value.toLowerCase()] || 'transparent';
+                            return '<div class="px-2 py-1 d-flex align-items-center"><div style="background-color:' + escape(color) + '; width:16px; height:16px; border-radius:50%; margin-right:8px; flex-shrink:0; border:1px solid rgba(0,0,0,0.1);"></div><span class="text-dark font-weight-normal">' + escape(data.text) + '</span></div>';
+                        },
+                        item: function(data, escape) {
+                            if (!data.value) return '<div class="px-2 py-1">' + escape(data.text) + '</div>';
+                            var color = colorMap[data.value.toLowerCase()] || 'transparent';
+                            return '<div class="px-2 py-1 d-flex align-items-center"><div style="background-color:' + escape(color) + '; width:16px; height:16px; border-radius:50%; margin-right:8px; flex-shrink:0; border:1px solid rgba(0,0,0,0.1);"></div><span class="text-dark font-weight-normal">' + escape(data.text) + '</span></div>';
+                        }
+                    };
+                }
+
+                new TomSelect(this, config);
             });
 
             // Global Password Toggle Logic

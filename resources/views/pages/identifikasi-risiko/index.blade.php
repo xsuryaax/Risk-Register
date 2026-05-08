@@ -26,11 +26,11 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">No</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kode</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kegiatan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Tujuan</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kode</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kategori</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Ruang Lingkup</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kategori</th>
+                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Ruang Lingkup</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Pernyataan</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Sebab</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 text-center">UC/C</th>
@@ -44,19 +44,19 @@
                                 <td class="align-middle text-center px-1">
                                     <span class="text-dark text-xs font-weight-bold">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
                                 </td>
+                                <td class="align-middle text-center px-1">
+                                    <span class="text-xs font-weight-bold text-primary">{{ $item->kode_risiko }}</span>
+                                </td>
                                 <td class="px-1">
                                     <p class="text-xs font-weight-bold mb-0 text-wrap text-dark">{{ $item->kegiatan }}</p>
                                 </td>
                                 <td class="px-1">
                                     <p class="text-xs mb-0 text-wrap text-dark">{{ $item->tujuan_kegiatan }}</p>
                                 </td>
-                                <td class="px-1">
-                                    <span class="text-xs font-weight-bold text-primary">{{ $item->kode_risiko }}</span>
-                                </td>
-                                <td class="px-1">
+                                <td class="align-middle text-center px-1">
                                     <p class="text-xs mb-0 text-wrap text-dark">{{ $item->kategori->nama_kategori ?? '-' }}</p>
                                 </td>
-                                <td class="px-1">
+                                <td class="align-middle text-center px-1">
                                     <p class="text-xs mb-0 text-wrap text-dark">{{ $item->ruangLingkup->nama_ruang_lingkup ?? '-' }}</p>
                                 </td>
                                 <td class="px-1">

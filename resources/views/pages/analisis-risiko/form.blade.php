@@ -175,6 +175,7 @@
     document.querySelectorAll('.tom-select').forEach((el) => {
         new TomSelect(el, {
             create: false,
+            dropdownParent: 'body',
         });
     });
 

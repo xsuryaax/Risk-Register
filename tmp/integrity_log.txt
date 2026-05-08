@@ -1,0 +1,12 @@
+ID:1 | P:2 D:3 | Score:6 | Rank:SEDANG
+ID:2 | P:4 D:5 | Score:20 | Rank:SANGAT TINGGI
+ID:3 | P:2 D:3 | Score:6 | Rank:SEDANG
+ID:4 | P:3 D:3 | Score:9 | Rank:SEDANG
+ID:5 | P:3 D:4 | Score:12 | Rank:TINGGI
+ID:6 | P:3 D:4 | Score:12 | Rank:TINGGI
+ID:7 | P:5 D:5 | Score:25 | Rank:SANGAT TINGGI
+ID:8 | P:2 D:2 | Score:4 | Rank:RENDAH
+ID:9 | P:4 D:4 | Score:16 | Rank:SANGAT TINGGI
+ID:10 | P:3 D:5 | Score:15 | Rank:TINGGI
+ID:11 | P:4 D:3 | Score:12 | Rank:TINGGI
+ID:12 | P:2 D:5 | Score:10 | Rank:SEDANG

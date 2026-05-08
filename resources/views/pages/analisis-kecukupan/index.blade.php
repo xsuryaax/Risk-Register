@@ -10,10 +10,22 @@
     <div class="col-12">
         <div class="card mb-4 border-radius-lg shadow-sm">
             <div class="card-header pb-3 p-3">
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                    <div class="input-group input-group-sm mb-3 mb-md-0" style="width: 250px;">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div class="input-group input-group-sm mb-0" style="width: 250px;">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
                         <input type="text" class="form-control border-start-0 ps-0 text-xs" placeholder="Cari kode atau risiko..." id="searchTable">
+                    </div>
+                    <div class="d-flex gap-2 w-100 w-md-auto">
+                        <select class="form-select form-select-sm select-filter select-pewarna" id="filterPeringkat">
+                            <option value="">Semua Warna</option>
+                            <option value="sangat tinggi">Sangat Tinggi</option>
+                            <option value="tinggi">Tinggi</option>
+                            <option value="sedang">Sedang</option>
+                            <option value="rendah">Rendah</option>
+                        </select>
+                        <select class="form-select form-select-sm select-filter" id="filterPemilik">
+                            <option value="">Semua Pemilik</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -44,7 +56,7 @@
                         </thead>
                         <tbody>
                             @forelse($data as $item)
-                            <tr>
+                            <tr data-peringkat="{{ strtolower($item->analisis->peringkat_risiko ?? '') }}" data-pemilik="{{ strtolower($item->analisis->pemilik_risiko ?? '') }}">
                                 <td class="align-middle text-center px-1">
                                     <span class="text-dark text-xs font-weight-bold">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
                                 </td>
@@ -58,10 +70,11 @@
                                 @php
                                     $rank = strtoupper($item->analisis->peringkat_risiko ?? '');
                                     $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffff00' : '#198754'));
+                                    $textColor = $rank == 'SEDANG' ? 'text-dark' : 'text-white';
                                 @endphp
                                 <td class="align-middle text-center px-1" style="{{ isset($item->analisis) ? 'background-color: '.$bgColor.';' : '' }}">
                                     @if(isset($item->analisis))
-                                        <span class="text-xs font-weight-bold text-dark">
+                                        <span class="text-xs font-weight-bold {{ $textColor }}">
                                             {{ ucfirst(strtolower($item->analisis->peringkat_risiko)) }}
                                         </span>
                                     @else
@@ -78,7 +91,7 @@
                                 </td>
 
                                 <td class="align-middle text-center px-1">
-                                    <div class="text-xs text-dark">{{ $item->analisis->pemilik_risiko ?? '-' }}</div>
+                                    <div class="text-xs text-dark col-pemilik-text">{{ $item->analisis->pemilik_risiko ?? '-' }}</div>
                                 </td>
                                 <td class="align-middle text-center px-1 bg-gray-50">
                                     <span class="text-xs text-dark">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? '-' }}</span>
@@ -124,6 +137,55 @@
     }
 </style>
 @endsection
+
+@push('js')
+<script>
+$(document).ready(function() {
+    let uniquePemilik = new Set();
+    $('#mainTable tbody tr').each(function() {
+        let pem = $(this).attr('data-pemilik');
+        let textPem = $(this).find('.col-pemilik-text').text().trim();
+        if(pem && pem !== '-') {
+            uniquePemilik.add(textPem);
+        }
+    });
+    
+    uniquePemilik = Array.from(uniquePemilik).sort();
+    let tsPemilik = document.getElementById('filterPemilik')?.tomselect;
+
+    uniquePemilik.forEach(function(p) {
+        if (tsPemilik) {
+            tsPemilik.addOption({value: p.toLowerCase(), text: p});
+        } else {
+            $('#filterPemilik').append(new Option(p, p.toLowerCase()));
+        }
+    });
+    
+    function filterTable() {
+        const search = $('#searchTable').val().toLowerCase();
+        const fPeringkat = $('#filterPeringkat').val().toLowerCase();
+        const fPemilik = $('#filterPemilik').val().toLowerCase();
+        
+        $('#mainTable tbody tr').each(function() {
+            if ($(this).find('.empty-state').length) return;
+            
+            const text = $(this).text().toLowerCase();
+            const rowPeringkat = ($(this).attr('data-peringkat') || '').toLowerCase();
+            const rowPemilik = ($(this).attr('data-pemilik') || '').toLowerCase();
+            
+            const matchSearch = text.indexOf(search) > -1;
+            const matchPeringkat = fPeringkat === '' || rowPeringkat === fPeringkat;
+            const matchPemilik = fPemilik === '' || rowPemilik === fPemilik;
+            
+            $(this).toggle(matchSearch && matchPeringkat && matchPemilik);
+        });
+    }
+
+    $('#searchTable').off('keyup').on('keyup', filterTable);
+    $('#filterPeringkat, #filterPemilik').on('change', filterTable);
+});
+</script>
+@endpush
 
 
 

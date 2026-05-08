@@ -67,7 +67,7 @@
                                 <tr>
                                     <td class="label-cell"><label class="mb-0">PJ Tindak Lanjut <span class="text-danger">*</span></label></td>
                                     <td class="input-cell text-start">
-                                        <input type="text" name="pj_tindak_lanjut" class="form-control" placeholder="Nama staf/unit penanggung jawab" value="{{ old('pj_tindak_lanjut', $identifikasi->analisisKecukupan->pj_tindak_lanjut ?? '') }}" required>
+                                        <textarea name="pj_tindak_lanjut" class="form-control" rows="1" placeholder="Sebutkan unit atau personil penanggung jawab..." required style="resize: none;">{{ old('pj_tindak_lanjut', $identifikasi->analisisKecukupan->pj_tindak_lanjut ?? '') }}</textarea>
                                         @error('pj_tindak_lanjut')<p class="text-danger text-xxs mt-1">{{ $message }}</p>@enderror
                                     </td>
                                 </tr>
@@ -110,6 +110,17 @@
     }
 </style>
 @endsection
+
+@push('js')
+<script>
+    document.querySelectorAll('.tom-select').forEach((el) => {
+        new TomSelect(el, {
+            create: false,
+            dropdownParent: 'body',
+        });
+    });
+</script>
+@endpush
 
 
 

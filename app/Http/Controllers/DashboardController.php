@@ -19,19 +19,26 @@ class DashboardController extends Controller
         $totalAnalyzed = AnalisisRisiko::count();
         $totalEvaluated = EvaluasiRisiko::count();
         
+        $allAnalisis = AnalisisRisiko::all();
         $levelStats = [
-            'SANGAT TINGGI' => AnalisisRisiko::where('peringkat_risiko', 'SANGAT TINGGI')->count(),
-            'TINGGI' => AnalisisRisiko::where('peringkat_risiko', 'TINGGI')->count(),
-            'SEDANG' => AnalisisRisiko::where('peringkat_risiko', 'SEDANG')->count(),
-            'RENDAH' => AnalisisRisiko::where('peringkat_risiko', 'RENDAH')->count(),
+            'SANGAT TINGGI' => 0,
+            'TINGGI'        => 0,
+            'SEDANG'        => 0,
+            'RENDAH'        => 0,
         ];
+        foreach($allAnalisis as $a) {
+            $p = strtoupper(trim($a->peringkat_risiko));
+            if(isset($levelStats[$p])) {
+                $levelStats[$p]++;
+            }
+        }
 
         // 2. Open vs Completed (Mitigation Status)
         $completedRisks = $totalEvaluated;
         $pendingRisks = IdentifikasiRisiko::whereDoesntHave('evaluasi')->count();
 
         // 3. Risk by Unit
-        $unitData = Unit::withCount('identifikasi')->get();
+        $unitData = Unit::whereHas('identifikasi')->withCount('identifikasi')->get();
 
         // 4. Trend Data (Last 6 Months)
         $isSqlite = DB::getDriverName() === 'sqlite';
@@ -58,10 +65,11 @@ class DashboardController extends Controller
         });
 
         // 5. Heatmap (P x D)
+        // Note: In Matrix, typically X=Impact, Y=Probability
         $heatmapRaw = AnalisisRisiko::with(['probabilitas', 'dampak'])->get();
         $heatmap = [];
-        for($p=1; $p<=5; $p++) {
-            for($d=1; $d<=5; $d++) {
+        for($p=1; $p<=5; $p++) { // Probabilitas (Vertical / Y)
+            for($d=1; $d<=5; $d++) { // Dampak (Horizontal / X)
                 $heatmap[$p][$d] = 0;
             }
         }
@@ -95,9 +103,20 @@ class DashboardController extends Controller
 
         $activities = $recentIdentifikasi->concat($recentAnalisis)->concat($recentEvaluasi)->sortByDesc('date')->take(6);
 
+        // 5. Risk by Category Distribution
+        $categoryStats = KategoriRisiko::withCount('identifikasi')
+            ->get()
+            ->map(function($cat) {
+                return [
+                    'name' => $cat->nama_kategori,
+                    'count' => $cat->identifikasi_count
+                ];
+            });
+
         return view('dashboard', compact(
-            'totalRisks', 'levelStats', 'pendingRisks', 'completedRisks',
-            'unitData', 'trendData', 'heatmap', 'criticalRisks', 'activities'
+            'totalRisks', 'totalAnalyzed', 'totalEvaluated', 'levelStats',
+            'pendingRisks', 'completedRisks',
+            'unitData', 'trendData', 'criticalRisks', 'heatmap', 'categoryStats', 'activities'
         ));
     }
 }

@@ -29,7 +29,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 3,
                 'skor' => 6,
                 'peringkat' => 'SEDANG',
-                'pemilik' => 'SIRS',
+                'pemilik' => 'IT',
             ],
             [
                 'kegiatan_idx' => 1, // Proses backdata
@@ -40,7 +40,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 5,
                 'skor' => 20,
                 'peringkat' => 'SANGAT TINGGI',
-                'pemilik' => 'SIRS',
+                'pemilik' => 'IT',
             ],
             [
                 'kegiatan_idx' => 2, // Lisensi windows
@@ -51,7 +51,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 3,
                 'skor' => 6,
                 'peringkat' => 'SEDANG',
-                'pemilik' => 'SIRS',
+                'pemilik' => 'IT',
             ],
             [
                 'kegiatan_idx' => 3, // Pemeliharaan PC
@@ -62,7 +62,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 3,
                 'skor' => 9,
                 'peringkat' => 'SEDANG',
-                'pemilik' => 'SIRS',
+                'pemilik' => 'IT',
             ],
             [
                 'kegiatan_idx' => 4, // Akun user dokter
@@ -73,7 +73,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 4,
                 'skor' => 12,
                 'peringkat' => 'TINGGI',
-                'pemilik' => 'All',
+                'pemilik' => 'Administrator',
             ],
             [
                 'kegiatan_idx' => 5, // Permintaan perubahan
@@ -84,7 +84,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 4,
                 'skor' => 12,
                 'peringkat' => 'TINGGI',
-                'pemilik' => 'All',
+                'pemilik' => 'Administrator',
             ],
             [
                 'kegiatan_idx' => 6, // Downtime sistem
@@ -95,7 +95,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 5,
                 'skor' => 25,
                 'peringkat' => 'SANGAT TINGGI',
-                'pemilik' => 'SIRS',
+                'pemilik' => 'IT',
             ],
             [
                 'kegiatan_idx' => 7, // Sosialisasi teramedik
@@ -106,7 +106,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 2,
                 'skor' => 4,
                 'peringkat' => 'RENDAH',
-                'pemilik' => 'SIRS',
+                'pemilik' => 'IT',
             ],
             [
                 'kegiatan_idx' => 8, // Pemadaman listrik
@@ -117,7 +117,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 4,
                 'skor' => 16,
                 'peringkat' => 'SANGAT TINGGI',
-                'pemilik' => 'SIRS',
+                'pemilik' => 'IT',
             ],
             [
                 'kegiatan_idx' => 9, // Backup database server
@@ -128,7 +128,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 5,
                 'skor' => 15,
                 'peringkat' => 'TINGGI',
-                'pemilik' => 'IT Infrastructure',
+                'pemilik' => 'IT',
             ],
             [
                 'kegiatan_idx' => 10, // Software bajakan
@@ -139,7 +139,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 3,
                 'skor' => 12,
                 'peringkat' => 'TINGGI',
-                'pemilik' => 'Legal & Procurement',
+                'pemilik' => 'Legal',
             ],
             [
                 'kegiatan_idx' => 11, // Akses fisik ruang server
@@ -150,7 +150,7 @@ class AnalisisRisikoSeeder extends Seeder
                 'd' => 5,
                 'skor' => 10,
                 'peringkat' => 'SEDANG',
-                'pemilik' => 'Security & IT',
+                'pemilik' => 'IT',
             ],
         ];
 
@@ -162,6 +162,16 @@ class AnalisisRisikoSeeder extends Seeder
                 $probId = Probabilitas::where('nilai_probabilitas', $data['p'])->first()->id ?? 1;
                 $dampId = Dampak::where('nilai_dampak', $data['d'])->first()->id ?? 1;
 
+                $score = $data['p'] * $data['d'];
+                $ranking = 'RENDAH';
+                if ($score >= 20) {
+                    $ranking = 'SANGAT TINGGI';
+                } elseif ($score >= 13) {
+                    $ranking = 'TINGGI';
+                } elseif ($score >= 5) {
+                    $ranking = 'SEDANG';
+                }
+
                 AnalisisRisiko::create([
                     'identifikasi_risiko_id' => $idRisk->id,
                     'uraian_pengendalian' => $data['uraian'],
@@ -169,8 +179,8 @@ class AnalisisRisikoSeeder extends Seeder
                     'efektifitas_pengendalian' => $data['efektifitas'],
                     'probabilitas_id' => $probId,
                     'dampak_id' => $dampId,
-                    'skor_risiko' => $data['skor'],
-                    'peringkat_risiko' => $data['peringkat'],
+                    'skor_risiko' => $score,
+                    'peringkat_risiko' => $ranking,
                     'pemilik_risiko' => $data['pemilik'],
                 ]);
             }

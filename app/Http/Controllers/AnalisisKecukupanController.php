@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\IdentifikasiRisiko;
 use App\Models\AnalisisKecukupan;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 
 class AnalisisKecukupanController extends Controller
@@ -21,7 +22,8 @@ class AnalisisKecukupanController extends Controller
     public function edit($id)
     {
         $identifikasi = IdentifikasiRisiko::with(['analisis', 'analisisKecukupan'])->findOrFail($id);
-        return view('pages.analisis-kecukupan.form', compact('identifikasi'));
+        $units = Unit::orderBy('nama_unit')->get();
+        return view('pages.analisis-kecukupan.form', compact('identifikasi', 'units'));
     }
 
     public function update(Request $request, $id)

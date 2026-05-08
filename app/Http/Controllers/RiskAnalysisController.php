@@ -11,11 +11,52 @@ use Illuminate\Support\Facades\DB;
 
 class RiskAnalysisController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Get all identifications with their analysis (if any)
-        $data = IdentifikasiRisiko::with(['analisis', 'unit', 'kategori', 'ruangLingkup'])->orderBy('created_at', 'desc')->paginate(10);
-        return view('pages.analisis-risiko.index', compact('data'));
+        $query = IdentifikasiRisiko::with(['analisis', 'unit', 'kategori', 'ruangLingkup']);
+
+        // Search Filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('kegiatan', 'like', "%$search%")
+                  ->orWhere('kode_risiko', 'like', "%$search%");
+            });
+        }
+
+        // Peringkat (Warna) Filter
+        if ($request->filled('peringkat')) {
+            $peringkat = strtoupper($request->peringkat);
+            $query->whereHas('analisis', function($q) use ($peringkat) {
+                $q->where('peringkat_risiko', $peringkat);
+            });
+        }
+
+        // Pemilik Filter
+        if ($request->filled('pemilik')) {
+            $pemilik = $request->pemilik;
+            $query->whereHas('analisis', function($q) use ($pemilik) {
+                $q->where('pemilik_risiko', 'like', "%$pemilik%");
+            });
+        }
+
+        $data = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        
+        // Get unique owners (cleaned)
+        $owners = AnalisisRisiko::whereNotNull('pemilik_risiko')
+            ->select('pemilik_risiko')
+            ->distinct()
+            ->pluck('pemilik_risiko')
+            ->map(fn($o) => trim($o)) 
+            ->filter()
+            ->unique()
+            ->sort();
+
+        if ($request->ajax()) {
+            return view('pages.analisis-risiko._table', compact('data'))->render();
+        }
+
+        return view('pages.analisis-risiko.index', compact('data', 'owners'));
     }
 
     public function edit($id)
