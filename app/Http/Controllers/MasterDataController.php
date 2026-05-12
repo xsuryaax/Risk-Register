@@ -69,18 +69,17 @@ class MasterDataController extends Controller
         $selectedRole = $request->role_id ?? Role::first()->id;
         $menuStructure = config('menu');
         
-        if ($selectedRole == 1) { // Assuming 1 is Admin/Superadmin
-            $allKeys = [];
-            foreach ($menuStructure as $group) {
-                foreach ($group['menus'] as $menu) {
-                    $allKeys[] = $menu['key'];
+        // Use the model's logic to check which menus are accessible by default/DB
+        $mockUser = new User();
+        $mockUser->role_id = $selectedRole;
+
+        $currentAkses = [];
+        foreach ($menuStructure as $group) {
+            foreach ($group['menus'] as $menu) {
+                if ($mockUser->hasAkses($menu['key'])) {
+                    $currentAkses[] = $menu['key'];
                 }
             }
-            $currentAkses = $allKeys;
-        } else {
-            $currentAkses = \App\Models\HakAkses::where('role_id', $selectedRole)
-                ->pluck('menu_key')
-                ->toArray();
         }
 
         $roles = Role::where('status_role', 'aktif')->get();

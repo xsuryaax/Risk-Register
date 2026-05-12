@@ -6,18 +6,21 @@ return [
         'icon' => 'fa-home',
         'menus' => [
             ['key' => 'dashboard', 'label' => 'Dashboard', 'route' => 'dashboard'],
-            ['key' => 'identifikasi_resiko', 'label' => 'Identifikasi Resiko', 'route' => 'dashboard'],
-            ['key' => 'analisis_resiko', 'label' => 'Analisis Resiko', 'route' => 'dashboard'],
-            ['key' => 'analisis_kecukupan', 'label' => 'Analisis Kecukupan', 'route' => 'dashboard'],
-            ['key' => 'daftar_lengkap', 'label' => 'Daftar Lengkap', 'route' => 'dashboard'],
-            ['key' => 'evaluasi_resiko', 'label' => 'Evaluasi Resiko', 'route' => 'dashboard'],
+            ['key' => 'identifikasi_risiko', 'label' => 'Identifikasi Risiko', 'route' => 'identifikasi-risiko.index'],
+            ['key' => 'analisis_risiko', 'label' => 'Analisis Risiko', 'route' => 'analisis-risiko.index'],
+            ['key' => 'analisis_kecukupan', 'label' => 'Analisis Kecukupan', 'route' => 'analisis-kecukupan.index'],
+            ['key' => 'daftar_risiko', 'label' => 'Daftar Lengkap', 'route' => 'daftar-risiko.index'],
+            ['key' => 'evaluasi_risiko', 'label' => 'Evaluasi Risiko', 'route' => 'evaluasi-risiko.index'],
         ]
     ],
     'master_data' => [
         'title' => 'Master Data',
         'icon' => 'fa-database',
         'menus' => [
-            ['key' => 'master_resiko', 'label' => 'Master Resiko (Soon)', 'route' => 'dashboard'],
+            ['key' => 'kategori_risiko', 'label' => 'Kategori Risiko', 'route' => 'kategori-risiko.index'],
+            ['key' => 'ruang_lingkup', 'label' => 'Ruang Lingkup', 'route' => 'ruang-lingkup.index'],
+            ['key' => 'probabilitas', 'label' => 'Skala Probabilitas', 'route' => 'probabilitas.index'],
+            ['key' => 'dampak', 'label' => 'Skala Dampak', 'route' => 'dampak.index'],
         ]
     ],
     'pengaturan' => [
@@ -25,9 +28,9 @@ return [
         'icon' => 'fa-cogs',
         'menus' => [
             ['key' => 'hak_akses', 'label' => 'Hak Akses', 'route' => 'hak-akses.index'],
-            ['key' => 'manajemen_user', 'label' => 'Manajemen User', 'route' => 'users.index'],
-            ['key' => 'manajemen_role', 'label' => 'Manajemen Role', 'route' => 'roles.index'],
-            ['key' => 'manajemen_unit', 'label' => 'Manajemen Unit', 'route' => 'units.index'],
+            ['key' => 'users', 'label' => 'Manajemen User', 'route' => 'users.index'],
+            ['key' => 'roles', 'label' => 'Manajemen Role', 'route' => 'roles.index'],
+            ['key' => 'units', 'label' => 'Manajemen Unit', 'route' => 'units.index'],
         ]
     ]
 ];

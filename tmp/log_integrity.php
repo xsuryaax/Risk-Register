@@ -1,16 +1,14 @@
 <?php
-require 'vendor/autoload.php';
+include 'vendor/autoload.php';
 $app = require_once 'bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-$all = \App\Models\AnalisisRisiko::with(['probabilitas', 'dampak'])->get();
-$out = "";
-foreach($all as $a) {
-    $p = $a->probabilitas->nilai_probabilitas ?? 0;
-    $d = $a->dampak->nilai_dampak ?? 0;
-    $score = $p * $d;
-    $rank = strtoupper(trim($a->peringkat_risiko));
-    $out .= "ID:{$a->id} | P:{$p} D:{$d} | Score:{$score} | Rank:{$rank}\n";
+use App\Models\AnalisisRisiko;
+use Illuminate\Support\Facades\DB;
+
+$ranks = AnalisisRisiko::distinct()->pluck('peringkat_risiko');
+echo "Distinct ranks in DB:\n";
+foreach ($ranks as $r) {
+    echo "'$r' (length: " . strlen($r) . ")\n";
 }
-file_put_contents('tmp/integrity_log.txt', $out);
-echo "Done\n";

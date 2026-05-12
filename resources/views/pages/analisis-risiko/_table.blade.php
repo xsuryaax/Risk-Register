@@ -60,25 +60,26 @@
                 </td>
 
                 <td class="align-middle text-center px-1">
-                    <span class="text-xs font-weight-bold text-dark">{{ $item->analisis?->probabilitas->nilai_probabilitas ?? '-' }}</span>
+                    <span class="text-xs font-weight-bold text-dark">{{ $item->evaluasi ? ($item->evaluasi->probabilitas->nilai_probabilitas ?? '-') : ($item->analisis?->probabilitas->nilai_probabilitas ?? '-') }}</span>
                 </td>
                 <td class="align-middle text-center px-1 border-right-red">
-                    <span class="text-xs font-weight-bold text-dark">{{ $item->analisis?->dampak->nilai_dampak ?? '-' }}</span>
+                    <span class="text-xs font-weight-bold text-dark">{{ $item->evaluasi ? ($item->evaluasi->dampak->nilai_dampak ?? '-') : ($item->analisis?->dampak->nilai_dampak ?? '-') }}</span>
                 </td>
                 @php
-                    $rank = strtoupper($item->analisis?->peringkat_risiko ?? '');
-                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffeb3b' : '#198754'));
-                    $textColor = $rank == 'SEDANG' ? 'text-dark' : 'text-white';
+                    $score = $item->evaluasi ? $item->evaluasi->skor_residu : ($item->analisis?->skor_risiko ?? null);
+                    $rank = strtoupper($item->evaluasi ? $item->evaluasi->peringkat_residu : ($item->analisis?->peringkat_risiko ?? ''));
+                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffeb3b' : ($rank == 'RENDAH' ? '#0d6efd' : '#198754')));
+                    $textColor = ($rank == 'SEDANG' || $rank == '') ? 'text-dark' : 'text-white';
                 @endphp
-                <td class="align-middle text-center px-1 border-right-red" style="{{ isset($item->analisis) ? 'background-color: '.$bgColor.';' : '' }}">
-                    <span class="text-xs font-weight-bold {{ isset($item->analisis) ? $textColor : 'text-dark' }}">
-                        {{ $item->analisis?->skor_risiko ?? '-' }}
+                <td class="align-middle text-center px-1 border-right-red" style="{{ $score !== null ? 'background-color: '.$bgColor.';' : '' }}">
+                    <span class="text-xs font-weight-bold {{ $score !== null ? $textColor : 'text-dark' }}">
+                        {{ $score ?? '-' }}
                     </span>
                 </td>
                 <td class="align-middle text-center px-1 border-right-red">
-                    @if(isset($item->analisis))
+                    @if($rank)
                         <span class="text-xxs font-weight-bold text-dark">
-                            {{ ucfirst(strtolower($item->analisis?->peringkat_risiko ?? '')) }}
+                            {{ ucfirst(strtolower($rank)) }}
                         </span>
                     @else
                         <span class="text-xs text-secondary">-</span>

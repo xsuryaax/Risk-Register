@@ -135,20 +135,55 @@
         }
 
         /* Global Soft UI Overrides to remove Tacky Gradients */
-        .bg-primary, .bg-gradient-primary { background-color: #007774 !important; background-image: none !important; }
-        .bg-secondary, .bg-gradient-secondary { background-color: #8392ab !important; background-image: none !important; }
-        .bg-success, .bg-gradient-success { background-color: #198754 !important; background-image: none !important; }
-        .bg-info, .bg-gradient-info { background-color: #11cdef !important; background-image: none !important; }
-        .bg-warning, .bg-gradient-warning { background-color: #f59e0b !important; background-image: none !important; }
-        .bg-danger, .bg-gradient-danger { background-color: #ef4444 !important; background-image: none !important; }
-        .bg-dark, .bg-gradient-dark { background-color: #1c1c1c !important; background-image: none !important; }
-        
+        .bg-primary,
+        .bg-gradient-primary {
+            background-color: #007774 !important;
+            background-image: none !important;
+        }
+
+        .bg-secondary,
+        .bg-gradient-secondary {
+            background-color: #8392ab !important;
+            background-image: none !important;
+        }
+
+        .bg-success,
+        .bg-gradient-success {
+            background-color: #198754 !important;
+            background-image: none !important;
+        }
+
+        .bg-info,
+        .bg-gradient-info {
+            background-color: #11cdef !important;
+            background-image: none !important;
+        }
+
+        .bg-warning,
+        .bg-gradient-warning {
+            background-color: #f59e0b !important;
+            background-image: none !important;
+        }
+
+        .bg-danger,
+        .bg-gradient-danger {
+            background-color: #ef4444 !important;
+            background-image: none !important;
+        }
+
+        .bg-dark,
+        .bg-gradient-dark {
+            background-color: #1c1c1c !important;
+            background-image: none !important;
+        }
+
         /* Table Bottom Separator */
         .table tbody tr:last-child td {
             border-bottom: 2px solid #dee2e6 !important;
         }
-        
-        .table-bordered-light td, .table-bordered-light th {
+
+        .table-bordered-light td,
+        .table-bordered-light th {
             border: 1px solid #f1f5f9 !important;
         }
 
@@ -175,11 +210,12 @@
         }
 
         /* Custom Table Borders */
-        .table-bordered-light td, 
+        .table-bordered-light td,
         .table-bordered-light th {
             border-right: 1px solid #e9ecef !important;
         }
-        .table-bordered-light th:last-child, 
+
+        .table-bordered-light th:last-child,
         .table-bordered-light td:last-child {
             border-right: none !important;
         }
@@ -248,7 +284,8 @@
 
         /* TomSelect Fixes */
         .ts-control {
-            min-width: 130px !important; /* Default minimal width */
+            min-width: 130px !important;
+            /* Default minimal width */
             padding: 0.35rem 0.5rem !important;
             border-radius: 8px !important;
             font-size: 0.75rem !important;
@@ -256,30 +293,35 @@
             display: flex !important;
             align-items: center !important;
         }
+
         /* Specific compact width for color filter */
-        .select-pewarna + .ts-wrapper .ts-control {
+        .select-pewarna+.ts-wrapper .ts-control {
             width: 140px !important;
             min-width: 140px !important;
         }
+
         /* Flexible width for unit filter */
-        .select-filter:not(.select-pewarna) + .ts-wrapper .ts-control {
+        .select-filter:not(.select-pewarna)+.ts-wrapper .ts-control {
             min-width: 180px !important;
         }
+
         .ts-wrapper.single .ts-control {
             background-color: #fff !important;
         }
+
         .ts-dropdown {
             min-width: 160px !important;
             border-radius: 8px !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
         }
+
         .color-indicator {
             width: 25px;
             height: 12px;
             display: inline-block;
             margin-right: 8px;
             border-radius: 2px;
-            border: 1px solid rgba(0,0,0,0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             flex-shrink: 0;
         }
     </style>
@@ -396,12 +438,14 @@
         }
 
         .btn-edit {
-            background-color: #ffeb3b !important; /* Canary Yellow */
+            background-color: #ffeb3b !important;
+            /* Canary Yellow */
             color: #fff !important;
         }
 
         .btn-delete {
-            background-color: #dc3545 !important; /* Standard Red */
+            background-color: #dc3545 !important;
+            /* Standard Red */
             color: #fff !important;
         }
 
@@ -496,13 +540,14 @@
                 bottom: 0 !important;
                 left: 0 !important;
             }
+
             .navbar-main .container-fluid {
                 flex-wrap: nowrap !important;
             }
         }
 
         /* ===== SIDEBAR MINIMIZE SYSTEM (REFINED) ===== */
-        
+
         /* Sidebar transition */
         #sidenav-main {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -511,11 +556,12 @@
 
         /* Toggle Button Visibility */
         @media (min-width: 1200px) {
+
             /* Hide sidebar toggle when mini */
             body.sidebar-mini .sidebar-toggle-container {
                 display: none !important;
             }
-            
+
             /* Navbar toggle always available on desktop */
             .navbar-toggle-container {
                 display: block !important;
@@ -524,32 +570,35 @@
 
         /* Sidenav Toggler Style & Animation (Clearer) */
         .sidenav-toggler-line {
-            background-color: #344767 !important; /* Standard Soft UI color for clarity */
+            background-color: #344767 !important;
+            /* Standard Soft UI color for clarity */
             transition: all 0.2s ease !important;
         }
-        
+
         .btn-sidebar-toggle {
             cursor: pointer;
             padding: 2px;
             transition: all 0.2s ease;
         }
-        
+
         .btn-sidebar-toggle .sidenav-toggler-inner {
-            width: 18px !important; 
+            width: 18px !important;
         }
-        
+
         .btn-sidebar-toggle .sidenav-toggler-line {
             width: 18px !important;
-            height: 2px !important; /* Clearer weight */
+            height: 2px !important;
+            /* Clearer weight */
             margin-bottom: 4px !important;
             border-radius: 2px;
         }
 
         /* Navbar Toggle Specific Alignment */
         .navbar-toggle-container {
-            margin-top: 5px; /* Slight push to align with text baseline */
+            margin-top: 5px;
+            /* Slight push to align with text baseline */
         }
-        
+
         .btn-sidebar-toggle:hover .sidenav-toggler-line {
             background-color: #007774 !important;
         }
@@ -560,7 +609,9 @@
         }
 
         /* Text elements transition for fade out */
-        .nav-link-text, .brand-text, .nav-category-text {
+        .nav-link-text,
+        .brand-text,
+        .nav-category-text {
             transition: opacity 0.3s ease, width 0.3s ease;
             white-space: nowrap;
             overflow: hidden;
@@ -573,9 +624,11 @@
                 min-width: 80px !important;
                 max-width: 80px !important;
             }
+
             body.sidebar-mini .main-content {
                 margin-left: 80px !important;
             }
+
             body.sidebar-mini .nav-link-text,
             body.sidebar-mini .brand-text {
                 opacity: 0;
@@ -583,6 +636,7 @@
                 pointer-events: none;
                 visibility: hidden;
             }
+
             body.sidebar-mini .nav-category-text {
                 opacity: 0;
                 width: 0;
@@ -591,22 +645,27 @@
                 pointer-events: none;
                 visibility: hidden;
             }
+
             body.sidebar-mini .sidenav-header {
                 justify-content: center !important;
                 padding: 1.5rem 0 !important;
             }
+
             body.sidebar-mini .sidenav-header .navbar-brand {
                 justify-content: center !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 width: 100% !important;
             }
+
             body.sidebar-mini .sidenav-header .navbar-brand img {
                 margin-right: 0 !important;
             }
+
             body.sidebar-mini .brand-text {
                 display: none !important;
             }
+
             body.sidebar-mini .navbar-nav .nav-link {
                 justify-content: center !important;
                 padding-left: 0 !important;
@@ -614,16 +673,19 @@
                 margin-left: 0 !important;
                 margin-right: 0 !important;
             }
+
             body.sidebar-mini .navbar-nav .nav-link .icon,
             body.sidebar-mini .navbar-nav .nav-link .icon-shape {
                 margin: 0 !important;
                 left: 0;
             }
+
             body.sidebar-mini .navbar-nav .nav-link {
                 padding: 10px 0 !important;
                 display: flex !important;
                 justify-content: center !important;
             }
+
             body.sidebar-mini .icon-shape {
                 width: 32px !important;
                 height: 32px !important;
@@ -633,21 +695,26 @@
                 align-items: center;
                 justify-content: center;
             }
+
             body.sidebar-mini .nav-item.mt-3 {
                 display: flex;
                 justify-content: center;
             }
+
             body.sidebar-mini .navbar-nav .nav-item.mt-3 {
                 margin-top: 0.5rem !important;
             }
+
             body.sidebar-mini .navbar-nav .nav-link.active {
                 background-color: transparent !important;
                 box-shadow: none !important;
             }
+
             /* Toggle icon direction */
             body.sidebar-mini #sidebarToggleIcon {
                 transform: rotate(180deg);
             }
+
             #sidebarToggleIcon {
                 transition: transform 0.3s ease;
             }
@@ -656,6 +723,7 @@
             body.sidebar-mini .navbar-nav .nav-link {
                 position: relative;
             }
+
             body.sidebar-mini .navbar-nav .nav-link:hover::after {
                 content: attr(data-mini-title);
                 position: absolute;
@@ -670,10 +738,11 @@
                 font-weight: 600;
                 white-space: nowrap;
                 z-index: 10000;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                 pointer-events: none;
                 animation: tooltipFadeIn 0.15s ease;
             }
+
             body.sidebar-mini .navbar-nav .nav-link:hover::before {
                 content: '';
                 position: absolute;
@@ -689,8 +758,15 @@
         }
 
         @keyframes tooltipFadeIn {
-            from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
-            to { opacity: 1; transform: translateY(-50%) translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-50%) translateX(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
         }
     </style>
     @stack('css')
@@ -737,7 +813,7 @@
     <script src="{{ asset('style/assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
     <script src="{{ asset('style/assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
     <script src="{{ asset('style/assets/js/plugins/chartjs.min.js') }}"></script>
-    
+
     <!-- Github buttons -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
@@ -748,19 +824,32 @@
         function loadAjax(url, target = '#tableContainer') {
             if ($(target).length) {
                 $(target).css('opacity', '0.5'); // Visual feedback
-                
+
                 $.ajax({
                     url: url,
                     type: 'get',
                     success: function(data) {
-                        let html = $(data).find(target).html();
+                        // Check if the returned data contains the target element
+                        const $fetched = $(data);
+                        let html;
+
+                        if ($fetched.find(target).length) {
+                            html = $fetched.find(target).html();
+                        } else if ($fetched.is(target)) {
+                            html = $fetched.html();
+                        } else {
+                            // If it's a partial (like _table.blade.php) it might not have the wrapper
+                            html = data;
+                        }
+
                         $(target).html(html);
                         $(target).css('opacity', '1');
-                        
+
                         // Re-init tooltips
                         if (window.bootstrap && bootstrap.Tooltip) {
-                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-                            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            var tooltipTriggerList = [].slice.call(document.querySelectorAll(
+                                '[data-bs-toggle="tooltip"]'))
+                            tooltipTriggerList.map(function(tooltipTriggerEl) {
                                 return new bootstrap.Tooltip(tooltipTriggerEl)
                             })
                         }
@@ -803,7 +892,7 @@
                     allowEmptyOption: true,
                     // Enabled plugins: for non-pewarna, add dropdown_input to ensure search is visible
                     plugins: isPewarna ? [] : ['dropdown_input'],
-                    controlInput: isPewarna ? null : undefined, 
+                    controlInput: isPewarna ? null : undefined,
                 };
 
                 if (isPewarna) {
@@ -811,18 +900,27 @@
                         'sangat tinggi': '#c00000',
                         'tinggi': '#ff9900',
                         'sedang': '#ffeb3b',
-                        'rendah': '#198754'
+                        'rendah': '#0d6efd',
+                        'sangat rendah': '#198754'
                     };
                     config.render = {
                         option: function(data, escape) {
-                            if (!data.value) return '<div class="px-2 py-1">' + escape(data.text) + '</div>';
+                            if (!data.value) return '<div class="px-2 py-1">' + escape(data.text) +
+                                '</div>';
                             var color = colorMap[data.value.toLowerCase()] || 'transparent';
-                            return '<div class="px-2 py-1 d-flex align-items-center"><div style="background-color:' + escape(color) + '; width:16px; height:16px; border-radius:50%; margin-right:8px; flex-shrink:0; border:1px solid rgba(0,0,0,0.1);"></div><span class="text-dark font-weight-normal">' + escape(data.text) + '</span></div>';
+                            return '<div class="px-2 py-1 d-flex align-items-center"><div style="background-color:' +
+                                escape(color) +
+                                '; width:16px; height:16px; border-radius:50%; margin-right:8px; flex-shrink:0; border:1px solid rgba(0,0,0,0.1);"></div><span class="text-dark font-weight-normal">' +
+                                escape(data.text) + '</span></div>';
                         },
                         item: function(data, escape) {
-                            if (!data.value) return '<div class="px-2 py-1">' + escape(data.text) + '</div>';
+                            if (!data.value) return '<div class="px-2 py-1">' + escape(data.text) +
+                                '</div>';
                             var color = colorMap[data.value.toLowerCase()] || 'transparent';
-                            return '<div class="px-2 py-1 d-flex align-items-center"><div style="background-color:' + escape(color) + '; width:16px; height:16px; border-radius:50%; margin-right:8px; flex-shrink:0; border:1px solid rgba(0,0,0,0.1);"></div><span class="text-dark font-weight-normal">' + escape(data.text) + '</span></div>';
+                            return '<div class="px-2 py-1 d-flex align-items-center"><div style="background-color:' +
+                                escape(color) +
+                                '; width:16px; height:16px; border-radius:50%; margin-right:8px; flex-shrink:0; border:1px solid rgba(0,0,0,0.1);"></div><span class="text-dark font-weight-normal">' +
+                                escape(data.text) + '</span></div>';
                         }
                     };
                 }
@@ -855,11 +953,11 @@
                 const value = $(this).val().toLowerCase();
                 const table = $('#mainTable');
                 if (!table.length) return;
-                
+
                 table.find('tbody tr').each(function() {
                     const row = $(this);
                     if (row.find('.empty-state').length) return;
-                    
+
                     const text = row.text().toLowerCase();
                     row.toggle(text.indexOf(value) > -1);
                 });
@@ -876,14 +974,14 @@
             $('.btn-sidebar-toggle').on('click', function(e) {
                 e.preventDefault();
                 const isMini = document.body.classList.toggle('sidebar-mini');
-                
+
                 // Toggle active class for animation
                 if (isMini) {
                     $('.btn-sidebar-toggle').removeClass('active');
                 } else {
                     $('.btn-sidebar-toggle').addClass('active');
                 }
-                
+
                 // Persist state
                 localStorage.setItem('sidebarMini', isMini);
             });
@@ -894,6 +992,3 @@
 </body>
 
 </html>
-
-
-

@@ -22,16 +22,14 @@
                             <option value="TINGGI" {{ request('peringkat') == 'TINGGI' ? 'selected' : '' }}>Tinggi</option>
                             <option value="SEDANG" {{ request('peringkat') == 'SEDANG' ? 'selected' : '' }}>Sedang</option>
                             <option value="RENDAH" {{ request('peringkat') == 'RENDAH' ? 'selected' : '' }}>Rendah</option>
+                            <option value="SANGAT RENDAH" {{ request('peringkat') == 'SANGAT RENDAH' ? 'selected' : '' }}>Sangat Rendah</option>
                         </select>
-                        <select name="pemilik" class="form-select form-select-sm filter-input">
-                            <option value="">Semua Pemilik</option>
-                            @foreach($owners as $owner)
-                                <option value="{{ $owner }}" {{ request('pemilik') == $owner ? 'selected' : '' }}>{{ $owner }}</option>
+                        <select name="unit_id" class="form-select form-select-sm select-filter filter-input" style="min-width: 150px;">
+                            <option value="">Semua Unit</option>
+                            @foreach($units as $u)
+                                <option value="{{ $u->id }}" {{ request('unit_id') == $u->id ? 'selected' : '' }}>{{ $u->nama_unit }}</option>
                             @endforeach
                         </select>
-                        @if(request()->anyFilled(['search', 'peringkat', 'pemilik']))
-                            <a href="{{ route('analisis-risiko.index') }}" class="btn btn-sm btn-outline-secondary mb-0">Reset</a>
-                        @endif
                     </div>
                 </form>
             </div>
@@ -73,36 +71,18 @@
 <script>
 $(document).ready(function() {
     let fadeTimer;
-    
-    function fetchResults(url) {
-        $('#tableContainer').css('opacity', '0.5');
-        
-        $.ajax({
-            url: url,
-            success: function(data) {
-                $('#tableContainer').html(data).css('opacity', '1');
-                // Update URL without reload
-                window.history.pushState({}, '', url);
-            }
-        });
-    }
 
     $('form input[name="search"]').on('keyup', function() {
         clearTimeout(fadeTimer);
         fadeTimer = setTimeout(() => {
             let form = $(this).closest('form');
-            fetchResults(form.attr('action') + '?' + form.serialize());
+            loadAjax(form.attr('action') + '?' + form.serialize());
         }, 500);
     });
 
     $('.filter-input').on('change', function() {
         let form = $(this).closest('form');
-        fetchResults(form.attr('action') + '?' + form.serialize());
-    });
-
-    $(document).on('click', '.pagination a', function(e) {
-        e.preventDefault();
-        fetchResults($(this).attr('href'));
+        loadAjax(form.attr('action') + '?' + form.serialize());
     });
 });
 </script>

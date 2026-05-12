@@ -10760,6 +10760,9 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
             $counters[$prefix]++;
             $kode = $prefix . '-2026-' . str_pad($counters[$prefix], 3, '0', STR_PAD_LEFT);
 
+            // Generate a random date within the last 12 months to populate trend charts
+            $randomDate = now()->subMonths(rand(0, 11))->subDays(rand(0, 28));
+
             // Create Identifikasi
             $identifikasi = IdentifikasiRisiko::create([
                 'unit_id' => $unitId,
@@ -10773,14 +10776,26 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
                 'sebab' => $item['sebab'],
                 'jenis_risiko' => $item['jenis'],
                 'dampak' => $item['pernyataan'],
+                'created_at' => $randomDate,
+                'updated_at' => $randomDate,
             ]);
 
             // Create Analisis
             $skor = $item['prob'] * $item['dmp'];
-            $peringkat = 'RENDAH';
-            if ($skor >= 20) $peringkat = 'SANGAT TINGGI';
-            elseif ($skor >= 13) $peringkat = 'TINGGI';
-            elseif ($skor >= 5) $peringkat = 'SEDANG';
+            
+            // New Matrix Logic based on user reference:
+            // 1-2: SANGAT RENDAH, 3-4: RENDAH, 5-9: SEDANG, 10-12: TINGGI, 15-25: SANGAT TINGGI
+            if ($skor >= 15) {
+                $peringkat = 'SANGAT TINGGI';
+            } elseif ($skor >= 10) {
+                $peringkat = 'TINGGI';
+            } elseif ($skor >= 5) {
+                $peringkat = 'SEDANG';
+            } elseif ($skor >= 3) {
+                $peringkat = 'RENDAH';
+            } else {
+                $peringkat = 'SANGAT RENDAH';
+            }
 
             // Data Cleaning for Enums
             $desain = trim($item['desain']);
@@ -10803,6 +10818,8 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
                 'skor_risiko' => $skor,
                 'peringkat_risiko' => $peringkat,
                 'pemilik_risiko' => $item['pemilik'] ?: $item['unit'],
+                'created_at' => $randomDate,
+                'updated_at' => $randomDate,
             ]);
 
             // Create Analisis Kecukupan
@@ -10811,7 +10828,39 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
                 'uraian_rencana' => $item['rencana'],
                 'jadwal' => $item['jadwal'],
                 'pj_tindak_lanjut' => $item['pj'],
+                'created_at' => $randomDate,
+                'updated_at' => $randomDate,
             ]);
+
+            // Create Evaluasi (70% chance to show transition effect on Dashboard)
+            if (rand(1, 10) <= 7) {
+                $resProb = rand(1, floor($item['prob']));
+                $resDmp = rand(1, floor($item['dmp']));
+                $resScore = $resProb * $resDmp;
+                
+                if ($resScore >= 15) {
+                    $resRank = 'SANGAT TINGGI';
+                } elseif ($resScore >= 10) {
+                    $resRank = 'TINGGI';
+                } elseif ($resScore >= 5) {
+                    $resRank = 'SEDANG';
+                } elseif ($resScore >= 3) {
+                    $resRank = 'RENDAH';
+                } else {
+                    $resRank = 'SANGAT RENDAH';
+                }
+
+                \App\Models\EvaluasiRisiko::create([
+                    'identifikasi_risiko_id' => $identifikasi->id,
+                    'probabilitas_residu_id' => $probMap[$resProb] ?? null,
+                    'dampak_residu_id' => $dmpMap[$resDmp] ?? null,
+                    'skor_residu' => $resScore,
+                    'peringkat_residu' => $resRank,
+                    'penurunan_persen' => $skor > 0 ? (($skor - $resScore) / $skor) * 100 : 0,
+                    'created_at' => $randomDate,
+                    'updated_at' => $randomDate,
+                ]);
+            }
         }
     }
 }

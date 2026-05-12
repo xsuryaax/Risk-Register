@@ -1,25 +1,16 @@
 <?php
-require 'vendor/autoload.php';
+include 'vendor/autoload.php';
 $app = require_once 'bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-$all = \App\Models\AnalisisRisiko::with(['probabilitas', 'dampak'])->get();
+use App\Models\AnalisisRisiko;
+use Illuminate\Support\Facades\DB;
 
-echo "Total Analisis: " . $all->count() . "\n";
+$stats = AnalisisRisiko::groupBy('peringkat_risiko')
+    ->select('peringkat_risiko', DB::raw('count(*) as total'))
+    ->get();
 
-$levels = ['SANGAT TINGGI' => 0, 'TINGGI' => 0, 'SEDANG' => 0, 'RENDAH' => 0];
-$matrix_count = 0;
-
-foreach($all as $a) {
-    echo "ID: {$a->id} | Rank: {$a->peringkat_risiko} | P: " . ($a->probabilitas->nilai_probabilitas ?? 'null') . " | D: " . ($a->dampak->nilai_dampak ?? 'null') . "\n";
-    
-    $r = strtoupper(trim($a->peringkat_risiko));
-    if(isset($levels[$r])) $levels[$r]++;
-    
-    if($a->probabilitas && $a->dampak) {
-        $matrix_count++;
-    }
+foreach ($stats as $stat) {
+    echo $stat->peringkat_risiko . ": " . $stat->total . "\n";
 }
-
-print_r($levels);
-echo "Total in Matrix: $matrix_count\n";

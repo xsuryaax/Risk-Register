@@ -13,7 +13,23 @@ class RiskAnalysisController extends Controller
 {
     public function index(Request $request)
     {
-        $query = IdentifikasiRisiko::with(['analisis', 'unit', 'kategori', 'ruangLingkup']);
+        $user = auth()->user();
+        $query = IdentifikasiRisiko::with([
+            'analisis.probabilitas', 
+            'analisis.dampak', 
+            'evaluasi.probabilitas', 
+            'evaluasi.dampak',
+            'unit', 
+            'kategori', 
+            'ruangLingkup'
+        ]);
+
+        // Security: Scoping by Unit
+        if (!in_array($user->role_id, [1, 2])) {
+            $query->where('unit_id', $user->unit_id);
+        } elseif ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
+        }
 
         // Search Filter
         if ($request->filled('search')) {
@@ -24,44 +40,55 @@ class RiskAnalysisController extends Controller
             });
         }
 
-        // Peringkat (Warna) Filter
+        // Status Filter (Pending/Evaluated)
+        if ($request->status == 'pending') {
+            $query->whereDoesntHave('evaluasi');
+        } elseif ($request->status == 'evaluated') {
+            $query->whereHas('evaluasi');
+        }
+
+        // Peringkat (Warna) Filter - Dynamic: Residual > Initial
         if ($request->filled('peringkat')) {
             $peringkat = strtoupper($request->peringkat);
-            $query->whereHas('analisis', function($q) use ($peringkat) {
-                $q->where('peringkat_risiko', $peringkat);
+            $query->where(function($q) use ($peringkat) {
+                $q->whereHas('evaluasi', function($qe) use ($peringkat) {
+                    $qe->where('peringkat_residu', $peringkat);
+                })
+                ->orWhere(function($qo) use ($peringkat) {
+                    $qo->whereDoesntHave('evaluasi')
+                       ->whereHas('analisis', function($qa) use ($peringkat) {
+                           $qa->where('peringkat_risiko', $peringkat);
+                       });
+                });
             });
         }
 
-        // Pemilik Filter
-        if ($request->filled('pemilik')) {
-            $pemilik = $request->pemilik;
-            $query->whereHas('analisis', function($q) use ($pemilik) {
-                $q->where('pemilik_risiko', 'like', "%$pemilik%");
-            });
+        // Unit Filter
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
         }
 
         $data = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
         
-        // Get unique owners (cleaned)
-        $owners = AnalisisRisiko::whereNotNull('pemilik_risiko')
-            ->select('pemilik_risiko')
-            ->distinct()
-            ->pluck('pemilik_risiko')
-            ->map(fn($o) => trim($o)) 
-            ->filter()
-            ->unique()
-            ->sort();
+        $units = \App\Models\Unit::orderBy('nama_unit', 'asc')->get();
 
         if ($request->ajax()) {
             return view('pages.analisis-risiko._table', compact('data'))->render();
         }
 
-        return view('pages.analisis-risiko.index', compact('data', 'owners'));
+        return view('pages.analisis-risiko.index', compact('data', 'units'));
     }
 
     public function edit($id)
     {
+        $user = auth()->user();
         $identifikasi = IdentifikasiRisiko::with('analisis')->findOrFail($id);
+
+        // Security: Prevent accessing other unit's risks
+        if (!in_array($user->role_id, [1, 2]) && $identifikasi->unit_id != $user->unit_id) {
+            return redirect()->route('analisis-risiko.index')->with('error', 'Anda tidak memiliki hak akses ke data ini.');
+        }
+
         $probabilitas = Probabilitas::orderBy('nilai_probabilitas', 'asc')->get();
         $dampak = Dampak::orderBy('nilai_dampak', 'asc')->get();
         $units = \App\Models\Unit::orderBy('nama_unit', 'asc')->get();
@@ -71,6 +98,14 @@ class RiskAnalysisController extends Controller
 
     public function store(Request $request, $id)
     {
+        $user = auth()->user();
+        $identifikasi = IdentifikasiRisiko::findOrFail($id);
+
+        // Security: Prevent accessing other unit's risks
+        if (!in_array($user->role_id, [1, 2]) && $identifikasi->unit_id != $user->unit_id) {
+            return redirect()->route('analisis-risiko.index')->with('error', 'Anda tidak memiliki hak akses ke data ini.');
+        }
+
         $request->validate([
             'uraian_pengendalian' => 'required',
             'desain_pengendalian' => 'required',
@@ -84,15 +119,17 @@ class RiskAnalysisController extends Controller
         $dam = Dampak::findOrFail($request->dampak_id);
         $score = $prob->nilai_probabilitas * $dam->nilai_dampak;
 
-        // Determine Peringkat Risiko
-        // 1-4: Rendah, 5-12: Sedang, 13-19: Tinggi, 20-25: Sangat Tinggi
-        $ranking = 'RENDAH';
-        if ($score >= 20) {
+        // Determine Peringkat Risiko based on reference matrix
+        if ($score >= 15) {
             $ranking = 'SANGAT TINGGI';
-        } elseif ($score >= 13) {
+        } elseif ($score >= 10) {
             $ranking = 'TINGGI';
         } elseif ($score >= 5) {
             $ranking = 'SEDANG';
+        } elseif ($score >= 3) {
+            $ranking = 'RENDAH';
+        } else {
+            $ranking = 'SANGAT RENDAH';
         }
 
         AnalisisRisiko::updateOrCreate(

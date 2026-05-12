@@ -10,26 +10,30 @@
     <div class="col-12">
         <div class="card mb-4 border-radius-lg shadow-sm">
             <div class="card-header pb-3 p-3">
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <form action="{{ route('analisis-kecukupan.index') }}" method="GET" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                     <div class="input-group input-group-sm mb-0" style="width: 250px;">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0 text-xs" placeholder="Cari kode atau risiko..." id="searchTable">
+                        <input type="text" name="search" class="form-control border-start-0 ps-0 text-xs" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
                     </div>
                     <div class="d-flex gap-2 w-100 w-md-auto">
-                        <select class="form-select form-select-sm select-filter select-pewarna" id="filterPeringkat">
-                            <option value="">Semua Warna</option>
-                            <option value="sangat tinggi">Sangat Tinggi</option>
-                            <option value="tinggi">Tinggi</option>
-                            <option value="sedang">Sedang</option>
-                            <option value="rendah">Rendah</option>
-                        </select>
-                        <select class="form-select form-select-sm select-filter" id="filterPemilik">
-                            <option value="">Semua Pemilik</option>
+                            <select name="peringkat" class="form-select form-select-sm select-filter select-pewarna filter-input" id="filterPeringkat">
+                                <option value="">Semua Warna</option>
+                                <option value="SANGAT TINGGI" {{ request('peringkat') == 'SANGAT TINGGI' ? 'selected' : '' }}>Sangat Tinggi</option>
+                                <option value="TINGGI" {{ request('peringkat') == 'TINGGI' ? 'selected' : '' }}>Tinggi</option>
+                                <option value="SEDANG" {{ request('peringkat') == 'SEDANG' ? 'selected' : '' }}>Sedang</option>
+                                <option value="RENDAH" {{ request('peringkat') == 'RENDAH' ? 'selected' : '' }}>Rendah</option>
+                                <option value="SANGAT RENDAH" {{ request('peringkat') == 'SANGAT RENDAH' ? 'selected' : '' }}>Sangat Rendah</option>
+                            </select>
+                        <select name="unit_id" class="form-select form-select-sm select-filter filter-input" style="min-width: 150px;">
+                            <option value="">Semua Unit</option>
+                            @foreach($units as $u)
+                                <option value="{{ $u->id }}" {{ request('unit_id') == $u->id ? 'selected' : '' }}>{{ $u->nama_unit }}</option>
+                            @endforeach
                         </select>
                     </div>
-                </div>
+                </form>
             </div>
-            <div class="card-body px-0 pt-0 pb-2">
+            <div class="card-body px-0 pt-0 pb-2" id="tableContainer">
                 <div class="table-responsive p-0">
                     <table class="table align-items-center mb-0 table-bordered-light" id="mainTable">
                         <thead class="bg-light">
@@ -68,33 +72,34 @@
                                 </td>
 
                                 @php
-                                    $rank = strtoupper($item->analisis->peringkat_risiko ?? '');
-                                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffff00' : '#198754'));
-                                    $textColor = $rank == 'SEDANG' ? 'text-dark' : 'text-white';
+                                    $rank = strtoupper($item->evaluasi ? $item->evaluasi->peringkat_residu : ($item->analisis->peringkat_risiko ?? ''));
+                                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffeb3b' : ($rank == 'RENDAH' ? '#0d6efd' : '#198754')));
+                                    $textColor = ($rank == 'SEDANG' || $rank == '') ? 'text-dark' : 'text-white';
                                 @endphp
-                                <td class="align-middle text-center px-1" style="{{ isset($item->analisis) ? 'background-color: '.$bgColor.';' : '' }}">
-                                    @if(isset($item->analisis))
+                                <td class="align-middle text-center px-1" style="{{ $rank ? 'background-color: '.$bgColor.';' : '' }}">
+                                    @if($rank)
                                         <span class="text-xs font-weight-bold {{ $textColor }}">
-                                            {{ ucfirst(strtolower($item->analisis->peringkat_risiko)) }}
+                                            {{ ucfirst(strtolower($rank)) }}
                                         </span>
                                     @else
                                         <span class="text-xs text-secondary">-</span>
                                     @endif
                                 </td>
 
+
                                 <!-- Rencana Pengendalian (DIISI USER) -->
                                 <td class="px-2 text-start bg-gray-50">
                                     <p class="text-xs mb-0 text-wrap text-dark" style="min-width: 250px;">{{ $item->analisisKecukupan->uraian_rencana ?? '-' }}</p>
                                 </td>
                                 <td class="align-middle text-center px-1 bg-gray-50">
-                                    <span class="text-xs text-dark">{{ $item->analisisKecukupan->jadwal ?? '-' }}</span>
+                                    <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $item->analisisKecukupan->jadwal ?? '-' }}</p>
                                 </td>
 
                                 <td class="align-middle text-center px-1">
-                                    <div class="text-xs text-dark col-pemilik-text">{{ $item->analisis->pemilik_risiko ?? '-' }}</div>
+                                    <p class="text-xs text-dark text-wrap mb-0 col-pemilik-text" style="min-width: 100px;">{{ $item->analisis->pemilik_risiko ?? '-' }}</p>
                                 </td>
                                 <td class="align-middle text-center px-1 bg-gray-50">
-                                    <span class="text-xs text-dark">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? '-' }}</span>
+                                    <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? '-' }}</p>
                                 </td>
 
                                 <td class="align-middle text-center px-1">
@@ -141,48 +146,20 @@
 @push('js')
 <script>
 $(document).ready(function() {
-    let uniquePemilik = new Set();
-    $('#mainTable tbody tr').each(function() {
-        let pem = $(this).attr('data-pemilik');
-        let textPem = $(this).find('.col-pemilik-text').text().trim();
-        if(pem && pem !== '-') {
-            uniquePemilik.add(textPem);
-        }
-    });
-    
-    uniquePemilik = Array.from(uniquePemilik).sort();
-    let tsPemilik = document.getElementById('filterPemilik')?.tomselect;
+    let fadeTimer;
 
-    uniquePemilik.forEach(function(p) {
-        if (tsPemilik) {
-            tsPemilik.addOption({value: p.toLowerCase(), text: p});
-        } else {
-            $('#filterPemilik').append(new Option(p, p.toLowerCase()));
-        }
+    $('form input[name="search"]').on('keyup', function() {
+        clearTimeout(fadeTimer);
+        fadeTimer = setTimeout(() => {
+            let form = $(this).closest('form');
+            loadAjax(form.attr('action') + '?' + form.serialize());
+        }, 500);
     });
-    
-    function filterTable() {
-        const search = $('#searchTable').val().toLowerCase();
-        const fPeringkat = $('#filterPeringkat').val().toLowerCase();
-        const fPemilik = $('#filterPemilik').val().toLowerCase();
-        
-        $('#mainTable tbody tr').each(function() {
-            if ($(this).find('.empty-state').length) return;
-            
-            const text = $(this).text().toLowerCase();
-            const rowPeringkat = ($(this).attr('data-peringkat') || '').toLowerCase();
-            const rowPemilik = ($(this).attr('data-pemilik') || '').toLowerCase();
-            
-            const matchSearch = text.indexOf(search) > -1;
-            const matchPeringkat = fPeringkat === '' || rowPeringkat === fPeringkat;
-            const matchPemilik = fPemilik === '' || rowPemilik === fPemilik;
-            
-            $(this).toggle(matchSearch && matchPeringkat && matchPemilik);
-        });
-    }
 
-    $('#searchTable').off('keyup').on('keyup', filterTable);
-    $('#filterPeringkat, #filterPemilik').on('change', filterTable);
+    $('.filter-input').on('change', function() {
+        let form = $(this).closest('form');
+        loadAjax(form.attr('action') + '?' + form.serialize());
+    });
 });
 </script>
 @endpush

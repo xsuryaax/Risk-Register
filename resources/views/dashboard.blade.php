@@ -70,6 +70,7 @@
 .kpi-green { background: #198754; color: #fff; box-shadow: 0 4px 12px rgba(25,135,84,0.2); }
 .kpi-blue  { background: #0d6efd; color: #fff; box-shadow: 0 4px 12px rgba(13,110,253,0.2); }
 .kpi-teal  { background: #007774; color: #fff; box-shadow: 0 4px 12px rgba(0,119,116,0.2); }
+.kpi-gray  { background: #8392ab; color: #fff; box-shadow: 0 4px 12px rgba(131,146,171,0.2); }
 
 /* == CHART CARDS ========================================================= */
 .dash-card {
@@ -228,12 +229,12 @@
 
     {{-- ═══════════════════════════════════════════ KPI CARDS ══════════════════════════════════════════ --}}
     <div class="kpi-grid mb-4">
-        <div class="kpi-card kpi-dark">
+        <a href="{{ route('daftar-risiko.index') }}" class="kpi-card kpi-dark text-decoration-none">
             <div class="kpi-icon"><i class="fas fa-database"></i></div>
             <div class="kpi-label">Total Risiko</div>
-            <div class="kpi-value">{{ $totalAnalyzed }}</div>
-            <div class="kpi-sub">TOTAL ANALYZED</div>
-        </div>
+            <div class="kpi-value">{{ $allIdentifikasi->count() }}</div>
+            <div class="kpi-sub">TOTAL REGISTERED</div>
+        </a>
         <a href="{{ route('analisis-risiko.index', ['peringkat' => 'SANGAT TINGGI']) }}" class="kpi-card kpi-red text-decoration-none">
             <div class="kpi-icon"><i class="fas fa-radiation-alt"></i></div>
             <div class="kpi-label">Sangat Tinggi</div>
@@ -252,24 +253,30 @@
             <div class="kpi-value">{{ $levelStats['SEDANG'] }}</div>
             <div class="kpi-sub">MEDIUM RISK</div>
         </a>
-        <a href="{{ route('analisis-risiko.index', ['peringkat' => 'RENDAH']) }}" class="kpi-card kpi-green text-decoration-none">
+        <a href="{{ route('analisis-risiko.index', ['peringkat' => 'RENDAH']) }}" class="kpi-card kpi-blue text-decoration-none">
             <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
             <div class="kpi-label">Rendah</div>
             <div class="kpi-value">{{ $levelStats['RENDAH'] }}</div>
             <div class="kpi-sub">LOW RISK</div>
         </a>
-        <div class="kpi-card kpi-blue">
+        <a href="{{ route('analisis-risiko.index', ['peringkat' => 'SANGAT RENDAH']) }}" class="kpi-card kpi-green text-decoration-none">
+            <div class="kpi-icon"><i class="fas fa-leaf"></i></div>
+            <div class="kpi-label">Sangat Rendah</div>
+            <div class="kpi-value">{{ $levelStats['SANGAT RENDAH'] }}</div>
+            <div class="kpi-sub">INSIGNIFICANT</div>
+        </a>
+        <a href="{{ route('analisis-risiko.index', ['status' => 'pending']) }}" class="kpi-card kpi-gray text-decoration-none">
             <div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div>
             <div class="kpi-label">Belum Ditangani</div>
             <div class="kpi-value">{{ $pendingRisks }}</div>
             <div class="kpi-sub">RISK OPEN</div>
-        </div>
-        <div class="kpi-card kpi-teal">
+        </a>
+        <a href="{{ route('analisis-risiko.index', ['status' => 'evaluated']) }}" class="kpi-card kpi-teal text-decoration-none">
             <div class="kpi-icon"><i class="fas fa-check-double"></i></div>
             <div class="kpi-label">Selesai</div>
             <div class="kpi-value">{{ $completedRisks }}</div>
             <div class="kpi-sub">EVALUATED</div>
-        </div>
+        </a>
     </div>
 
     {{-- ═══════════════════════════════════════════ ROW 2 ══════════════════════════════════════════════ --}}
@@ -320,6 +327,7 @@
                             <tr style="background:#f8f9fa;">
                                 <th class="ps-3 py-2 text-center" style="font-size:0.6rem; font-weight:800; color:#94a3b8; border:1px solid #e9ecef; width:40px;">#</th>
                                 <th class="ps-2 py-2" style="font-size:0.6rem; font-weight:800; letter-spacing:1px; color:#94a3b8; border:1px solid #e9ecef;">IDENTIFIKASI RISIKO</th>
+                                <th class="text-center py-2" style="font-size:0.6rem; font-weight:800; letter-spacing:1px; color:#94a3b8; border:1px solid #e9ecef; width:65px;">SKOR</th>
                                 <th class="text-center py-2" style="font-size:0.6rem; font-weight:800; letter-spacing:1px; color:#94a3b8; border:1px solid #e9ecef; width:130px;">PERINGKAT</th>
                                 <th class="text-center py-2" style="font-size:0.6rem; font-weight:800; letter-spacing:1px; color:#94a3b8; border:1px solid #e9ecef; width:100px;">STATUS</th>
                             </tr>
@@ -337,10 +345,14 @@
                                     </div>
                                 </td>
                                 @php
-                                    $rank  = strtoupper($rk->analisis->peringkat_risiko ?? '—');
-                                    $bg    = $rank=='SANGAT TINGGI'?'#c00000':($rank=='TINGGI'?'#ff9900':($rank=='SEDANG'?'#ffeb3b':'#198754'));
-                                    $txtC  = ($rank=='SANGAT TINGGI'||$rank=='TINGGI'||$rank=='RENDAH')?'#fff':'#1a1a2e';
+                                    $score = $rk->evaluasi ? $rk->evaluasi->skor_residu : ($rk->analisis->skor_risiko ?? 0);
+                                    $rank  = strtoupper($rk->evaluasi ? $rk->evaluasi->peringkat_residu : ($rk->analisis->peringkat_risiko ?? '—'));
+                                    $bg    = $rank=='SANGAT TINGGI'?'#c00000':($rank=='TINGGI'?'#ff9900':($rank=='SEDANG'?'#ffeb3b':($rank=='RENDAH'?'#0d6efd':'#198754')));
+                                    $txtC  = ($rank=='SANGAT TINGGI'||$rank=='TINGGI'||$rank=='RENDAH'||$rank=='SANGAT RENDAH')?'#fff':'#1a1a2e';
                                 @endphp
+                                <td class="text-center py-3 fw-900" style="border:1px solid #e9ecef; color:#1e293b; font-size:0.8rem; background: #f8f9fa;">
+                                    {{ $score }}
+                                </td>
                                 <td class="text-center py-3 fw-bold" style="border:1px solid #e9ecef; background:{{ $bg }}; color:{{ $txtC }}; font-size:0.62rem; letter-spacing:0.5px;">
                                     {{ $rank }}
                                 </td>
@@ -377,10 +389,19 @@
                                             @php 
                                                 $count = $heatmap[$d][$p] ?? 0;
                                                 $score = $p*$d;
-                                                $col   = $score>=20?'#c00000':($score>=13?'#ff9900':($score>=5?'#ffeb3b':'#198754'));
+                                                // Color logic based on user matrix image
+                                                if ($score >= 15) $col = '#c00000';      // Red
+                                                elseif ($score >= 10) $col = '#ff9900';  // Orange
+                                                elseif ($score >= 5) $col = '#ffeb3b';   // Yellow
+                                                elseif ($score >= 3) $col = '#0d6efd';   // Blue
+                                                else $col = '#198754';                  // Green
                                             @endphp
                                             @php
-                                                $rankText = $score>=20?'SANGAT TINGGI':($score>=13?'TINGGI':($score>=5?'SEDANG':'RENDAH'));
+                                                if ($score >= 15) $rankText = 'SANGAT TINGGI';
+                                                elseif ($score >= 10) $rankText = 'TINGGI';
+                                                elseif ($score >= 5) $rankText = 'SEDANG';
+                                                elseif ($score >= 3) $rankText = 'RENDAH';
+                                                else $rankText = 'SANGAT RENDAH';
                                             @endphp
                                             <a href="{{ route('analisis-risiko.index', ['peringkat' => $rankText]) }}" class="hm-cell text-decoration-none" style="background:{{ $col }}; height:36px; width:36px; border-radius:4px;" title="P={{ $d }} × D={{ $p }} ({{ $rankText }})">
                                                 @if($count > 0)
@@ -400,25 +421,30 @@
 
                         {{-- Legend & Footer --}}
                         <div class="w-100 border-top pt-3" style="margin-left:18px;">
-                            <div class="d-flex flex-wrap gap-3 justify-content-center mb-3">
-                                <div class="d-flex align-items-center gap-1">
-                                    <div style="width:10px; height:10px; background:#c00000; border-radius:2px;"></div>
-                                    <span style="font-size:0.6rem; font-weight:700; color:#475569;">Ekstrem</span>
+                                <div class="d-flex flex-wrap gap-3 justify-content-center mb-3">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <div style="width:10px; height:10px; background:#c00000; border-radius:2px;"></div>
+                                        <span style="font-size:0.55rem; font-weight:700; color:#475569;">Sgt Tinggi</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <div style="width:10px; height:10px; background:#ff9900; border-radius:2px;"></div>
+                                        <span style="font-size:0.55rem; font-weight:700; color:#475569;">Tinggi</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <div style="width:10px; height:10px; background:#ffeb3b; border-radius:2px;"></div>
+                                        <span style="font-size:0.55rem; font-weight:700; color:#475569;">Sedang</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <div style="width:10px; height:10px; background:#0d6efd; border-radius:2px;"></div>
+                                        <span style="font-size:0.55rem; font-weight:700; color:#475569;">Rendah</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <div style="width:10px; height:10px; background:#198754; border-radius:2px;"></div>
+                                        <span style="font-size:0.55rem; font-weight:700; color:#475569;">Sgt Rendah</span>
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <div style="width:10px; height:10px; background:#ff9900; border-radius:2px;"></div>
-                                    <span style="font-size:0.6rem; font-weight:700; color:#475569;">Tinggi</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <div style="width:10px; height:10px; background:#ffeb3b; border-radius:2px;"></div>
-                                    <span style="font-size:0.6rem; font-weight:700; color:#475569;">Sedang</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <div style="width:10px; height:10px; background:#198754; border-radius:2px;"></div>
-                                    <span style="font-size:0.6rem; font-weight:700; color:#475569;">Rendah</span>
-                                </div>
-                            </div>
-                            <div class="text-center" style="font-size:0.7rem; font-weight:800; color:#1e293b; background:#f1f5f9; padding:6px 16px; border-radius:30px; width:fit-content; margin:0 auto;">
+
+                            <div class="text-center mt-3" style="font-size:0.7rem; font-weight:800; color:#1e293b; background:#f1f5f9; padding:6px 16px; border-radius:30px; width:fit-content; margin:0 auto;">
                                 <i class="fas fa-bullseye me-1 opacity-5"></i>
                                 Total: {{ array_sum(array_map('array_sum', $heatmap)) }} Risiko
                             </div>
@@ -471,7 +497,7 @@ function buildChart(key) {
                 label: d.title,
                 data: d.data,
                 backgroundColor: key === 'unit'
-                    ? d.data.map((_, i) => ['#007774','#c00000','#ff9900','#198754','#0d6efd','#ffc107'][i % 6])
+                    ? '#007774'
                     : 'rgba(0,119,116,0.12)',
                 borderColor: key === 'unit' ? 'transparent' : '#007774',
                 borderWidth: key === 'unit' ? 0 : 3,
@@ -490,6 +516,7 @@ function buildChart(key) {
             plugins: { 
                 legend: { display: false },
                 datalabels: {
+                    display: key === 'unit',
                     anchor: 'end',
                     align: key === 'unit' ? 'right' : 'top',
                     color: '#8392ab',
@@ -506,7 +533,7 @@ function buildChart(key) {
                         display: key === 'unit' ? false : true,
                         borderDash: [4] 
                     },
-                    ticks: { font: { size: 10, weight: '600' }, stepSize: 1 }
+                    ticks: { font: { size: 10, weight: '600' }, precision: 0, maxRotation: 0, minRotation: 0 }
                 },
                 x: {
                     beginAtZero: true,
@@ -515,7 +542,7 @@ function buildChart(key) {
                         display: key === 'unit' ? true : false,
                         borderDash: [4]
                     },
-                    ticks: { font: { size: 10, weight: '600' }, stepSize: 1 }
+                    ticks: { font: { size: 10, weight: '600' }, precision: 0, maxRotation: 0, minRotation: 0 }
                 }
             }
         }
@@ -544,6 +571,7 @@ $(function() {
     // Default Font Global Setup
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.color = '#8392ab';
+    Chart.defaults.animation = false;
 
     /* ── Pie Chart ─────────────────────────────────────────────────────────── */
     new Chart(document.getElementById('levelPieChart'), {
@@ -555,9 +583,8 @@ $(function() {
                 backgroundColor: [
                     '#007774', '#c00000', '#ff9900', '#0d6efd', '#198754', '#ffeb3b', '#6f42c1', '#fd7e14'
                 ],
-                borderWidth: 2,
+                borderWidth: 1.5,
                 borderColor: '#ffffff',
-                hoverBorderWidth: 0,
             }]
         },
         options: {
@@ -565,13 +592,15 @@ $(function() {
             maintainAspectRatio: false,
             plugins: {
                 datalabels: {
-                    color: '#fff',
-                    font: { weight: 'bold', size: 10 },
-                    formatter: (value) => value > 0 ? value : '',
+                    display: false
                 },
                 legend: {
                     position: 'bottom',
-                    labels: { boxWidth: 8, padding: 8, font: { size: 9, weight: 700 } }
+                    labels: { 
+                        boxWidth: 8, 
+                        padding: 10, 
+                        font: { size: 9, weight: 600 }
+                    }
                 },
                 tooltip: {
                     callbacks: {

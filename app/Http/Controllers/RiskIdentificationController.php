@@ -13,9 +13,13 @@ class RiskIdentificationController extends Controller
 {
     public function index(Request $request)
     {
+        $user = Auth::user();
         $query = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup']);
 
-        if ($request->filled('unit_id')) {
+        // Security: Non-Admin/Mutu can only see their own unit
+        if (!in_array($user->role_id, [1, 2])) {
+            $query->where('unit_id', $user->unit_id);
+        } elseif ($request->filled('unit_id')) {
             $query->where('unit_id', $request->unit_id);
         }
 
@@ -27,19 +31,38 @@ class RiskIdentificationController extends Controller
 
     public function create()
     {
+        $user = Auth::user();
         $kategori = KategoriRisiko::all();
         $ruangLingkup = RuangLingkup::all();
-        $units = Unit::all();
+        
+        // Non-Admin/Mutu only see their own unit in select (if applicable)
+        if (!in_array($user->role_id, [1, 2])) {
+            $units = Unit::where('id', $user->unit_id)->get();
+        } else {
+            $units = Unit::all();
+        }
         
         return view('pages.identifikasi-risiko.create', compact('kategori', 'ruangLingkup', 'units'));
     }
 
     public function edit($id)
     {
+        $user = Auth::user();
         $risk = IdentifikasiRisiko::findOrFail($id);
+        
+        // Security: Prevent accessing other unit's risks
+        if (!in_array($user->role_id, [1, 2]) && $risk->unit_id != $user->unit_id) {
+            return redirect()->route('identifikasi-risiko.index')->with('error', 'Anda tidak memiliki hak akses ke data ini.');
+        }
+
         $kategori = KategoriRisiko::all();
         $ruangLingkup = RuangLingkup::all();
-        $units = Unit::all();
+        
+        if (!in_array($user->role_id, [1, 2])) {
+            $units = Unit::where('id', $user->unit_id)->get();
+        } else {
+            $units = Unit::all();
+        }
         
         return view('pages.identifikasi-risiko.edit', compact('risk', 'kategori', 'ruangLingkup', 'units'));
     }
@@ -89,6 +112,14 @@ class RiskIdentificationController extends Controller
 
     public function update(Request $request, $id)
     {
+        $user = Auth::user();
+        $risk = IdentifikasiRisiko::findOrFail($id);
+
+        // Security: Prevent updating other unit's risks
+        if (!in_array($user->role_id, [1, 2]) && $risk->unit_id != $user->unit_id) {
+            return redirect()->route('identifikasi-risiko.index')->with('error', 'Anda tidak memiliki hak akses untuk merubah data ini.');
+        }
+
         $request->validate([
             'kegiatan' => 'required',
             'tujuan_kegiatan' => 'required',
@@ -100,7 +131,6 @@ class RiskIdentificationController extends Controller
             'dampak' => 'required',
         ]);
 
-        $risk = IdentifikasiRisiko::findOrFail($id);
         $risk->update($request->except('unit_id'));
 
         return redirect()->route('identifikasi-risiko.index')->with('success', 'Identifikasi risiko berhasil diperbarui.');
@@ -108,7 +138,14 @@ class RiskIdentificationController extends Controller
 
     public function destroy($id)
     {
+        $user = Auth::user();
         $risk = IdentifikasiRisiko::findOrFail($id);
+
+        // Security: Prevent deleting other unit's risks
+        if (!in_array($user->role_id, [1, 2]) && $risk->unit_id != $user->unit_id) {
+            return redirect()->route('identifikasi-risiko.index')->with('error', 'Anda tidak memiliki hak akses untuk menghapus data ini.');
+        }
+        
         $risk->delete();
 
         return redirect()->back()->with('success', 'Identifikasi risiko berhasil dihapus.');

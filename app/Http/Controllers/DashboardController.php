@@ -9,42 +9,86 @@ use App\Models\KategoriRisiko;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Basic Stats & Risk Levels
-        $totalRisks = IdentifikasiRisiko::count();
-        $totalAnalyzed = AnalisisRisiko::count();
-        $totalEvaluated = EvaluasiRisiko::count();
+        $user = Auth::user();
         
-        $allAnalisis = AnalisisRisiko::all();
+        // Base Query for Security
+        $baseQuery = IdentifikasiRisiko::with([
+            'analisis.probabilitas', 
+            'analisis.dampak', 
+            'evaluasi.probabilitas', 
+            'evaluasi.dampak'
+        ]);
+        if (!in_array($user->role_id, [1, 2])) {
+            $baseQuery->where('unit_id', $user->unit_id);
+        }
+
+        // 1. Basic Stats & Risk Levels (Dynamic: Use Residual if evaluated)
+        $allIdentifikasi = $baseQuery->get();
+        
         $levelStats = [
             'SANGAT TINGGI' => 0,
             'TINGGI'        => 0,
             'SEDANG'        => 0,
             'RENDAH'        => 0,
+            'SANGAT RENDAH' => 0,
         ];
-        foreach($allAnalisis as $a) {
-            $p = strtoupper(trim($a->peringkat_risiko));
-            if(isset($levelStats[$p])) {
-                $levelStats[$p]++;
+
+        // 5. Heatmap (P x D) Initialize
+        $heatmap = [];
+        for($p=1; $p<=5; $p++) { 
+            for($d=1; $d<=5; $d++) { 
+                $heatmap[$p][$d] = 0;
             }
         }
 
-        // 2. Open vs Completed (Mitigation Status)
-        $completedRisks = $totalEvaluated;
-        $pendingRisks = IdentifikasiRisiko::whereDoesntHave('evaluasi')->count();
+        foreach($allIdentifikasi as $item) {
+            // Priority: Residual > Initial
+            $score = $item->evaluasi ? $item->evaluasi->skor_residu : ($item->analisis ? $item->analisis->skor_risiko : null);
+            $rank = $item->evaluasi ? $item->evaluasi->peringkat_residu : ($item->analisis ? $item->analisis->peringkat_risiko : null);
+            
+            // Stats
+            if($rank && isset($levelStats[strtoupper(trim($rank))])) {
+                $levelStats[strtoupper(trim($rank))]++;
+            }
 
-        // 3. Risk by Unit
-        $unitData = Unit::whereHas('identifikasi')->withCount('identifikasi')->get();
+            // Heatmap (Dampak = Row, Probabilitas = Column)
+            $pVal = $item->evaluasi ? ($item->evaluasi->probabilitas->nilai_probabilitas ?? null) : ($item->analisis->probabilitas->nilai_probabilitas ?? null);
+            $dVal = $item->evaluasi ? ($item->evaluasi->dampak->nilai_dampak ?? null) : ($item->analisis->dampak->nilai_dampak ?? null);
+            if($pVal && $dVal && isset($heatmap[$dVal][$pVal])) {
+                $heatmap[$dVal][$pVal]++;
+            }
+        }
+
+        $totalAnalyzed = $allIdentifikasi->filter(fn($i) => $i->analisis)->count();
+        $totalEvaluated = $allIdentifikasi->filter(fn($i) => $i->evaluasi)->count();
+        
+        // 2. Mitigation Status
+        $completedRisks = $totalEvaluated;
+        $pendingRisks = $totalAnalyzed - $totalEvaluated;
+
+        // 3. Risk by Unit (Admin/Mutu see all units, others see only theirs)
+        $unitQuery = Unit::whereHas('identifikasi');
+        if (!in_array($user->role_id, [1, 2])) {
+            $unitQuery->where('id', $user->unit_id);
+        }
+        $unitData = $unitQuery->withCount('identifikasi')->get();
 
         // 4. Trend Data (Last 6 Months)
+        $trendQuery = IdentifikasiRisiko::query();
+        if (!in_array($user->role_id, [1, 2])) {
+            $trendQuery->where('unit_id', $user->unit_id);
+        }
+
         $isSqlite = DB::getDriverName() === 'sqlite';
         $monthFormat = $isSqlite ? "strftime('%m', created_at)" : "DATE_FORMAT(created_at, '%m')";
         
-        $trendDataRaw = IdentifikasiRisiko::select(
+        $trendDataRaw = $trendQuery->select(
             DB::raw('count(*) as total'),
             DB::raw("$monthFormat as month_num"),
             DB::raw('max(created_at) as date')
@@ -64,40 +108,35 @@ class DashboardController extends Controller
             return $item;
         });
 
-        // 5. Heatmap (P x D)
-        // Note: In Matrix, typically X=Impact, Y=Probability
-        $heatmapRaw = AnalisisRisiko::with(['probabilitas', 'dampak'])->get();
-        $heatmap = [];
-        for($p=1; $p<=5; $p++) { // Probabilitas (Vertical / Y)
-            for($d=1; $d<=5; $d++) { // Dampak (Horizontal / X)
-                $heatmap[$p][$d] = 0;
-            }
-        }
-        foreach($heatmapRaw as $item) {
-            $pVal = $item->probabilitas->nilai_probabilitas ?? null;
-            $dVal = $item->dampak->nilai_dampak ?? null;
-            if($pVal && $dVal && isset($heatmap[$pVal][$dVal])) {
-                $heatmap[$pVal][$dVal]++;
-            }
-        }
-
-        // 6. Top Risks (Priority)
-        $criticalRisks = IdentifikasiRisiko::with(['analisis', 'evaluasi'])
-            ->whereHas('analisis')
-            ->get()
+        // 6. Top Risks (Priority: Sort by Current Score)
+        $criticalRisks = $allIdentifikasi->filter(fn($i) => $i->analisis)
             ->sortByDesc(function($item) {
-                return $item->analisis->skor_risiko;
+                return $item->evaluasi ? $item->evaluasi->skor_residu : $item->analisis->skor_risiko;
             })
-            ->take(8);
+            ->take(10);
 
-        // 7. Recent Activity (Unified Log)
-        $recentIdentifikasi = IdentifikasiRisiko::orderBy('created_at', 'desc')->take(5)->get()->map(function($item) {
+        // 7. Recent Activity (Filtered by Unit)
+        $activityLogQuery = function($model) use ($user) {
+            $q = $model->query();
+            if (!in_array($user->role_id, [1, 2])) {
+                if ($model instanceof IdentifikasiRisiko) {
+                    $q->where('unit_id', $user->unit_id);
+                } else {
+                    $q->whereHas('identifikasi', function($qi) use ($user) {
+                        $qi->where('unit_id', $user->unit_id);
+                    });
+                }
+            }
+            return $q->orderBy('created_at', 'desc')->take(5)->get();
+        };
+
+        $recentIdentifikasi = $activityLogQuery(new IdentifikasiRisiko())->map(function($item) {
             return ['type' => 'ID', 'msg' => 'Identifikasi Baru', 'date' => $item->created_at, 'risk' => $item->kode_risiko];
         });
-        $recentAnalisis = AnalisisRisiko::with('identifikasi')->orderBy('created_at', 'desc')->take(5)->get()->map(function($item) {
+        $recentAnalisis = $activityLogQuery(new AnalisisRisiko())->map(function($item) {
             return ['type' => 'AN', 'msg' => 'Analisis Selesai', 'date' => $item->created_at, 'risk' => $item->identifikasi->kode_risiko ?? '-'];
         });
-        $recentEvaluasi = EvaluasiRisiko::with('identifikasi')->orderBy('created_at', 'desc')->take(5)->get()->map(function($item) {
+        $recentEvaluasi = $activityLogQuery(new EvaluasiRisiko())->map(function($item) {
             return ['type' => 'EV', 'msg' => 'Evaluasi Selesai', 'date' => $item->created_at, 'risk' => $item->identifikasi->kode_risiko ?? '-'];
         });
 
@@ -113,8 +152,10 @@ class DashboardController extends Controller
                 ];
             });
 
+        $totalRisks = $allIdentifikasi->count();
+
         return view('dashboard', compact(
-            'totalRisks', 'totalAnalyzed', 'totalEvaluated', 'levelStats',
+            'allIdentifikasi', 'totalRisks', 'totalAnalyzed', 'totalEvaluated', 'levelStats',
             'pendingRisks', 'completedRisks',
             'unitData', 'trendData', 'criticalRisks', 'heatmap', 'categoryStats', 'activities'
         ));
