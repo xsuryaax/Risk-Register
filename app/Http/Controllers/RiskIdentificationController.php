@@ -6,15 +6,49 @@ use App\Models\IdentifikasiRisiko;
 use App\Models\KategoriRisiko;
 use App\Models\RuangLingkup;
 use App\Models\Unit;
+use App\Models\Periode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class RiskIdentificationController extends Controller
 {
+    public function getLibrary(Request $request)
+    {
+        $user = Auth::user();
+        $activePeriode = \App\Models\Periode::getActive();
+        
+        if (!$activePeriode) {
+            return response()->json([]);
+        }
+
+        $query = IdentifikasiRisiko::with(['unit', 'kategori', 'periode'])
+            ->where('periode_id', '!=', $activePeriode->id);
+
+        // Security: Non-Admin/Mutu can only see their own unit
+        if (!in_array($user->role_id, [1, 2])) {
+            $query->where('unit_id', $user->unit_id);
+        }
+
+        $data = $query->get();
+        return response()->json($data);
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
+        $activePeriode = \App\Models\Periode::getActive();
+        $periodes = \App\Models\Periode::orderBy('tahun', 'desc')->get();
+        
+        // Target period to view
+        $viewPeriodeId = $request->periode_id ?? ($activePeriode->id ?? null);
+        
         $query = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup']);
+
+        if ($viewPeriodeId) {
+            $query->where('periode_id', $viewPeriodeId);
+        } else {
+            $query->whereRaw('1 = 0');
+        }
 
         // Security: Non-Admin/Mutu can only see their own unit
         if (!in_array($user->role_id, [1, 2])) {
@@ -23,10 +57,30 @@ class RiskIdentificationController extends Controller
             $query->where('unit_id', $request->unit_id);
         }
 
-        $data = $query->orderBy('created_at', 'desc')->paginate(10);
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('kegiatan', 'like', "%$search%")
+                  ->orWhere('kode_risiko', 'like', "%$search%");
+            });
+        }
+
+        $data = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
         $units = Unit::all();
+
+        // Get list of activities already pulled to active period to prevent duplicates
+        $pulledActivities = [];
+        if ($activePeriode && $viewPeriodeId != $activePeriode->id) {
+            $pulledActivities = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                ->when(!in_array($user->role_id, [1, 2]), function($q) use ($user) {
+                    $q->where('unit_id', $user->unit_id);
+                })
+                ->pluck('kegiatan')
+                ->toArray();
+        }
             
-        return view('pages.identifikasi-risiko.index', compact('data', 'units'));
+        return view('pages.identifikasi-risiko.index', compact('data', 'units', 'activePeriode', 'periodes', 'viewPeriodeId', 'pulledActivities'));
     }
 
     public function create()
@@ -95,6 +149,7 @@ class RiskIdentificationController extends Controller
 
         IdentifikasiRisiko::create([
             'unit_id' => Auth::user()->unit_id ?? 1,
+            'periode_id' => \App\Models\Periode::getActive()->id ?? null,
             'kegiatan' => $request->kegiatan,
             'tujuan_kegiatan' => $request->tujuan_kegiatan,
             'kode_risiko' => $kode,
@@ -149,5 +204,148 @@ class RiskIdentificationController extends Controller
         $risk->delete();
 
         return redirect()->back()->with('success', 'Identifikasi risiko berhasil dihapus.');
+    }
+
+    public function copyFromLibrary(Request $request)
+    {
+        $original = IdentifikasiRisiko::findOrFail($request->risk_id);
+        $activePeriode = \App\Models\Periode::getActive();
+
+        if (!$activePeriode) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada periode aktif'], 400);
+        }
+
+        $year = $activePeriode->tahun;
+        $kat = KategoriRisiko::find($original->kategori_risiko_id);
+        $prefix = $kat ? substr($kat->nama_kategori, 0, 1) : 'R';
+
+        // Optimized Code Generation (Cross-database compatible)
+        $lastCode = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+            ->where('kode_risiko', 'like', "$prefix-$year-%")
+            ->orderBy('kode_risiko', 'desc')
+            ->value('kode_risiko');
+
+        $nextNum = 1;
+        if ($lastCode) {
+            $parts = explode('-', $lastCode);
+            $nextNum = (int)end($parts) + 1;
+        }
+        $newCode = sprintf("%s-%s-%03d", $prefix, $year, $nextNum);
+
+        try {
+            return \DB::transaction(function () use ($original, $activePeriode, $newCode) {
+                $newRisk = new IdentifikasiRisiko();
+                $newRisk->unit_id = $original->unit_id;
+                $newRisk->periode_id = $activePeriode->id;
+                $newRisk->kode_risiko = $newCode;
+                $newRisk->kegiatan = $original->kegiatan;
+                $newRisk->tujuan_kegiatan = $original->tujuan_kegiatan;
+                $newRisk->kategori_risiko_id = $original->kategori_risiko_id;
+                $newRisk->ruang_lingkup_id = $original->ruang_lingkup_id;
+                $newRisk->pernyataan_risiko = $original->pernyataan_risiko;
+                $newRisk->sebab = $original->sebab;
+                $newRisk->jenis_risiko = $original->jenis_risiko;
+                $newRisk->dampak = $original->dampak;
+                $newRisk->user_id = \Auth::id() ?? $original->user_id;
+                $newRisk->save();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Risiko berhasil ditarik ke periode ' . $activePeriode->tahun,
+                    'redirect' => route('identifikasi-risiko.index')
+                ]);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menarik data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function bulkCopy(Request $request)
+    {
+        $ids = $request->ids;
+        if (!$ids || !is_array($ids)) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada data terpilih'], 400);
+        }
+
+        $activePeriode = Periode::getActive();
+        if (!$activePeriode) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada periode aktif'], 400);
+        }
+
+        $year = $activePeriode->tahun;
+        $successCount = 0;
+
+        try {
+            \DB::transaction(function () use ($ids, $activePeriode, $year, &$successCount) {
+                foreach ($ids as $id) {
+                    $original = IdentifikasiRisiko::find($id);
+                    if (!$original) continue;
+
+                    // Skip if already exists in this period (optional, but safer)
+                    $exists = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                        ->where('kegiatan', $original->kegiatan)
+                        ->where('unit_id', $original->unit_id)
+                        ->exists();
+                    if ($exists) continue;
+
+                    $kat = KategoriRisiko::find($original->kategori_risiko_id);
+                    $prefix = $kat ? substr($kat->nama_kategori, 0, 1) : 'R';
+
+                    // Find latest number again inside loop to avoid collision
+                    $lastCode = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                        ->where('kode_risiko', 'like', "$prefix-$year-%")
+                        ->orderBy('kode_risiko', 'desc')
+                        ->value('kode_risiko');
+
+                    $nextNum = 1;
+                    if ($lastCode) {
+                        $parts = explode('-', $lastCode);
+                        $nextNum = (int)end($parts) + 1;
+                    }
+                    $newCode = sprintf("%s-%s-%03d", $prefix, $year, $nextNum);
+
+                    $newRisk = new IdentifikasiRisiko();
+                    $newRisk->unit_id = $original->unit_id;
+                    $newRisk->periode_id = $activePeriode->id;
+                    $newRisk->kode_risiko = $newCode;
+                    $newRisk->kegiatan = $original->kegiatan;
+                    $newRisk->tujuan_kegiatan = $original->tujuan_kegiatan;
+                    $newRisk->kategori_risiko_id = $original->kategori_risiko_id;
+                    $newRisk->ruang_lingkup_id = $original->ruang_lingkup_id;
+                    $newRisk->pernyataan_risiko = $original->pernyataan_risiko;
+                    $newRisk->sebab = $original->sebab;
+                    $newRisk->jenis_risiko = $original->jenis_risiko;
+                    $newRisk->dampak = $original->dampak;
+                    $newRisk->user_id = \Auth::id() ?? $original->user_id;
+                    $newRisk->save();
+
+                    // ── Clone Analisis ──────────────────────────
+                    if ($original->analisis) {
+                        $newAnalisis = $original->analisis->replicate();
+                        $newAnalisis->identifikasi_id = $newRisk->id;
+                        $newAnalisis->save();
+                    }
+
+                    // ── Clone Evaluasi ──────────────────────────
+                    if ($original->evaluasi) {
+                        $newEvaluasi = $original->evaluasi->replicate();
+                        $newEvaluasi->identifikasi_id = $newRisk->id;
+                        $newEvaluasi->save();
+                    }
+                    
+                    $successCount++;
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => "$successCount risiko berhasil ditarik ke periode " . $activePeriode->tahun
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal bulk pull: ' . $e->getMessage()], 500);
+        }
     }
 }

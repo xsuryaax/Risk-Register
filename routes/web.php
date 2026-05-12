@@ -53,6 +53,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/dampak/{id}/edit', [App\Http\Controllers\MasterDataController::class, 'editDampak'])->name('dampak.edit');
         Route::put('/dampak/{id}', [App\Http\Controllers\MasterDataController::class, 'updateDampak'])->name('dampak.update');
         Route::delete('/dampak/{id}', [App\Http\Controllers\MasterDataController::class, 'destroyDampak'])->name('dampak.destroy');
+
+        // Periode Management
+        Route::resource('periode', App\Http\Controllers\PeriodeController::class);
+        Route::post('periode/{id}/activate', [App\Http\Controllers\PeriodeController::class, 'activate'])->name('periode.activate');
     });
     // Risk Identification
     Route::get('/identifikasi-risiko', [App\Http\Controllers\RiskIdentificationController::class, 'index'])->name('identifikasi-risiko.index');
@@ -61,6 +65,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/identifikasi-risiko/{id}/edit', [App\Http\Controllers\RiskIdentificationController::class, 'edit'])->name('identifikasi-risiko.edit');
     Route::put('/identifikasi-risiko/{id}', [App\Http\Controllers\RiskIdentificationController::class, 'update'])->name('identifikasi-risiko.update');
     Route::delete('/identifikasi-risiko/{id}', [App\Http\Controllers\RiskIdentificationController::class, 'destroy'])->name('identifikasi-risiko.destroy');
+    Route::get('/identifikasi-risiko/library', [App\Http\Controllers\RiskIdentificationController::class, 'getLibrary'])->name('identifikasi-risiko.library');
+    Route::post('/identifikasi-risiko/copy', [App\Http\Controllers\RiskIdentificationController::class, 'copyFromLibrary'])->name('identifikasi-risiko.copy');
+    Route::post('/identifikasi-risiko/bulk-copy', [App\Http\Controllers\RiskIdentificationController::class, 'bulkCopy'])->name('identifikasi-risiko.bulk-copy');
 
     // Risk Analysis
     Route::get('/analisis-risiko', [App\Http\Controllers\RiskAnalysisController::class, 'index'])->name('analisis-risiko.index');

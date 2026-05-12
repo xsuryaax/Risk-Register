@@ -19,8 +19,14 @@ class IdentifikasiRisiko extends Model
         'sebab',
         'jenis_risiko',
         'dampak',
-        'user_id'
+        'user_id',
+        'periode_id'
     ];
+
+    public function periode()
+    {
+        return $this->belongsTo(Periode::class, 'periode_id');
+    }
 
     public function unit()
     {

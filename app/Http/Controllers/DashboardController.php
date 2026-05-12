@@ -7,23 +7,41 @@ use App\Models\AnalisisRisiko;
 use App\Models\EvaluasiRisiko;
 use App\Models\KategoriRisiko;
 use App\Models\Unit;
+use App\Models\Periode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         
-        // Base Query for Security
+        // Get period to view (from navbar dropdown or current active)
+        $activePeriode = Periode::getActive();
+        $viewPeriodeId = $request->view_periode;
+        
+        if ($viewPeriodeId) {
+            $activePeriode = Periode::find($viewPeriodeId);
+        }
+        
+        $activeId = $activePeriode ? $activePeriode->id : 0;
+        
+        // Base Query for Security & Period
         $baseQuery = IdentifikasiRisiko::with([
             'analisis.probabilitas', 
             'analisis.dampak', 
             'evaluasi.probabilitas', 
             'evaluasi.dampak'
         ]);
+
+        if ($activePeriode) {
+            $baseQuery->where('periode_id', $activePeriode->id);
+        } else {
+            $baseQuery->whereRaw('1 = 0');
+        }
+
         if (!in_array($user->role_id, [1, 2])) {
             $baseQuery->where('unit_id', $user->unit_id);
         }
@@ -72,15 +90,27 @@ class DashboardController extends Controller
         $completedRisks = $totalEvaluated;
         $pendingRisks = $totalAnalyzed - $totalEvaluated;
 
-        // 3. Risk by Unit (Admin/Mutu see all units, others see only theirs)
-        $unitQuery = Unit::whereHas('identifikasi');
+        // 3. Risk by Unit 
+        $unitQuery = Unit::query();
         if (!in_array($user->role_id, [1, 2])) {
             $unitQuery->where('id', $user->unit_id);
         }
-        $unitData = $unitQuery->withCount('identifikasi')->get();
+        $activeId = $activePeriode ? $activePeriode->id : 0;
+        $unitData = $unitQuery->withCount(['identifikasi' => function($q) use ($activeId) {
+            $q->where('periode_id', $activeId);
+        }])
+        ->orderBy('identifikasi_count', 'desc')
+        ->get()
+        ->filter(fn($u) => $u->identifikasi_count > 0)
+        ->values();
 
-        // 4. Trend Data (Last 6 Months)
+        // 4. Trend Data
         $trendQuery = IdentifikasiRisiko::query();
+        if ($activePeriode) {
+            $trendQuery->where('periode_id', $activePeriode->id);
+        } else {
+            $trendQuery->whereRaw('1 = 0');
+        }
         if (!in_array($user->role_id, [1, 2])) {
             $trendQuery->where('unit_id', $user->unit_id);
         }
@@ -108,24 +138,28 @@ class DashboardController extends Controller
             return $item;
         });
 
-        // 6. Top Risks (Priority: Sort by Current Score)
+        // 6. Top Risks
         $criticalRisks = $allIdentifikasi->filter(fn($i) => $i->analisis)
             ->sortByDesc(function($item) {
                 return $item->evaluasi ? $item->evaluasi->skor_residu : $item->analisis->skor_risiko;
             })
             ->take(10);
 
-        // 7. Recent Activity (Filtered by Unit)
-        $activityLogQuery = function($model) use ($user) {
+        // 7. Recent Activity (Filtered by Period)
+        $activityLogQuery = function($model) use ($user, $activeId) {
             $q = $model->query();
-            if (!in_array($user->role_id, [1, 2])) {
-                if ($model instanceof IdentifikasiRisiko) {
+            if ($model instanceof IdentifikasiRisiko) {
+                $q->where('periode_id', $activeId);
+                if (!in_array($user->role_id, [1, 2])) {
                     $q->where('unit_id', $user->unit_id);
-                } else {
-                    $q->whereHas('identifikasi', function($qi) use ($user) {
-                        $qi->where('unit_id', $user->unit_id);
-                    });
                 }
+            } else {
+                $q->whereHas('identifikasi', function($qi) use ($user, $activeId) {
+                    $qi->where('periode_id', $activeId);
+                    if (!in_array($user->role_id, [1, 2])) {
+                        $qi->where('unit_id', $user->unit_id);
+                    }
+                });
             }
             return $q->orderBy('created_at', 'desc')->take(5)->get();
         };
@@ -142,9 +176,13 @@ class DashboardController extends Controller
 
         $activities = $recentIdentifikasi->concat($recentAnalisis)->concat($recentEvaluasi)->sortByDesc('date')->take(6);
 
-        // 5. Risk by Category Distribution
-        $categoryStats = KategoriRisiko::withCount('identifikasi')
-            ->get()
+        // 5. Risk by Category Distribution (Strictly filtered by Unit if not Admin)
+        $categoryStats = KategoriRisiko::withCount(['identifikasi' => function($q) use ($activeId, $user) {
+            $q->where('periode_id', $activeId);
+            if (!in_array($user->role_id, [1, 2])) {
+                $q->where('unit_id', $user->unit_id);
+            }
+        }])->get()
             ->map(function($cat) {
                 return [
                     'name' => $cat->nama_kategori,
@@ -157,7 +195,7 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'allIdentifikasi', 'totalRisks', 'totalAnalyzed', 'totalEvaluated', 'levelStats',
             'pendingRisks', 'completedRisks',
-            'unitData', 'trendData', 'criticalRisks', 'heatmap', 'categoryStats', 'activities'
+            'unitData', 'trendData', 'criticalRisks', 'heatmap', 'categoryStats', 'activities', 'activePeriode'
         ));
     }
 }

@@ -140,6 +140,9 @@
 </div>
 
 <style>
+    .card, .card-body {
+        overflow: visible !important;
+    }
     .table-responsive {
         overflow: visible !important;
     }

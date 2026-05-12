@@ -25,6 +25,9 @@
 
     <!-- Tom Select CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         /* Tom Select Premium Integration */
@@ -845,13 +848,19 @@
                         $(target).html(html);
                         $(target).css('opacity', '1');
 
-                        // Re-init tooltips
+                        // Re-init tooltips with correct container
                         if (window.bootstrap && bootstrap.Tooltip) {
-                            var tooltipTriggerList = [].slice.call(document.querySelectorAll(
-                                '[data-bs-toggle="tooltip"]'))
+                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
                             tooltipTriggerList.map(function(tooltipTriggerEl) {
-                                return new bootstrap.Tooltip(tooltipTriggerEl)
-                            })
+                                // Dispose existing
+                                const existing = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+                                if (existing) existing.dispose();
+                                
+                                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                    container: 'body',
+                                    trigger: 'hover'
+                                });
+                            });
                         }
 
                         // Update URL without reload

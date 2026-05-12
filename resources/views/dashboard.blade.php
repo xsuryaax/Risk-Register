@@ -297,10 +297,12 @@
         <div class="col-lg-8">
             <div class="dash-card h-100">
                 <div class="dash-card-header">
-                    <span class="dash-card-title" id="toggleTitle">Risiko per Unit / Divisi</span>
+                    <span class="dash-card-title" id="toggleTitle">Analisis Visual Risiko</span>
                     <div class="chart-toggle-group">
-                        <button class="chart-toggle-btn active" id="btnUnit" onclick="switchView('unit')">Per Unit</button>
-                        <button class="chart-toggle-btn" id="btnTrend" onclick="switchView('trend')">Tren Bulanan</button>
+                        @if(in_array(auth()->user()->role_id, [1, 2]))
+                            <button class="chart-toggle-btn active" id="btnUnit" onclick="switchView('unit')">Per Unit</button>
+                        @endif
+                        <button class="chart-toggle-btn {{ !in_array(auth()->user()->role_id, [1, 2]) ? 'active' : '' }}" id="btnTrend" onclick="switchView('trend')">Tren Bulanan</button>
                     </div>
                 </div>
                 <div class="px-3 pb-3" style="height:300px;">
@@ -389,7 +391,6 @@
                                             @php 
                                                 $count = $heatmap[$d][$p] ?? 0;
                                                 $score = $p*$d;
-                                                // Color logic based on user matrix image
                                                 if ($score >= 15) $col = '#c00000';      // Red
                                                 elseif ($score >= 10) $col = '#ff9900';  // Orange
                                                 elseif ($score >= 5) $col = '#ffeb3b';   // Yellow
@@ -419,9 +420,9 @@
                             </div>
                         </div>
 
-                        {{-- Legend & Footer --}}
+                        {{-- Legend --}}
                         <div class="w-100 border-top pt-3" style="margin-left:18px;">
-                                <div class="d-flex flex-wrap gap-3 justify-content-center mb-3">
+                                <div class="d-flex flex-wrap gap-3 justify-content-center">
                                     <div class="d-flex align-items-center gap-1">
                                         <div style="width:10px; height:10px; background:#c00000; border-radius:2px;"></div>
                                         <span style="font-size:0.55rem; font-weight:700; color:#475569;">Sgt Tinggi</span>
@@ -443,19 +444,12 @@
                                         <span style="font-size:0.55rem; font-weight:700; color:#475569;">Sgt Rendah</span>
                                     </div>
                                 </div>
-
-                            <div class="text-center mt-3" style="font-size:0.7rem; font-weight:800; color:#1e293b; background:#f1f5f9; padding:6px 16px; border-radius:30px; width:fit-content; margin:0 auto;">
-                                <i class="fas fa-bullseye me-1 opacity-5"></i>
-                                Total: {{ array_sum(array_map('array_sum', $heatmap)) }} Risiko
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-
 </div>
 @endsection
 
@@ -463,7 +457,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
-/* ── Global Toggleable Chart Logic ── */
 let activeChart;
 const ds = {
     unit: {
@@ -488,6 +481,16 @@ function buildChart(key) {
     if (activeChart) activeChart.destroy();
     const d = ds[key];
     document.getElementById('toggleTitle').textContent = d.title;
+
+    // Create Premium Gradient
+    let background;
+    if (key === 'unit') {
+        background = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        background.addColorStop(0, '#005f5d');
+        background.addColorStop(1, '#00a89d');
+    } else {
+        background = 'rgba(0,119,116,0.08)';
+    }
     
     activeChart = new Chart(ctx, {
         type: d.type,
@@ -496,14 +499,13 @@ function buildChart(key) {
             datasets: [{
                 label: d.title,
                 data: d.data,
-                backgroundColor: key === 'unit'
-                    ? '#007774'
-                    : 'rgba(0,119,116,0.12)',
+                backgroundColor: background,
                 borderColor: key === 'unit' ? 'transparent' : '#007774',
                 borderWidth: key === 'unit' ? 0 : 3,
-                borderRadius: key === 'unit' ? 4 : 0,
+                borderRadius: 6,
+                maxBarThickness: 32,
                 fill: key === 'trend',
-                tension: 0.45,
+                tension: 0.4,
                 pointBackgroundColor: '#007774',
                 pointRadius: key === 'trend' ? 5 : 0,
                 pointHoverRadius: 8,
@@ -513,36 +515,44 @@ function buildChart(key) {
             indexAxis: key === 'unit' ? 'y' : 'x',
             responsive: true,
             maintainAspectRatio: false,
+            layout: { padding: { right: 20 } },
             plugins: { 
                 legend: { display: false },
                 datalabels: {
                     display: key === 'unit',
                     anchor: 'end',
-                    align: key === 'unit' ? 'right' : 'top',
-                    color: '#8392ab',
-                    font: { weight: 'bold', size: 10 },
+                    align: 'right',
+                    color: '#475569',
+                    font: { weight: '800', size: 11 },
                     formatter: (value) => value > 0 ? value : '',
-                    offset: 4
+                    offset: 8
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    padding: 12,
+                    titleFont: { size: 13, weight: '700' },
+                    bodyFont: { size: 12 },
+                    cornerRadius: 8,
+                    displayColors: false
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { 
-                        color: '#f0f2f5', 
-                        display: key === 'unit' ? false : true,
-                        borderDash: [4] 
-                    },
-                    ticks: { font: { size: 10, weight: '600' }, precision: 0, maxRotation: 0, minRotation: 0 }
+                    suggestedMax: 5,
+                    grid: { display: false, drawBorder: false },
+                    ticks: { font: { size: 10, weight: '700' }, color: '#64748b', stepSize: 5 }
                 },
                 x: {
                     beginAtZero: true,
+                    suggestedMax: 5,
                     grid: { 
-                        color: '#f0f2f5',
-                        display: key === 'unit' ? true : false,
-                        borderDash: [4]
+                        color: '#f1f5f9', 
+                        display: key === 'unit',
+                        drawBorder: false,
+                        borderDash: [5, 5]
                     },
-                    ticks: { font: { size: 10, weight: '600' }, precision: 0, maxRotation: 0, minRotation: 0 }
+                    ticks: { font: { size: 10, weight: '700' }, color: '#64748b', stepSize: 5 }
                 }
             }
         }
@@ -555,34 +565,24 @@ function switchView(key) {
         const btn = document.getElementById('btn' + k.charAt(0).toUpperCase() + k.slice(1));
         if (btn) btn.classList.remove('active');
     });
-    
     const activeBtn = document.getElementById('btn' + key.charAt(0).toUpperCase() + key.slice(1));
     if (activeBtn) activeBtn.classList.add('active');
-    
     buildChart(key);
 }
 
 $(function() {
-    // Register the datalabels plugin globally if it exists
-    if (typeof ChartDataLabels !== 'undefined') {
-        Chart.register(ChartDataLabels);
-    }
-    
-    // Default Font Global Setup
+    if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.color = '#8392ab';
     Chart.defaults.animation = false;
 
-    /* ── Pie Chart ─────────────────────────────────────────────────────────── */
     new Chart(document.getElementById('levelPieChart'), {
         type: 'pie',
         data: {
             labels: @json($categoryStats->pluck('name')),
             datasets: [{
                 data: @json($categoryStats->pluck('count')),
-                backgroundColor: [
-                    '#007774', '#c00000', '#ff9900', '#0d6efd', '#198754', '#ffeb3b', '#6f42c1', '#fd7e14'
-                ],
+                backgroundColor: ['#007774', '#c00000', '#ff9900', '#0d6efd', '#198754', '#ffeb3b', '#6f42c1', '#fd7e14'],
                 borderWidth: 1.5,
                 borderColor: '#ffffff',
             }]
@@ -591,17 +591,8 @@ $(function() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                datalabels: {
-                    display: false
-                },
-                legend: {
-                    position: 'bottom',
-                    labels: { 
-                        boxWidth: 8, 
-                        padding: 10, 
-                        font: { size: 9, weight: 600 }
-                    }
-                },
+                datalabels: { display: false },
+                legend: { position: 'bottom', labels: { boxWidth: 8, padding: 10, font: { size: 9, weight: 600 } } },
                 tooltip: {
                     callbacks: {
                         label: ctx => {
@@ -615,8 +606,8 @@ $(function() {
         }
     });
 
-    // Initial build
-    buildChart('unit');
+    const isSpecial = @json(in_array(auth()->user()->role_id, [1, 2]));
+    buildChart(isSpecial ? 'unit' : 'trend');
 });
 </script>
 @endpush

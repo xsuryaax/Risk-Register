@@ -1,18 +1,18 @@
 <div class="table-responsive p-0">
     <table class="table align-items-center mb-0 table-bordered-light table-compact-analisis" id="mainTable">
         <colgroup>
-            <col style="width: 3%; min-width: 30px;">
+            <col style="width: 2%;"> <!-- No -->
             <col style="width: 80px;"> <!-- Kode -->
-            <col style="width: 22%; min-width: 150px;"> <!-- Kegiatan -->
-            <col style="width: 22%; min-width: 150px;"> <!-- Uraian -->
-            <col style="width: 50px;">
-            <col style="width: 75px;">
-            <col style="width: 35px;">
-            <col style="width: 35px;">
-            <col style="width: 40px;">
-            <col style="width: 70px;">
-            <col style="width: 80px;">
-            <col style="width: 50px;">
+            <col style="width: 15%;"> <!-- Kegiatan -->
+            <col style="width: 25%;"> <!-- Uraian -->
+            <col style="width: 100px;"> <!-- Desain -->
+            <col style="width: 110px;"> <!-- Efektifitas -->
+            <col style="width: 65px;"> <!-- P -->
+            <col style="width: 65px;"> <!-- D -->
+            <col style="width: 50px;"> <!-- TR -->
+            <col style="width: 80px;"> <!-- PR -->
+            <col style="width: 120px;"> <!-- Pemilik -->
+            <col style="width: 50px;"> <!-- Action -->
         </colgroup>
         <thead class="bg-light">
             <tr>
@@ -38,7 +38,16 @@
         </thead>
         <tbody>
             @forelse($data as $item)
-            <tr>
+            @php
+                $analisis = $item->analisis;
+                $pId = $analisis->probabilitas_id ?? null;
+                $dId = $analisis->dampak_id ?? null;
+                $score = $analisis->skor_risiko ?? null;
+                $rank = strtoupper($analisis->peringkat_risiko ?? '');
+                $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffeb3b' : ($rank == 'RENDAH' ? '#0d6efd' : '#198754')));
+                $textColor = ($rank == 'SEDANG' || $rank == '') ? 'text-dark' : 'text-white';
+            @endphp
+            <tr data-id="{{ $item->id }}" class="row-analisis">
                 <td class="align-middle text-center px-1">
                     <span class="text-dark text-xs font-weight-bold">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
                 </td>
@@ -46,52 +55,148 @@
                     <span class="text-xs font-weight-bold text-primary">{{ $item->kode_risiko }}</span>
                 </td>
                 <td class="px-1 text-start">
-                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark">{{ $item->kegiatan }}</p>
+                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark" style="min-width: 150px;">{{ $item->kegiatan }}</p>
                 </td>
                 
-                <td class="px-1 bg-gray-50 text-start">
-                    <p class="text-xs mb-0 text-wrap text-dark">{{ $item->analisis?->uraian_pengendalian ?? '-' }}</p>
+                {{-- Uraian Pengendalian --}}
+                <td class="px-1 bg-gray-50 overflow-hidden">
+                    <div class="view-mode">
+                        <p class="text-xs mb-0 text-wrap text-dark label-uraian">{{ $analisis->uraian_pengendalian ?? '-' }}</p>
+                    </div>
+                    <div class="edit-mode d-none">
+                        <textarea class="form-control form-control-sm text-xs edit-uraian" rows="2" style="min-width: 180px;">{{ $analisis->uraian_pengendalian ?? '' }}</textarea>
+                    </div>
                 </td>
+                
+                {{-- Desain --}}
                 <td class="align-middle text-center px-1 bg-gray-50">
-                    <span class="text-xs text-dark">{{ $item->analisis?->desain_pengendalian ?? '-' }}</span>
+                    <div class="view-mode">
+                        <span class="text-xs text-dark label-desain">{{ $analisis->desain_pengendalian ?? '-' }}</span>
+                    </div>
+                    <div class="edit-mode d-none">
+                        <select class="form-select form-select-sm text-xs edit-desain">
+                            <option value="">-</option>
+                            <option value="Ada" {{ ($analisis->desain_pengendalian ?? '') == 'Ada' ? 'selected' : '' }}>Ada</option>
+                            <option value="Tidak" {{ ($analisis->desain_pengendalian ?? '') == 'Tidak' ? 'selected' : '' }}>Tidak</option>
+                        </select>
+                    </div>
                 </td>
+                
+                {{-- Efektifitas --}}
                 <td class="align-middle text-center px-1 bg-gray-50">
-                    <span class="text-xs text-dark">{{ $item->analisis?->efektifitas_pengendalian ?? '-' }}</span>
+                    <div class="view-mode">
+                        <span class="text-xs text-dark label-efektif">{{ $analisis->efektifitas_pengendalian ?? '-' }}</span>
+                    </div>
+                    <div class="edit-mode d-none">
+                        <select class="form-select form-select-sm text-xs edit-efektif">
+                            <option value="">-</option>
+                            <option value="Efektif" {{ ($analisis->efektifitas_pengendalian ?? '') == 'Efektif' ? 'selected' : '' }}>Efektif</option>
+                            <option value="Kurang Efektif" {{ ($analisis->efektifitas_pengendalian ?? '') == 'Kurang Efektif' ? 'selected' : '' }}>Kurang</option>
+                            <option value="Tidak Efektif" {{ ($analisis->efektifitas_pengendalian ?? '') == 'Tidak Efektif' ? 'selected' : '' }}>Tidak</option>
+                        </select>
+                    </div>
                 </td>
 
-                <td class="align-middle text-center px-1">
-                    <span class="text-xs font-weight-bold text-dark">{{ $item->evaluasi ? ($item->evaluasi->probabilitas->nilai_probabilitas ?? '-') : ($item->analisis?->probabilitas->nilai_probabilitas ?? '-') }}</span>
+                {{-- Probabilitas (P) --}}
+                <td class="align-middle text-center px-0">
+                    <div class="view-mode">
+                        <span class="text-xs font-weight-bold text-dark label-prob">{{ $analisis->probabilitas->nilai_probabilitas ?? '-' }}</span>
+                    </div>
+                    <div class="edit-mode d-none">
+                        <select class="form-select form-select-sm text-xs edit-prob px-1" style="min-width: 45px;">
+                            <option value="">-</option>
+                            @foreach($probs as $p)
+                                <option value="{{ $p->id }}" {{ $pId == $p->id ? 'selected' : '' }}>{{ $p->nilai_probabilitas }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </td>
-                <td class="align-middle text-center px-1 border-right-red">
-                    <span class="text-xs font-weight-bold text-dark">{{ $item->evaluasi ? ($item->evaluasi->dampak->nilai_dampak ?? '-') : ($item->analisis?->dampak->nilai_dampak ?? '-') }}</span>
+
+                {{-- Dampak (D) --}}
+                <td class="align-middle text-center px-0 border-right-red">
+                    <div class="view-mode">
+                        <span class="text-xs font-weight-bold text-dark label-dampak">{{ $analisis->dampak->nilai_dampak ?? '-' }}</span>
+                    </div>
+                    <div class="edit-mode d-none">
+                        <select class="form-select form-select-sm text-xs edit-dampak px-1" style="min-width: 45px;">
+                            <option value="">-</option>
+                            @foreach($damps as $d)
+                                <option value="{{ $d->id }}" {{ $dId == $d->id ? 'selected' : '' }}>{{ $d->nilai_dampak }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </td>
-                @php
-                    $score = $item->evaluasi ? $item->evaluasi->skor_residu : ($item->analisis?->skor_risiko ?? null);
-                    $rank = strtoupper($item->evaluasi ? $item->evaluasi->peringkat_residu : ($item->analisis?->peringkat_risiko ?? ''));
-                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffeb3b' : ($rank == 'RENDAH' ? '#0d6efd' : '#198754')));
-                    $textColor = ($rank == 'SEDANG' || $rank == '') ? 'text-dark' : 'text-white';
-                @endphp
-                <td class="align-middle text-center px-1 border-right-red" style="{{ $score !== null ? 'background-color: '.$bgColor.';' : '' }}">
-                    <span class="text-xs font-weight-bold {{ $score !== null ? $textColor : 'text-dark' }}">
+
+                {{-- Skor Risiko (TR) --}}
+                <td class="align-middle text-center px-1 border-right-red col-score" style="{{ $score !== null ? 'background-color: '.$bgColor.';' : '' }}">
+                    <span class="text-xs font-weight-bold {{ $score !== null ? $textColor : 'text-dark' }} label-score">
                         {{ $score ?? '-' }}
                     </span>
                 </td>
-                <td class="align-middle text-center px-1 border-right-red">
-                    @if($rank)
-                        <span class="text-xxs font-weight-bold text-dark">
-                            {{ ucfirst(strtolower($rank)) }}
-                        </span>
-                    @else
-                        <span class="text-xs text-secondary">-</span>
-                    @endif
+
+                {{-- Peringkat Risiko (PR) --}}
+                <td class="align-middle text-center px-1 border-right-red col-rank">
+                    <span class="text-xxs font-weight-bold text-dark label-rank">
+                        {{ $rank ? ucfirst(strtolower($rank)) : '-' }}
+                    </span>
                 </td>
+
+                {{-- Pemilik Risiko --}}
                 <td class="align-middle text-center px-1">
-                    <span class="text-xs text-dark col-pemilik-text">{{ $item->analisis?->pemilik_risiko ?? '-' }}</span>
+                    @php
+                        $rawPemilik = $analisis->pemilik_risiko ?? $item->unit?->nama_unit;
+                        $pemiliks = array_filter(explode(',', $rawPemilik));
+                        $firstPemilik = $pemiliks[0] ?? '-';
+                        $extraCount = count($pemiliks) > 1 ? count($pemiliks) - 1 : 0;
+                    @endphp
+                    <div class="view-mode">
+                        <div class="custom-tooltip-wrapper">
+                            <span class="text-xs text-dark label-pemilik-container cursor-pointer">
+                                <span class="label-pemilik-text">{{ $firstPemilik }}</span>
+                                @if($extraCount > 0)
+                                    <span class="badge bg-soft-info text-primary p-1 ms-1 label-pemilik-extra" style="font-size: 0.65rem;">+{{ $extraCount }}</span>
+                                @endif
+                            </span>
+
+                            @if(count($pemiliks) > 1)
+                            <div class="custom-tooltip-content">
+                                <div class="px-2 py-1">
+                                    <div class="mb-1 font-weight-bold border-bottom pb-1 text-white opacity-8" style="font-size: 10px;">DAFTAR PEMILIK :</div>
+                                    <ul class="list-unstyled mb-0 text-start label-pemilik-list">
+                                        @foreach($pemiliks as $p)
+                                            <li class="py-1" style="font-size: 11px; white-space: nowrap;">
+                                                <i class="fa fa-caret-right me-1 text-info"></i> {{ $p }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="edit-mode d-none">
+                        <select class="edit-pemilik ts-multi" multiple style="min-width: 150px;">
+                            @foreach($units as $u)
+                                <option value="{{ $u->nama_unit }}" {{ in_array($u->nama_unit, $pemiliks) ? 'selected' : '' }}>{{ $u->nama_unit }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </td>
+
                 <td class="align-middle text-center px-1">
-                    <a href="{{ route('analisis-risiko.edit', $item->id) }}" class="btn-action btn-edit" title="Evaluasi &amp; Analisis">
-                        <i class="fa {{ isset($item->analisis) ? 'fa-edit' : 'fa-plus' }}"></i>
-                    </a>
+                    <div class="view-mode">
+                        <button type="button" class="btn-action btn-edit btn-toggle-edit" title="{{ $analisis ? 'Edit Analisis' : 'Isi Analisis' }}">
+                            <i class="fa {{ $analisis ? 'fa-edit' : 'fa-plus' }}"></i>
+                        </button>
+                    </div>
+                    <div class="edit-mode d-none d-flex gap-1 justify-content-center">
+                        <button type="button" class="btn btn-sm btn-success btn-inline-save p-2 mb-0 shadow-sm" title="Simpan">
+                            <i class="fa fa-check text-xs"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light btn-inline-cancel p-2 mb-0 shadow-sm" title="Batal">
+                            <i class="fa fa-times text-xs"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
             @empty

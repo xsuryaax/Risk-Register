@@ -14,6 +14,7 @@ class RiskAnalysisController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        $activePeriode = \App\Models\Periode::getActive();
         $query = IdentifikasiRisiko::with([
             'analisis.probabilitas', 
             'analisis.dampak', 
@@ -23,6 +24,12 @@ class RiskAnalysisController extends Controller
             'kategori', 
             'ruangLingkup'
         ]);
+
+        if ($activePeriode) {
+            $query->where('periode_id', $activePeriode->id);
+        } else {
+            $query->whereRaw('1 = 0');
+        }
 
         // Security: Scoping by Unit
         if (!in_array($user->role_id, [1, 2])) {
@@ -69,14 +76,15 @@ class RiskAnalysisController extends Controller
         }
 
         $data = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
-        
-        $units = \App\Models\Unit::orderBy('nama_unit', 'asc')->get();
+        $units = \App\Models\Unit::orderBy('nama_unit')->get();
+        $probs = Probabilitas::orderBy('nilai_probabilitas')->get();
+        $damps = Dampak::orderBy('nilai_dampak')->get();
 
         if ($request->ajax()) {
-            return view('pages.analisis-risiko._table', compact('data'))->render();
+            return view('pages.analisis-risiko._table', compact('data', 'units', 'probs', 'damps'))->render();
         }
 
-        return view('pages.analisis-risiko.index', compact('data', 'units'));
+        return view('pages.analisis-risiko.index', compact('data', 'units', 'probs', 'damps'));
     }
 
     public function edit($id)
@@ -145,6 +153,17 @@ class RiskAnalysisController extends Controller
                 'pemilik_risiko' => $request->pemilik_risiko,
             ]
         );
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Analisis berhasil disimpan',
+                'score' => $score,
+                'rank' => ucfirst(strtolower($ranking)),
+                'color' => $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754'))),
+                'text_color' => ($ranking == 'SEDANG') ? 'text-dark' : 'text-white'
+            ]);
+        }
 
         return redirect()->route('analisis-risiko.index')->with('success', 'Analisis risiko berhasil disimpan.');
     }

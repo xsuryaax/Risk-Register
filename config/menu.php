@@ -31,6 +31,7 @@ return [
             ['key' => 'users', 'label' => 'Manajemen User', 'route' => 'users.index'],
             ['key' => 'roles', 'label' => 'Manajemen Role', 'route' => 'roles.index'],
             ['key' => 'units', 'label' => 'Manajemen Unit', 'route' => 'units.index'],
+            ['key' => 'periode', 'label' => 'Manajemen Periode', 'route' => 'periode.index'],
         ]
     ]
 ];

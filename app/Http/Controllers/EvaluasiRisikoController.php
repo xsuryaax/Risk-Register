@@ -13,7 +13,14 @@ class EvaluasiRisikoController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        $activePeriode = \App\Models\Periode::getActive();
         $query = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup', 'analisis', 'evaluasi']);
+
+        if ($activePeriode) {
+            $query->where('periode_id', $activePeriode->id);
+        } else {
+            $query->whereRaw('1 = 0');
+        }
 
         // Security: Non-Admin/Mutu can only see their own unit
         if (!in_array($user->role_id, [1, 2])) {
