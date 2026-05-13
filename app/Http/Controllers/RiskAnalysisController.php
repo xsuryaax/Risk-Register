@@ -86,7 +86,6 @@ class RiskAnalysisController extends Controller
 
         return view('pages.analisis-risiko.index', compact('data', 'units', 'probs', 'damps'));
     }
-
     public function edit($id)
     {
         $user = auth()->user();

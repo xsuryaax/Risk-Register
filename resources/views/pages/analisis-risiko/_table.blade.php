@@ -25,7 +25,7 @@
                 <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-num border-right-red">TR</th>
                 <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-rank border-right-red">PR</th>
                 <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-pemilik">Pemilik</th>
-                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-action">Action</th>
+                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 col-action">Aksi</th>
             </tr>
             <tr>
                 <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top col-uraian">Uraian</th>
@@ -43,9 +43,9 @@
                 $pId = $analisis->probabilitas_id ?? null;
                 $dId = $analisis->dampak_id ?? null;
                 $score = $analisis->skor_risiko ?? null;
-                $rank = strtoupper($analisis->peringkat_risiko ?? '');
-                $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffeb3b' : ($rank == 'RENDAH' ? '#0d6efd' : '#198754')));
-                $textColor = ($rank == 'SEDANG' || $rank == '') ? 'text-dark' : 'text-white';
+                $rank = $score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')));
+                $bgColor = $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')));
+                $textColor = ($score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
             @endphp
             <tr data-id="{{ $item->id }}" class="row-analisis">
                 <td class="align-middle text-center px-1">
@@ -137,7 +137,7 @@
                 {{-- Peringkat Risiko (PR) --}}
                 <td class="align-middle text-center px-1 border-right-red col-rank">
                     <span class="text-xxs font-weight-bold text-dark label-rank">
-                        {{ $rank ? ucfirst(strtolower($rank)) : '-' }}
+                        {{ $score !== null ? $rank : '-' }}
                     </span>
                 </td>
 

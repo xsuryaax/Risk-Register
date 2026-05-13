@@ -75,7 +75,7 @@
 
 <div class="row">
     <div class="col-md-4">
-        <div class="card mb-4 border-0 shadow-sm border-radius-lg">
+        <div class="card mb-3 border-0 shadow-sm border-radius-lg">
             <div class="card-header bg-primary py-3 text-center">
                 <h6 class="mb-0 text-white font-weight-bold">Tambah User Baru</h6>
             </div>
@@ -180,10 +180,10 @@
     </div>
 
     <div class="col-md-8">
-        <div class="card mb-4 border-radius-lg shadow-sm">
-            <div class="card-header pb-0 p-3">
+        <div class="card mb-3 border-radius-lg shadow-sm">
+            <div class="card-header py-2 px-3">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <div class="input-group input-group-sm mb-0" style="width: 250px;">
+                    <div class="input-group input-group-sm mb-0" style="width: 220px;">
                         <span class="input-group-text bg-transparent border-end-0">
                             <i class="fa fa-building text-xs"></i>
                         </span>
@@ -194,9 +194,9 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="input-group input-group-sm mb-0" style="width: 250px;">
+                    <div class="input-group input-group-sm mb-0" style="width: 220px;">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Cari user..." id="searchTable">
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari user..." id="searchUser" value="{{ request('search') }}">
                     </div>
                 </div>
             </div>
@@ -285,18 +285,26 @@
         alert('Fitur AJAX Simpan User akan diimplementasikan pada langkah berikutnya!');
     });
 
-    // Filter Unit Logic
-    document.getElementById('filterUnit').addEventListener('change', function() {
-        const unitId = this.value;
+    // Filter logic
+    function refreshTable() {
         const url = new URL(window.location.href);
-        if (unitId) {
-            url.searchParams.set('unit_id', unitId);
-        } else {
-            url.searchParams.delete('unit_id');
-        }
+        const search = document.getElementById('searchUser').value;
+        const unitId = document.getElementById('filterUnit').value;
+
+        if (search) url.searchParams.set('search', search); else url.searchParams.delete('search');
+        if (unitId) url.searchParams.set('unit_id', unitId); else url.searchParams.delete('unit_id');
         
-        // Use the global AJAX loader
         loadAjax(url.toString());
+    }
+
+    // Debounce search
+    let searchTimer;
+    document.getElementById('searchUser').addEventListener('keyup', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(refreshTable, 500);
     });
+
+    // Filter Unit logic
+    document.getElementById('filterUnit').addEventListener('change', refreshTable);
 </script>
 @endpush

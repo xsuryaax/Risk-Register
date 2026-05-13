@@ -35,11 +35,22 @@
                                 <tr>
                                     <td class="label-cell"><label class="mb-0">Peringkat Risiko</label></td>
                                     <td class="input-cell text-start">
+                                        @php
+                                            $score = $identifikasi->analisis->skor_risiko;
+                                            $bgColor = $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')));
+                                            $textColor = ($score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
+                                            
+                                            if ($score >= 15) $rankTitle = 'Sangat Tinggi';
+                                            elseif ($score >= 10) $rankTitle = 'Tinggi';
+                                            elseif ($score >= 5) $rankTitle = 'Sedang';
+                                            elseif ($score >= 3) $rankTitle = 'Rendah';
+                                            else $rankTitle = 'Sangat Rendah';
+                                        @endphp
                                         <div class="d-flex align-items-center">
-                                            <span class="badge badge-sm me-2" style="background-color: {{ $identifikasi->analisis->skor_risiko >= 20 ? '#c00000' : ($identifikasi->analisis->skor_risiko >= 13 ? '#ff9900' : ($identifikasi->analisis->skor_risiko >= 5 ? '#ffff00' : '#198754')) }}">
-                                                {{ $identifikasi->analisis->skor_risiko }}
+                                            <span class="badge badge-sm me-2 {{ $textColor }}" style="background-color: {{ $bgColor }}">
+                                                {{ $score }}
                                             </span>
-                                            <span class="text-xs font-weight-bold text-dark">{{ ucfirst(strtolower($identifikasi->analisis->peringkat_risiko)) }}</span>
+                                            <span class="text-xs font-weight-bold text-dark">{{ $rankTitle }}</span>
                                         </div>
                                     </td>
                                 </tr>

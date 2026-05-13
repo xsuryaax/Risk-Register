@@ -117,7 +117,18 @@ class EvaluasiRisikoSeeder extends Seeder
 
                 // Tentukan peringkat residu berdasarkan skor
                 $skor = $data['skor_residu'];
-                $peringkat = $skor >= 20 ? 'SANGAT TINGGI' : ($skor >= 13 ? 'TINGGI' : ($skor >= 5 ? 'SEDANG' : 'RENDAH'));
+                $peringkat = 'RENDAH';
+                if ($skor >= 15) {
+                    $peringkat = 'SANGAT TINGGI';
+                } elseif ($skor >= 10) {
+                    $peringkat = 'TINGGI';
+                } elseif ($skor >= 5) {
+                    $peringkat = 'SEDANG';
+                } elseif ($skor >= 3) {
+                    $peringkat = 'RENDAH';
+                } else {
+                    $peringkat = 'SANGAT RENDAH';
+                }
 
                 EvaluasiRisiko::create([
                     'identifikasi_risiko_id' => $idRisk->id,

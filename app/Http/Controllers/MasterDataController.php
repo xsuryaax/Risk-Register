@@ -53,6 +53,15 @@ class MasterDataController extends Controller
             $query->where('unit_id', $request->unit_id);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama_lengkap', 'like', '%' . $search . '%')
+                  ->orWhere('username', 'like', '%' . $search . '%')
+                  ->orWhere('nip', 'like', '%' . $search . '%');
+            });
+        }
+
         $users = $query->paginate(10)->onEachSide(1)->withQueryString();
         $roles = Role::where('status_role', 'aktif')->get();
         $units = Unit::where('status_unit', 'aktif')->get();

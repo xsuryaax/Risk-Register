@@ -8,12 +8,12 @@
 @section('content')
 <div class="row">
     <div class="col-12">
-        <div class="card mb-4 border-radius-lg shadow-sm">
-            <div class="card-header pb-3 p-3">
+        <div class="card mb-3 border-radius-lg shadow-sm">
+            <div class="card-header py-2 px-3">
                 <form action="{{ route('analisis-kecukupan.index') }}" method="GET" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <div class="input-group input-group-sm mb-0" style="width: 250px;">
+                    <div class="input-group input-group-sm mb-0" style="width: 220px;">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 ps-0 text-xs" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
                     </div>
                     <div class="d-flex gap-2 w-100 w-md-auto">
                             <select name="peringkat" class="form-select form-select-sm select-filter select-pewarna filter-input" id="filterPeringkat">
@@ -72,14 +72,15 @@
                                 </td>
 
                                 @php
-                                    $rank = strtoupper($item->evaluasi ? $item->evaluasi->peringkat_residu : ($item->analisis->peringkat_risiko ?? ''));
-                                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffeb3b' : ($rank == 'RENDAH' ? '#0d6efd' : '#198754')));
-                                    $textColor = ($rank == 'SEDANG' || $rank == '') ? 'text-dark' : 'text-white';
+                                    $score = $item->analisis->skor_risiko ?? null;
+                                    $rankLabel = $score !== null ? ($score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')))) : '-';
+                                    $bgColor = $score !== null ? ($score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')))) : '';
+                                    $textColor = ($score !== null && $score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
                                 @endphp
-                                <td class="align-middle text-center px-1" style="{{ $rank ? 'background-color: '.$bgColor.';' : '' }}">
-                                    @if($rank)
+                                <td class="align-middle text-center px-1" style="{{ $score !== null ? 'background-color: '.$bgColor.';' : '' }}">
+                                    @if($score !== null)
                                         <span class="text-xs font-weight-bold {{ $textColor }}">
-                                            {{ ucfirst(strtolower($rank)) }}
+                                            {{ $rankLabel }}
                                         </span>
                                     @else
                                         <span class="text-xs text-secondary">-</span>
@@ -96,7 +97,35 @@
                                 </td>
 
                                 <td class="align-middle text-center px-1">
-                                    <p class="text-xs text-dark text-wrap mb-0 col-pemilik-text" style="min-width: 100px;">{{ $item->analisis->pemilik_risiko ?? '-' }}</p>
+                                    @php
+                                        $rawPemilik = $item->analisis->pemilik_risiko ?? '-';
+                                        $pemiliks = array_filter(explode(',', $rawPemilik));
+                                        $firstPemilik = $pemiliks[0] ?? '-';
+                                        $extraCount = count($pemiliks) > 1 ? count($pemiliks) - 1 : 0;
+                                    @endphp
+                                    <div class="custom-tooltip-wrapper">
+                                        <span class="text-xs text-dark cursor-pointer">
+                                            {{ $firstPemilik }}
+                                            @if($extraCount > 0)
+                                                <span class="badge bg-soft-info text-primary p-1 ms-1" style="font-size: 0.65rem;">+{{ $extraCount }}</span>
+                                            @endif
+                                        </span>
+
+                                        @if(count($pemiliks) > 1)
+                                        <div class="custom-tooltip-content">
+                                            <div class="px-2 py-1">
+                                                <div class="mb-1 font-weight-bold border-bottom pb-1 text-white opacity-8" style="font-size: 10px;">DAFTAR PEMILIK :</div>
+                                                <ul class="list-unstyled mb-0 text-start">
+                                                    @foreach($pemiliks as $p)
+                                                        <li class="py-1" style="font-size: 11px; white-space: nowrap;">
+                                                            <i class="fa fa-caret-right me-1 text-info"></i> {{ $p }}
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="align-middle text-center px-1 bg-gray-50">
                                     <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? '-' }}</p>
@@ -130,16 +159,51 @@
 
 <style>
     .bg-gray-50 { background-color: #fbfbfb !important; }
-    .border-right-red {
-        border-right: 1.5px solid #c00000 !important;
+    .bg-soft-info { background-color: rgba(33, 150, 243, 0.1) !important; }
+
+    /* Custom Tooltip Style */
+    .custom-tooltip-wrapper {
+        position: relative;
+        display: inline-block;
     }
-    .border-left-red {
-        border-left: 1.5px solid #c00000 !important;
+    .custom-tooltip-content {
+        visibility: hidden;
+        min-width: 160px;
+        background-color: #1a1a2e;
+        color: #fff;
+        text-align: left;
+        border-radius: 8px;
+        position: absolute;
+        z-index: 10000;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        pointer-events: none;
     }
-    #mainTable th.border-right-red, 
-    #mainTable td.border-right-red {
-        border-right: 1.5px solid #c00000 !important;
+    .custom-tooltip-content::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -6px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: #1a1a2e transparent transparent transparent;
     }
+    .custom-tooltip-wrapper:hover .custom-tooltip-content {
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(-50%) translateY(-5px);
+    }
+    
+    .table-responsive { overflow: visible !important; }
+    .card { overflow: visible !important; }
+
+    .border-right-red { border-right: 1.5px solid #c00000 !important; }
+    .border-left-red { border-left: 1.5px solid #c00000 !important; }
 </style>
 @endsection
 

@@ -35,19 +35,55 @@
                                 <tr>
                                     <td class="label-cell"><label class="mb-0">Skor Awal</label></td>
                                     <td class="input-cell text-start">
+                                        @php
+                                            $score = $identifikasi->analisis->skor_risiko;
+                                            $bgColor = $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')));
+                                            $textColor = ($score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
+                                            
+                                            if ($score >= 15) $rankTitle = 'Sangat Tinggi';
+                                            elseif ($score >= 10) $rankTitle = 'Tinggi';
+                                            elseif ($score >= 5) $rankTitle = 'Sedang';
+                                            elseif ($score >= 3) $rankTitle = 'Rendah';
+                                            else $rankTitle = 'Sangat Rendah';
+                                        @endphp
                                         <div class="d-flex align-items-center">
-                                            <span class="badge badge-sm me-2" style="background-color: {{ $identifikasi->analisis->skor_risiko >= 20 ? '#c00000' : ($identifikasi->analisis->skor_risiko >= 13 ? '#ff9900' : ($identifikasi->analisis->skor_risiko >= 5 ? '#ffff00' : '#198754')) }}">
-                                                {{ $identifikasi->analisis->skor_risiko }}
+                                            <span class="badge badge-sm me-2 {{ $textColor }}" style="background-color: {{ $bgColor }}">
+                                                {{ $score }}
                                             </span>
-                                            <span class="text-xs font-weight-bold text-dark">{{ ucfirst(strtolower($identifikasi->analisis->peringkat_risiko)) }}</span>
+                                            <span class="text-xs font-weight-bold text-dark">{{ $rankTitle }}</span>
                                         </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Monitoring Kejadian -->
+                                <tr>
+                                    <th colspan="2" class="bg-gray-100 py-2 px-4 border-bottom shadow-none">
+                                        <h6 class="mb-0 text-primary text-uppercase text-xxs font-weight-bolder">II. Pemantauan Risiko (Kejadian)</h6>
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell"><label class="mb-0">Frekuensi Kejadian <span class="text-danger">*</span></label></td>
+                                    <td class="input-cell text-start">
+                                        <input type="text" name="frekuensi_kejadian" id="frekuensi_kejadian" class="form-control text-xs font-weight-bold" value="{{ old('frekuensi_kejadian', $identifikasi->evaluasi->frekuensi_kejadian ?? '') }}" placeholder="Masukkan frekuensi kejadian..." required>
+                                    </td>
+                                </tr>
+                                <tr id="rowUraianKejadian">
+                                    <td class="label-cell"><label class="mb-0">Uraian / Pernyataan Kejadian <span class="text-danger">*</span></label></td>
+                                    <td class="input-cell text-start">
+                                        <textarea name="uraian_kejadian" id="uraian_kejadian" class="form-control text-xs" rows="3" placeholder="Jelaskan detail kejadian atau pernyataan lainnya..." required>{{ old('uraian_kejadian', $identifikasi->evaluasi->uraian_kejadian ?? '') }}</textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell"><label class="mb-0">Tindak Lanjut Evaluasi <span class="text-danger">*</span></label></td>
+                                    <td class="input-cell text-start">
+                                        <textarea name="rekomendasi_tindak_lanjut" class="form-control text-xs" rows="3" placeholder="Masukkan rencana tindak lanjut atau perbaikan kontrol berdasarkan hasil evaluasi ini..." required>{{ old('rekomendasi_tindak_lanjut', $identifikasi->evaluasi->rekomendasi_tindak_lanjut ?? '') }}</textarea>
                                     </td>
                                 </tr>
 
                                 <!-- Penilaian Residu -->
                                 <tr>
                                     <th colspan="2" class="bg-gray-100 py-2 px-4 border-bottom shadow-none">
-                                        <h6 class="mb-0 text-primary text-uppercase text-xxs font-weight-bolder">II. Penilaian Risiko (Residu)</h6>
+                                        <h6 class="mb-0 text-primary text-uppercase text-xxs font-weight-bolder">III. Penilaian Risiko (Residu)</h6>
                                     </th>
                                 </tr>
                                 <tr>
@@ -79,7 +115,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="label-cell" style="background-color: #e9ecef;"><label class="mb-0">Hasil Evaluasi</label></td>
+                                    <td class="label-cell" style="background-color: #e9ecef;"><label class="mb-0">Kesimpulan Evaluasi (IV)</label></td>
                                     <td class="input-cell text-start">
                                         <div class="bg-gray-100 p-3 border-radius-md">
                                             <div class="row align-items-center">
@@ -149,12 +185,13 @@
             if (prob && dam) {
                 const score = parseInt(prob) * parseInt(dam);
                 document.getElementById('displayScore').innerText = score;
-                
-                let rank = 'Rendah';
+                let rank = '-';
                 let color = '#344767';
-                if (score >= 20) { rank = 'Sangat Tinggi'; color = '#c00000'; }
-                else if (score >= 13) { rank = 'Tinggi'; color = '#ff9900'; }
-                else if (score >= 5) { rank = 'Sedang'; color = '#ffff00'; }
+                if (score >= 15) { rank = 'Sangat Tinggi'; color = '#c00000'; }
+                else if (score >= 10) { rank = 'Tinggi'; color = '#ff9900'; }
+                else if (score >= 5) { rank = 'Sedang'; color = '#ffeb3b'; }
+                else if (score >= 3) { rank = 'Rendah'; color = '#0d6efd'; }
+                else { rank = 'Sangat Rendah'; color = '#198754'; }
                 
                 document.getElementById('displayRank').innerText = rank;
                 document.getElementById('displayRank').style.color = color;

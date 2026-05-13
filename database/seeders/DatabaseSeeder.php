@@ -24,9 +24,7 @@ class DatabaseSeeder extends Seeder
             ProbabilitasSeeder::class,
             DampakSeeder::class,
             IdentifikasiRisikoSeeder::class,
-            // Analisis, Kecukupan, dan Eval sudah di-handle di dalam IdentifikasiRisikoSeeder untuk 534 record
-            // AnalisisRisikoSeeder::class,
-            // AnalisisKecukupanSeeder::class,
+            PeriodeSeeder::class,
             EvaluasiRisikoSeeder::class,
         ]);
     }

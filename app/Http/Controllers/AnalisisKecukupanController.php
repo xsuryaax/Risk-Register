@@ -38,23 +38,11 @@ class AnalisisKecukupanController extends Controller
             });
         }
 
-        // Peringkat Filter (Current Status) - Dynamic: Residual > Initial
+        // Peringkat Filter (Initial Only for Adequacy)
         if ($request->filled('peringkat')) {
             $peringkat = strtoupper($request->peringkat);
-            $query->where(function($q) use ($peringkat) {
-                // Jika sudah ada evaluasi, cocokkan peringkat residu
-                $q->where(function($sq1) use ($peringkat) {
-                    $sq1->whereHas('evaluasi', function($qe) use ($peringkat) {
-                        $qe->where('peringkat_residu', $peringkat);
-                    });
-                })
-                // Jika belum ada evaluasi, cocokkan peringkat awal
-                ->orWhere(function($sq2) use ($peringkat) {
-                    $sq2->whereDoesntHave('evaluasi')
-                       ->whereHas('analisis', function($qa) use ($peringkat) {
-                           $qa->where('peringkat_risiko', $peringkat);
-                       });
-                });
+            $query->whereHas('analisis', function($qa) use ($peringkat) {
+                $qa->where('peringkat_risiko', $peringkat);
             });
         }
 

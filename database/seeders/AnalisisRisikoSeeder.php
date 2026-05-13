@@ -164,12 +164,16 @@ class AnalisisRisikoSeeder extends Seeder
 
                 $score = $data['p'] * $data['d'];
                 $ranking = 'RENDAH';
-                if ($score >= 20) {
+                if ($score >= 15) {
                     $ranking = 'SANGAT TINGGI';
-                } elseif ($score >= 13) {
+                } elseif ($score >= 10) {
                     $ranking = 'TINGGI';
                 } elseif ($score >= 5) {
                     $ranking = 'SEDANG';
+                } elseif ($score >= 3) {
+                    $ranking = 'RENDAH';
+                } else {
+                    $ranking = 'SANGAT RENDAH';
                 }
 
                 AnalisisRisiko::create([

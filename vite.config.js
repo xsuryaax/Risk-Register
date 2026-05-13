@@ -11,8 +11,13 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        host: 'localhost',
         watch: {
+            usePolling: true,
             ignored: ['**/storage/framework/views/**'],
+        },
+        hmr: {
+            host: 'localhost',
         },
     },
 });

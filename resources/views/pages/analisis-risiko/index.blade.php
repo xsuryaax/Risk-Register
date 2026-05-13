@@ -8,10 +8,10 @@
 @section('content')
 <div class="row">
     <div class="col-12">
-        <div class="card mb-4 border-radius-lg shadow-sm">
-            <div class="card-header p-3 pb-0">
+        <div class="card mb-3 border-radius-lg shadow-sm">
+            <div class="card-header py-2 px-3">
                 <form action="{{ route('analisis-risiko.index') }}" method="GET" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-0">
-                    <div class="input-group input-group-sm mb-0" style="width: 250px;">
+                    <div class="input-group input-group-sm mb-0" style="width: 220px;">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
                         <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
                     </div>
@@ -82,6 +82,17 @@ $(document).ready(function() {
     // Toggle Edit Mode
     $(document).on('click', '.btn-toggle-edit', function() {
         const row = $(this).closest('tr');
+        
+        // Backup original state for cancel button
+        const scoreCol = row.find('.col-score');
+        const labelScore = row.find('.label-score');
+        const labelRank = row.find('.label-rank');
+        
+        row.data('orig-score-text', labelScore.text());
+        row.data('orig-score-color', scoreCol.css('background-color'));
+        row.data('orig-score-class', labelScore.attr('class'));
+        row.data('orig-rank-text', labelRank.text());
+
         row.find('.view-mode').addClass('d-none');
         row.find('.edit-mode').removeClass('d-none');
         
@@ -92,7 +103,7 @@ $(document).ready(function() {
                 plugins: ['remove_button'],
                 maxItems: null,
                 placeholder: 'Pilih Unit...',
-                dropdownParent: 'body', // Fix: Make dropdown float over the table
+                dropdownParent: 'body',
                 onInitialize: function() {
                     this.control.classList.add('form-control-sm');
                 }
@@ -103,6 +114,17 @@ $(document).ready(function() {
     // Cancel Edit Mode
     $(document).on('click', '.btn-inline-cancel', function() {
         const row = $(this).closest('tr');
+        
+        // Restore original state before hiding edit mode
+        const scoreCol = row.find('.col-score');
+        const labelScore = row.find('.label-score');
+        const labelRank = row.find('.label-rank');
+
+        labelScore.text(row.data('orig-score-text'));
+        scoreCol.css('background-color', row.data('orig-score-color'));
+        labelScore.attr('class', row.data('orig-score-class'));
+        labelRank.text(row.data('orig-rank-text'));
+
         row.find('.edit-mode').addClass('d-none');
         row.find('.view-mode').removeClass('d-none');
     });
@@ -203,6 +225,47 @@ $(document).ready(function() {
                 alert(msg);
             }
         });
+    });
+
+    // Real-time calculation for Inline Edit
+    $(document).on('change', '.edit-prob, .edit-dampak', function() {
+        const row = $(this).closest('tr');
+        const pVal = parseInt(row.find('.edit-prob option:selected').text()) || 0;
+        const dVal = parseInt(row.find('.edit-dampak option:selected').text()) || 0;
+        const score = pVal * dVal;
+        
+        const scoreCol = row.find('.col-score');
+        const rankCol = row.find('.col-rank');
+        const labelScore = scoreCol.find('.label-score');
+        const labelRank = rankCol.find('.label-rank');
+        
+        labelScore.text(score > 0 ? score : '-');
+        
+        let bgColor = '';
+        let textColor = 'text-white';
+        let rank = '-';
+        
+        if (score >= 15) {
+            bgColor = '#c00000';
+            rank = 'Sangat Tinggi';
+        } else if (score >= 10) {
+            bgColor = '#ff9900';
+            rank = 'Tinggi';
+        } else if (score >= 5) {
+            bgColor = '#ffeb3b';
+            rank = 'Sedang';
+            textColor = 'text-dark';
+        } else if (score >= 3) {
+            bgColor = '#0d6efd';
+            rank = 'Rendah';
+        } else if (score > 0) {
+            bgColor = '#198754';
+            rank = 'Sangat Rendah';
+        }
+        
+        scoreCol.css('background-color', bgColor || 'transparent');
+        labelScore.removeClass('text-dark text-white').addClass(textColor);
+        labelRank.text(rank);
     });
 });
 </script>

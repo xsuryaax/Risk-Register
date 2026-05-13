@@ -25,7 +25,7 @@
 
     <!-- Tom Select CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-    
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -469,6 +469,10 @@
             font-weight: 700 !important;
         }
 
+        .text-teal {
+            color: #007774 !important;
+        }
+
         /* Pagination Refined Styling */
         .pagination {
             gap: 4px;
@@ -786,7 +790,7 @@
         @include('layouts.partials.navbar')
 
         <div class="container-fluid py-4 d-flex flex-column flex-grow-1" style="min-height: calc(100vh - 70px);">
-            <div class="flex-grow-1 pb-5">
+            <div class="flex-grow-1 pb-2">
                 @yield('content')
             </div>
 
@@ -794,11 +798,18 @@
                 <div class="container-fluid">
                     <div class="row align-items-center justify-content-lg-between">
                         <div class="col-lg-6 mb-lg-0 mb-4">
-                            <div class="copyright text-center text-sm text-muted text-lg-start">
-                                Risk Register RS Azra -
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script>
+                            <div class="copyright text-center text-sm text-teal font-weight-bold text-lg-start">
+                                @php
+                                    $footerYear = date('Y');
+                                    if(isset($globalActivePeriode)) {
+                                        $footerYear = $globalActivePeriode->tahun;
+                                        if(request()->filled('view_periode')) {
+                                            $vp = $globalPeriodes->firstWhere('id', request('view_periode'));
+                                            if($vp) $footerYear = $vp->tahun;
+                                        }
+                                    }
+                                @endphp
+                                Risk Register RS Azra - {{ $footerYear }}
                             </div>
                         </div>
                     </div>
@@ -850,12 +861,13 @@
 
                         // Re-init tooltips with correct container
                         if (window.bootstrap && bootstrap.Tooltip) {
-                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                            var tooltipTriggerList = [].slice.call(document.querySelectorAll(
+                                '[data-bs-toggle="tooltip"]'))
                             tooltipTriggerList.map(function(tooltipTriggerEl) {
                                 // Dispose existing
                                 const existing = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
                                 if (existing) existing.dispose();
-                                
+
                                 return new bootstrap.Tooltip(tooltipTriggerEl, {
                                     container: 'body',
                                     trigger: 'hover'

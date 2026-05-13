@@ -10,11 +10,15 @@ class EvaluasiRisiko extends Model
 
     protected $fillable = [
         'identifikasi_risiko_id',
+        'frekuensi_kejadian',
+        'status_kejadian',
+        'uraian_kejadian',
         'probabilitas_residu_id',
         'dampak_residu_id',
         'skor_residu',
         'peringkat_residu',
         'penurunan_persen',
+        'rekomendasi_tindak_lanjut',
     ];
 
     public function identifikasi()

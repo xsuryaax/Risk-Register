@@ -80,6 +80,10 @@ class RiskIdentificationController extends Controller
                 ->toArray();
         }
             
+        if ($request->ajax()) {
+            return view('pages.identifikasi-risiko._table', compact('data', 'activePeriode', 'viewPeriodeId', 'pulledActivities'));
+        }
+            
         return view('pages.identifikasi-risiko.index', compact('data', 'units', 'activePeriode', 'periodes', 'viewPeriodeId', 'pulledActivities'));
     }
 
@@ -265,14 +269,39 @@ class RiskIdentificationController extends Controller
 
     public function bulkCopy(Request $request)
     {
-        $ids = $request->ids;
-        if (!$ids || !is_array($ids)) {
-            return response()->json(['success' => false, 'message' => 'Tidak ada data terpilih'], 400);
-        }
-
+        $user = Auth::user();
         $activePeriode = Periode::getActive();
         if (!$activePeriode) {
             return response()->json(['success' => false, 'message' => 'Tidak ada periode aktif'], 400);
+        }
+
+        $ids = [];
+        if ($request->boolean('select_all')) {
+            // Apply original filters to get all matching IDs
+            $query = IdentifikasiRisiko::query();
+            
+            if ($request->filled('view_periode_id')) {
+                $query->where('periode_id', $request->view_periode_id);
+            }
+            if (!in_array($user->role_id, [1, 2])) {
+                $query->where('unit_id', $user->unit_id);
+            } elseif ($request->filled('unit_id')) {
+                $query->where('unit_id', $request->unit_id);
+            }
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('kegiatan', 'like', "%$search%")
+                      ->orWhere('kode_risiko', 'like', "%$search%");
+                });
+            }
+            $ids = $query->pluck('id')->toArray();
+        } else {
+            $ids = $request->ids;
+        }
+
+        if (!$ids || !is_array($ids)) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada data terpilih'], 400);
         }
 
         $year = $activePeriode->tahun;
@@ -284,7 +313,7 @@ class RiskIdentificationController extends Controller
                     $original = IdentifikasiRisiko::find($id);
                     if (!$original) continue;
 
-                    // Skip if already exists in this period (optional, but safer)
+                    // Skip if already exists in this period
                     $exists = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
                         ->where('kegiatan', $original->kegiatan)
                         ->where('unit_id', $original->unit_id)
@@ -294,7 +323,6 @@ class RiskIdentificationController extends Controller
                     $kat = KategoriRisiko::find($original->kategori_risiko_id);
                     $prefix = $kat ? substr($kat->nama_kategori, 0, 1) : 'R';
 
-                    // Find latest number again inside loop to avoid collision
                     $lastCode = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
                         ->where('kode_risiko', 'like', "$prefix-$year-%")
                         ->orderBy('kode_risiko', 'desc')
@@ -322,17 +350,15 @@ class RiskIdentificationController extends Controller
                     $newRisk->user_id = \Auth::id() ?? $original->user_id;
                     $newRisk->save();
 
-                    // ── Clone Analisis ──────────────────────────
                     if ($original->analisis) {
                         $newAnalisis = $original->analisis->replicate();
-                        $newAnalisis->identifikasi_id = $newRisk->id;
+                        $newAnalisis->identifikasi_risiko_id = $newRisk->id;
                         $newAnalisis->save();
                     }
 
-                    // ── Clone Evaluasi ──────────────────────────
                     if ($original->evaluasi) {
                         $newEvaluasi = $original->evaluasi->replicate();
-                        $newEvaluasi->identifikasi_id = $newRisk->id;
+                        $newEvaluasi->identifikasi_risiko_id = $newRisk->id;
                         $newEvaluasi->save();
                     }
                     

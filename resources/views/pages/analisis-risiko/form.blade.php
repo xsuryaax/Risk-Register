@@ -55,6 +55,7 @@
                                     <td class="label-cell"><label class="mb-0">Desain Pengendalian</label></td>
                                     <td class="input-cell text-start">
                                         <select name="desain_pengendalian" class="form-control tom-select" required>
+                                            <option value="" selected disabled>Pilih Desain...</option>
                                             <option value="Ada" {{ (isset($identifikasi->analisis) && $identifikasi->analisis->desain_pengendalian == 'Ada') ? 'selected' : '' }}>Ada</option>
                                             <option value="Tidak" {{ (isset($identifikasi->analisis) && $identifikasi->analisis->desain_pengendalian == 'Tidak') ? 'selected' : '' }}>Tidak</option>
                                         </select>
@@ -64,6 +65,7 @@
                                     <td class="label-cell"><label class="mb-0">Efektifitas</label></td>
                                     <td class="input-cell text-start">
                                         <select name="efektifitas_pengendalian" class="form-control tom-select" required>
+                                            <option value="" selected disabled>Pilih Efektifitas...</option>
                                             <option value="Efektif" {{ (isset($identifikasi->analisis) && $identifikasi->analisis->efektifitas_pengendalian == 'Efektif') ? 'selected' : '' }}>Efektif</option>
                                             <option value="Kurang Efektif" {{ (isset($identifikasi->analisis) && $identifikasi->analisis->efektifitas_pengendalian == 'Kurang Efektif') ? 'selected' : '' }}>Kurang Efektif</option>
                                             <option value="Tidak Efektif" {{ (isset($identifikasi->analisis) && $identifikasi->analisis->efektifitas_pengendalian == 'Tidak Efektif') ? 'selected' : '' }}>Tidak Efektif</option>
@@ -175,46 +177,65 @@
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
-    document.querySelectorAll('.tom-select').forEach((el) => {
-        new TomSelect(el, {
-            create: false,
-            dropdownParent: 'body',
-        });
-    });
-
     const probSelect = document.getElementById('probabilitas');
     const dampSelect = document.getElementById('dampak');
     const totalInput = document.getElementById('total_skor');
     const rankText = document.getElementById('peringkat_text');
 
     function calculate() {
-        const pVal = probSelect.options[probSelect.selectedIndex]?.dataset.val || 0;
-        const dVal = dampSelect.options[dampak.selectedIndex]?.dataset.val || 0;
-        const score = pVal * dVal;
-
-        totalInput.value = score > 0 ? score : '-';
+        // More robust option retrieval using checked selector
+        const pOption = probSelect.querySelector('option:checked');
+        const dOption = dampSelect.querySelector('option:checked');
         
-        if(score >= 20) {
+        const pVal = pOption ? (pOption.getAttribute('data-val') || 0) : 0;
+        const dVal = dOption ? (dOption.getAttribute('data-val') || 0) : 0;
+        const score = parseInt(pVal) * parseInt(dVal);
+
+        totalInput.value = (score > 0) ? score : '-';
+        
+        // Reset and update badge classes
+        rankText.className = 'd-block mt-1 font-weight-bold';
+        
+        if(score >= 15) {
             rankText.innerText = 'SANGAT TINGGI';
-            rankText.className = 'd-block mt-1 font-weight-bold text-danger';
-        } else if(score >= 13) {
+            rankText.classList.add('text-danger');
+        } else if(score >= 10) {
             rankText.innerText = 'TINGGI';
-            rankText.className = 'd-block mt-1 font-weight-bold text-warning';
+            rankText.classList.add('text-danger');
         } else if(score >= 5) {
             rankText.innerText = 'SEDANG';
-            rankText.className = 'd-block mt-1 font-weight-bold text-warning';
-        } else if(score > 0) {
+            rankText.classList.add('text-warning');
+        } else if(score >= 3) {
             rankText.innerText = 'RENDAH';
-            rankText.className = 'd-block mt-1 font-weight-bold text-success';
+            rankText.classList.add('text-info');
+        } else if(score > 0) {
+            rankText.innerText = 'SANGAT RENDAH';
+            rankText.classList.add('text-success');
         } else {
             rankText.innerText = '';
         }
     }
 
+    // Initialize TomSelect with reliable event listeners
+    document.querySelectorAll('.tom-select').forEach((el) => {
+        if (el.tomselect) return;
+        
+        let control = new TomSelect(el, {
+            create: false,
+            dropdownParent: 'body'
+        });
+
+        // Use TomSelect native change listener
+        control.on('change', () => {
+            calculate();
+        });
+    });
+
+    // Also listen to Native change just in case
     probSelect.addEventListener('change', calculate);
     dampSelect.addEventListener('change', calculate);
     
-    // Initial calculation if editing
-    window.onload = calculate;
+    // Initial calculation on load
+    setTimeout(calculate, 200);
 </script>
 @endpush

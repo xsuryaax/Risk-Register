@@ -104,8 +104,8 @@
                                             <form action="{{ route('periode.destroy', $item->id) }}" method="POST" class="m-0">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-link text-danger text-gradient px-1 mb-0 py-1" onclick="return confirm('Hapus periode ini?')">
-                                                    <i class="fa fa-trash text-xs"></i>
+                                                <button type="submit" class="btn btn-xs btn-danger mb-0 py-1 px-2 font-weight-bold" onclick="return confirm('Hapus periode ini?')">
+                                                    <i class="fa fa-trash me-1"></i> Hapus
                                                 </button>
                                             </form>
                                         @else

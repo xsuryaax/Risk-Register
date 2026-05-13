@@ -103,8 +103,11 @@ class EvaluasiRisikoController extends Controller
         }
 
         $request->validate([
+            'frekuensi_kejadian' => 'required|string',
+            'uraian_kejadian' => 'required|string',
             'probabilitas_residu_id' => 'required',
             'dampak_residu_id' => 'required',
+            'rekomendasi_tindak_lanjut' => 'required|string',
         ]);
 
         $prob = Probabilitas::findOrFail($request->probabilitas_residu_id);
@@ -134,11 +137,15 @@ class EvaluasiRisikoController extends Controller
         EvaluasiRisiko::updateOrCreate(
             ['identifikasi_risiko_id' => $id],
             [
+                'frekuensi_kejadian' => $request->frekuensi_kejadian,
+                'status_kejadian' => (!empty($request->frekuensi_kejadian) && !in_array(strtolower($request->frekuensi_kejadian), ['0', 'tidak ada', 'nihil', '-'])) ? 'Ya' : 'Tidak',
+                'uraian_kejadian' => $request->uraian_kejadian,
                 'probabilitas_residu_id' => $request->probabilitas_residu_id,
                 'dampak_residu_id' => $request->dampak_residu_id,
                 'skor_residu' => $score,
                 'peringkat_residu' => $ranking,
                 'penurunan_persen' => $reduction,
+                'rekomendasi_tindak_lanjut' => $request->rekomendasi_tindak_lanjut,
             ]
         );
 

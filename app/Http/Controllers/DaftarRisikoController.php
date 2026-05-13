@@ -11,6 +11,11 @@ class DaftarRisikoController extends Controller
     {
         $user = auth()->user();
         $activePeriode = \App\Models\Periode::getActive();
+        $periodes = \App\Models\Periode::orderBy('tahun', 'desc')->get();
+        
+        // Target period to view
+        $viewPeriodeId = $request->periode_id ?? ($activePeriode->id ?? null);
+
         $query = IdentifikasiRisiko::with([
             'kategori', 
             'ruangLingkup', 
@@ -20,8 +25,8 @@ class DaftarRisikoController extends Controller
             'evaluasi'
         ]);
 
-        if ($activePeriode) {
-            $query->where('periode_id', $activePeriode->id);
+        if ($viewPeriodeId) {
+            $query->where('periode_id', $viewPeriodeId);
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -65,10 +70,21 @@ class DaftarRisikoController extends Controller
         $risikos = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
         $units = \App\Models\Unit::orderBy('nama_unit')->get();
 
-        if ($request->ajax()) {
-            return view('pages.daftar-risiko._table', compact('risikos', 'units'))->render();
+        // Get list of activities already pulled to active period to prevent duplicates
+        $pulledActivities = [];
+        if ($activePeriode && $viewPeriodeId != $activePeriode->id) {
+            $pulledActivities = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                ->when(!in_array($user->role_id, [1, 2]), function($q) use ($user) {
+                    $q->where('unit_id', $user->unit_id);
+                })
+                ->pluck('kegiatan')
+                ->toArray();
         }
 
-        return view('pages.daftar-risiko.index', compact('risikos', 'units'));
+        if ($request->ajax()) {
+            return view('pages.daftar-risiko._table', compact('risikos', 'units', 'activePeriode', 'viewPeriodeId', 'pulledActivities'))->render();
+        }
+
+        return view('pages.daftar-risiko.index', compact('risikos', 'units', 'activePeriode', 'periodes', 'viewPeriodeId', 'pulledActivities'));
     }
 }

@@ -8,12 +8,12 @@
 @section('content')
 <div class="row">
     <div class="col-12">
-        <div class="card mb-4 border-radius-lg shadow-sm">
-            <div class="card-header pb-3 p-3">
+        <div class="card mb-3 border-radius-lg shadow-sm">
+            <div class="card-header py-2 px-3">
                 <form action="{{ route('evaluasi-risiko.index') }}" method="GET" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <div class="input-group input-group-sm mb-0" style="width: 250px;">
+                    <div class="input-group input-group-sm mb-0" style="width: 220px;">
                         <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 ps-0 text-xs" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
                     </div>
                     <div class="d-flex gap-2 w-100 w-md-auto">
                         <select name="peringkat" class="form-select form-select-sm select-filter select-pewarna filter-input" id="filterPeringkat">
@@ -44,9 +44,10 @@
                                 <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 col-pernyataan">Pernyataan Risiko</th>
                                 <th colspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 bg-gray-100">Daftar Risiko (Awal)</th>
                                 <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 col-pemilik">Pemilik</th>
-                                <th colspan="4" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 bg-info text-white">Evaluasi Risiko (Residu)</th>
+                                <th colspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 bg-info text-white">Evaluasi Risiko (Residu)</th>
+                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 col-rank">PR</th>
                                 <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 col-penurunan">Penurunan (%)</th>
-                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 col-action">Action</th>
+                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 col-action">Aksi</th>
                             </tr>
                             <!-- Header Row 2 -->
                             <tr>
@@ -57,7 +58,6 @@
                                 <th class="text-center text-uppercase text-white text-xxs font-weight-bolder bg-info col-num">P</th>
                                 <th class="text-center text-white text-uppercase text-xxs font-weight-bolder bg-info col-num">D</th>
                                 <th class="text-center text-white text-uppercase text-xxs font-weight-bolder bg-info col-tr">TR</th>
-                                <th class="text-center text-white text-uppercase text-xxs font-weight-bolder bg-info col-rank">PR</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -71,6 +71,13 @@
                                 </td>
                                 <td class="text-start text-wrap">
                                     <p class="text-xs font-weight-bold mb-0 text-dark">{{ $item->kegiatan }}</p>
+                                    @if($item->evaluasi && $item->evaluasi->status_kejadian == 'Ya')
+                                        <div class="mt-1">
+                                            <span class="badge badge-sm bg-soft-danger text-danger text-xxs p-1 font-weight-bolder" style="text-transform: none;">
+                                                <i class="fa fa-exclamation-circle me-1"></i> {{ $item->evaluasi->frekuensi_kejadian }}
+                                            </span>
+                                        </div>
+                                    @endif
                                 </td>
 
                                 <!-- Risiko Awal -->
@@ -81,35 +88,68 @@
                                     <span class="text-xs text-dark">{{ $item->analisis->dampak->nilai_dampak ?? '-' }}</span>
                                 </td>
                                 @php
-                                    $rank = strtoupper($item->analisis->peringkat_risiko ?? '');
-                                    $bgColor = $rank == 'SANGAT TINGGI' ? '#c00000' : ($rank == 'TINGGI' ? '#ff9900' : ($rank == 'SEDANG' ? '#ffeb3b' : ($rank == 'RENDAH' ? '#0d6efd' : '#198754')));
-                                    $textColor = ($rank == 'SEDANG') ? 'text-dark' : 'text-white';
+                                    $score = $item->analisis->skor_risiko;
+                                    $rank = $score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')));
+                                    $bgColor = $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')));
+                                    $textColor = ($score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
                                 @endphp
                                 <td class="align-middle text-center" style="{{ isset($item->analisis) ? 'background-color: '.$bgColor.';' : '' }}">
                                     <span class="text-xs font-weight-bold {{ isset($item->analisis) ? $textColor : 'text-dark' }}">{{ $item->analisis->skor_risiko ?? '-' }}</span>
                                 </td>
 
-                                <td class="align-middle text-center">
-                                    <span class="text-xs text-dark col-pemilik-text">{{ $item->analisis->pemilik_risiko ?? '-' }}</span>
+                                <td class="align-middle text-center px-2">
+                                    @php
+                                        $rawPemilik = $item->analisis->pemilik_risiko ?? '-';
+                                        $pemiliks = array_filter(explode(',', $rawPemilik));
+                                        $firstPemilik = $pemiliks[0] ?? '-';
+                                        $extraCount = count($pemiliks) > 1 ? count($pemiliks) - 1 : 0;
+                                    @endphp
+                                    <div class="custom-tooltip-wrapper">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <span class="text-xs text-dark font-weight-bold cursor-pointer text-truncate" style="max-width: 100px;">
+                                                {{ $firstPemilik }}
+                                            </span>
+                                            @if($extraCount > 0)
+                                                <span class="badge bg-soft-info text-primary p-1 ms-1" style="font-size: 0.65rem; min-width: 18px;">+{{ $extraCount }}</span>
+                                            @endif
+                                        </div>
+
+                                        @if(count($pemiliks) > 1)
+                                        <div class="custom-tooltip-content">
+                                            <div class="p-2">
+                                                <div class="mb-2 font-weight-bold border-bottom pb-1 text-info" style="font-size: 10px; letter-spacing: 0.5px;">DAFTAR PEMILIK :</div>
+                                                <ul class="list-unstyled mb-0 text-start">
+                                                    @foreach($pemiliks as $p)
+                                                        <li class="py-1 d-flex align-items-start gap-2" style="font-size: 11px; line-height: 1.2;">
+                                                            <i class="fa fa-circle text-info mt-1" style="font-size: 6px;"></i>
+                                                            <span class="text-white">{{ trim($p) }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    </div>
                                 </td>
 
                                 <!-- Risiko Residu -->
                                 <td class="align-middle text-center bg-info-soft">
-                                    <span class="text-xs text-dark">{{ $item->evaluasi->probabilitas->nilai_probabilitas ?? '-' }}</span>
+                                    <span class="text-xs text-dark">{{ $item->evaluasi?->probabilitas?->nilai_probabilitas ?? '-' }}</span>
                                 </td>
                                 <td class="align-middle text-center bg-info-soft">
-                                    <span class="text-xs text-dark">{{ $item->evaluasi->dampak->nilai_dampak ?? '-' }}</span>
+                                    <span class="text-xs text-dark">{{ $item->evaluasi?->dampak?->nilai_dampak ?? '-' }}</span>
                                 </td>
                                 @php
-                                    $resRank = strtoupper($item->evaluasi->peringkat_residu ?? '');
-                                    $resBgColor = $resRank == 'SANGAT TINGGI' ? '#c00000' : ($resRank == 'TINGGI' ? '#ff9900' : ($resRank == 'SEDANG' ? '#ffeb3b' : ($resRank == 'RENDAH' ? '#0d6efd' : '#198754')));
-                                    $resTextColor = ($resRank == 'SEDANG') ? 'text-dark' : 'text-white';
+                                    $resScore = $item->evaluasi->skor_residu ?? null;
+                                    $resRank = $resScore !== null ? ($resScore >= 15 ? 'Sangat Tinggi' : ($resScore >= 10 ? 'Tinggi' : ($resScore >= 5 ? 'Sedang' : ($resScore >= 3 ? 'Rendah' : 'Sangat Rendah')))) : '-';
+                                    $resBgColor = $resScore !== null ? ($resScore >= 15 ? '#c00000' : ($resScore >= 10 ? '#ff9900' : ($resScore >= 5 ? '#ffeb3b' : ($resScore >= 3 ? '#0d6efd' : '#198754')))) : '';
+                                    $resTextColor = ($resScore !== null && $resScore >= 5 && $resScore < 10) ? 'text-dark' : 'text-white';
                                 @endphp
                                 <td class="align-middle text-center" style="{{ isset($item->evaluasi) ? 'background-color: '.$resBgColor.';' : '' }}">
                                     <span class="text-xs font-weight-bold {{ isset($item->evaluasi) ? $resTextColor : 'text-dark' }}">{{ $item->evaluasi->skor_residu ?? '-' }}</span>
                                 </td>
                                 <td class="align-middle text-center">
-                                    <span class="text-xxs font-weight-bold text-dark">{{ isset($item->evaluasi) ? ucfirst(strtolower($item->evaluasi->peringkat_residu)) : '-' }}</span>
+                                    <span class="text-xxs font-weight-bold text-dark">{{ isset($item->evaluasi) ? $resRank : '-' }}</span>
                                 </td>
 
                                 <td class="align-middle text-center">
@@ -155,16 +195,16 @@
     }
     .col-no { width: 25px; }
     .col-kode { width: 70px; }
-    .col-pernyataan { width: 160px; }
-    .col-num { width: 28px; }
-    .col-tr { width: 35px; }
-    .col-rank { width: 55px; }
-    .col-pemilik { width: 90px; }
+    .col-pernyataan { width: 180px; }
+    .col-num { width: 22px; }
+    .col-tr { width: 30px; }
+    .col-rank { width: 85px; }
+    .col-pemilik { width: 130px; }
     .col-penurunan { width: 80px; }
     .col-action { width: 55px; }
 
     .table-evaluasi td, .table-evaluasi th {
-        padding: 0.3rem 0.2rem !important;
+        padding: 0.4rem 0.3rem !important;
         word-break: break-word;
     }
 
@@ -174,9 +214,53 @@
     }
 
     .table-evaluasi td {
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible !important;
     }
+    .bg-soft-info { background-color: rgba(33, 150, 243, 0.1) !important; }
+    .bg-soft-danger { background-color: rgba(244, 67, 54, 0.1) !important; }
+
+    /* Custom Tooltip Style */
+    .custom-tooltip-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    .custom-tooltip-content {
+        visibility: hidden;
+        min-width: 180px;
+        max-width: 250px;
+        background-color: #1a1a2e;
+        color: #fff;
+        text-align: left;
+        border-radius: 8px;
+        position: absolute;
+        z-index: 1050;
+        bottom: 110%;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        opacity: 0;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        pointer-events: none;
+        border: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(4px);
+    }
+    .custom-tooltip-content::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -6px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: #1a1a2e transparent transparent transparent;
+    }
+    .custom-tooltip-wrapper:hover .custom-tooltip-content {
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    .table-responsive { overflow: visible !important; }
+    .card { overflow: visible !important; }
 </style>
 @endsection
 
