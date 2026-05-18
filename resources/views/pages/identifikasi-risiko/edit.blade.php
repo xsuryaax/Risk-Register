@@ -37,6 +37,35 @@
                                         <textarea name="tujuan_kegiatan" class="form-control" rows="2" required style="resize: none;">{{ $risk->tujuan_kegiatan }}</textarea>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td class="label-cell"><label class="mb-0">Frekuensi Pelaporan</label></td>
+                                    <td class="input-cell text-start">
+                                        <input type="hidden" name="triwulan" value="{{ $risk->triwulan }}">
+                                        <div class="d-flex gap-3 custom-radio-group">
+                                            <div class="custom-radio">
+                                                <input type="radio" name="frekuensi_pelaporan" value="tahunan" id="edit_frekTahunan" {{ ($risk->frekuensi_pelaporan ?? 'triwulan') == 'tahunan' ? 'checked' : '' }}>
+                                                <label for="edit_frekTahunan">
+                                                    <i class="fa fa-check-circle check-icon"></i> Tahunan
+                                                    <small class="text-muted ms-1">(1x/tahun)</small>
+                                                </label>
+                                            </div>
+                                            <div class="custom-radio">
+                                                <input type="radio" name="frekuensi_pelaporan" value="semester" id="edit_frekSemester" {{ ($risk->frekuensi_pelaporan ?? 'triwulan') == 'semester' ? 'checked' : '' }}>
+                                                <label for="edit_frekSemester">
+                                                    <i class="fa fa-check-circle check-icon"></i> Semester
+                                                    <small class="text-muted ms-1">(2x/tahun)</small>
+                                                </label>
+                                            </div>
+                                            <div class="custom-radio">
+                                                <input type="radio" name="frekuensi_pelaporan" value="triwulan" id="edit_frekTriwulan" {{ ($risk->frekuensi_pelaporan ?? 'triwulan') == 'triwulan' ? 'checked' : '' }}>
+                                                <label for="edit_frekTriwulan">
+                                                    <i class="fa fa-check-circle check-icon"></i> Triwulan
+                                                    <small class="text-muted ms-1">(4x/tahun)</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
 
                                 <!-- Bagian II -->
                                 <tr>

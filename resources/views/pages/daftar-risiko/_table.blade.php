@@ -69,6 +69,43 @@
             @forelse($risikos as $item)
                 @php
                     $isPulled = in_array($item->kegiatan, $pulledActivities);
+                    $frekuensi = $item->frekuensi_pelaporan ?? 'triwulan';
+                    $viewTri = $viewTriwulan ?? 'all';
+                    $showValue = false;
+
+                    if ($viewTri == 'all') {
+                        $showValue = true;
+                    } else {
+                        $targetArr = ($viewTri == 's1' ? [1, 2] : ($viewTri == 's2' ? [3, 4] : [$viewTri]));
+                        if ($frekuensi == 'tahunan') {
+                            $showValue = true;
+                        } elseif ($frekuensi == 'semester') {
+                            $itemSem = $item->triwulan <= 2 ? [1, 2] : [3, 4];
+                            if (array_intersect($targetArr, $itemSem)) {
+                                $showValue = true;
+                            }
+                        } elseif ($frekuensi == 'triwulan') {
+                            if (in_array($item->triwulan, $targetArr)) {
+                                $showValue = true;
+                            }
+                        }
+                    }
+
+                    $evaluasi = $showValue ? $item->evaluasi : null;
+                    $analisis = $showValue ? $item->analisis : null;
+                    $analisisKecukupan = $showValue ? $item->analisisKecukupan : null;
+
+                    $score = $evaluasi ? $evaluasi->skor_residu : ($analisis->skor_risiko ?? null);
+                    
+                    $rank = null;
+                    $bgColor = 'transparent';
+                    $textColor = 'text-dark';
+
+                    if ($score !== null) {
+                        $rank = $score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')));
+                        $bgColor = $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')));
+                        $textColor = ($score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
+                    }
                 @endphp
                 <tr>
                     <td class="align-middle text-center">
@@ -89,11 +126,11 @@
                             {{ $item->kegiatan }}</p>
                         <div class="d-flex align-items-center gap-2 mt-1">
                             <span class="text-xxs text-primary font-weight-bold">{{ $item->kode_risiko }}</span>
-                            @if($item->evaluasi && $item->evaluasi->status_kejadian == 'Ya')
+                            @if($evaluasi && $evaluasi->status_kejadian == 'Ya')
                                 <span class="badge badge-sm bg-soft-danger text-danger text-xxs p-1 font-weight-bolder" 
                                     style="text-transform: none; font-size: 0.6rem !important;"
-                                    title="Detail: {{ $item->evaluasi->uraian_kejadian }}">
-                                    <i class="fa fa-exclamation-circle me-1"></i> {{ $item->evaluasi->frekuensi_kejadian }}
+                                    title="Detail: {{ $evaluasi->uraian_kejadian }}">
+                                    <i class="fa fa-exclamation-circle me-1"></i> {{ $evaluasi->frekuensi_kejadian }}
                                 </span>
                             @endif
                         </div>
@@ -107,37 +144,33 @@
 
                     <td class="align-middle text-center">
                         <span
-                            class="text-xs font-weight-bold text-dark">{{ $item->evaluasi ? ($item->evaluasi->probabilitas?->nilai_probabilitas ?? '-') : ($item->analisis->probabilitas?->nilai_probabilitas ?? '-') }}</span>
+                            class="text-xs font-weight-bold text-dark">{{ $evaluasi ? ($evaluasi->probabilitas?->nilai_probabilitas ?? '-') : ($analisis->probabilitas?->nilai_probabilitas ?? '-') }}</span>
                     </td>
                     <td class="align-middle text-center">
                         <span
-                            class="text-xs font-weight-bold text-dark">{{ $item->evaluasi ? ($item->evaluasi->dampak?->nilai_dampak ?? '-') : ($item->analisis->dampak?->nilai_dampak ?? '-') }}</span>
+                            class="text-xs font-weight-bold text-dark">{{ $evaluasi ? ($evaluasi->dampak?->nilai_dampak ?? '-') : ($analisis->dampak?->nilai_dampak ?? '-') }}</span>
                     </td>
-                    @php
-                        $score = $item->evaluasi ? $item->evaluasi->skor_residu : ($item->analisis->skor_risiko ?? null);
-                        $rank = $score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')));
-                        $bgColor = $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')));
-                        $textColor = ($score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
-                    @endphp
+                    
                     <td class="align-middle text-center" style="{{ $score !== null ? 'background-color: '.$bgColor.';' : '' }}">
                         <span class="text-xs font-weight-bold {{ $score !== null ? $textColor : 'text-dark' }}">{{ $score ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-center">
-                        <span
-                            class="text-xxs font-weight-bold {{ $score !== null ? 'text-dark' : 'text-secondary' }}">{{ $score !== null ? $rank : '-' }}</span>
+                        <span class="text-xxs font-weight-bold text-dark">
+                            {{ $score !== null ? $rank : '-' }}
+                        </span>
                     </td>
 
                     <td class="align-middle text-start text-wrap">
                         <span
-                            class="text-xs text-dark">{{ $item->analisis->uraian_pengendalian ?? '-' }}</span>
+                            class="text-xs text-dark">{{ $analisis->uraian_pengendalian ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-start text-wrap">
                         <span
-                            class="text-xs text-dark">{{ $item->analisisKecukupan->uraian_rencana ?? '-' }}</span>
+                            class="text-xs text-dark">{{ $analisisKecukupan->uraian_rencana ?? '-' }}</span>
                     </td>
                     <td class="align-middle text-center text-wrap">
                         <span
-                            class="text-xs text-dark">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? ($item->analisis->pemilik_risiko ?? '-') }}</span>
+                            class="text-xs text-dark">{{ $analisisKecukupan->pj_tindak_lanjut ?? ($analisis->pemilik_risiko ?? '-') }}</span>
                     </td>
                     @if($activePeriode && $viewPeriodeId != $activePeriode->id)
                     <td class="align-middle text-center" style="width: 50px !important;">

@@ -99,6 +99,7 @@ class RiskRegister2026Seeder extends Seeder
                 }
 
                 // e. Simpan Identifikasi Risiko
+                $activePeriode = \App\Models\Periode::where('tahun', '2026')->first();
                 $identifikasi = IdentifikasiRisiko::create([
                     'unit_id' => $unit->id,
                     'user_id' => $user->id,
@@ -111,6 +112,9 @@ class RiskRegister2026Seeder extends Seeder
                     'sebab' => trim($data[7] ?? '-'),
                     'jenis_risiko' => trim($data[8] ?? 'C'),
                     'dampak' => trim($data[6] ?? '-'), // Default ke pernyataan jika tidak ada kolom dampak tekstual
+                    'triwulan' => ($countSuccess % 4) + 1,
+                    'frekuensi_pelaporan' => 'triwulan',
+                    'periode_id' => $activePeriode->id ?? null,
                 ]);
 
                 // f. Simpan Analisis Risiko

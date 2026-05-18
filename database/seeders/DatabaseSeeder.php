@@ -23,8 +23,8 @@ class DatabaseSeeder extends Seeder
             RuangLingkupSeeder::class,
             ProbabilitasSeeder::class,
             DampakSeeder::class,
-            IdentifikasiRisikoSeeder::class,
             PeriodeSeeder::class,
+            IdentifikasiRisikoSeeder::class,
             EvaluasiRisikoSeeder::class,
         ]);
     }

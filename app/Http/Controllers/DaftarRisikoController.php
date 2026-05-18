@@ -16,6 +16,7 @@ class DaftarRisikoController extends Controller
         // Target period to view
         $viewPeriodeId = $request->periode_id ?? ($activePeriode->id ?? null);
 
+        $viewTriwulan = $request->view_triwulan ?? 'all';
         $query = IdentifikasiRisiko::with([
             'kategori', 
             'ruangLingkup', 
@@ -27,6 +28,21 @@ class DaftarRisikoController extends Controller
 
         if ($viewPeriodeId) {
             $query->where('periode_id', $viewPeriodeId);
+
+            $targetVal = ($viewTriwulan == 's1' ? [1, 2] : ($viewTriwulan == 's2' ? [3, 4] : [$viewTriwulan]));
+            $ids = IdentifikasiRisiko::where('periode_id', $viewPeriodeId)
+                ->get()
+                ->groupBy('kode_risiko')
+                ->map(function($group) use ($targetVal, $viewTriwulan) {
+                    if ($viewTriwulan === 'all') {
+                        return $group->sortByDesc('triwulan')->first()->id;
+                    }
+                    $match = $group->first(fn($item) => in_array($item->triwulan, $targetVal));
+                    return $match ? $match->id : $group->sortByDesc('triwulan')->first()->id;
+                })
+                ->values()->toArray();
+
+            $query->whereIn('id', $ids);
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -67,7 +83,7 @@ class DaftarRisikoController extends Controller
             });
         }
 
-        $risikos = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $risikos = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
         $units = \App\Models\Unit::orderBy('nama_unit')->get();
 
         // Get list of activities already pulled to active period to prevent duplicates
@@ -82,9 +98,9 @@ class DaftarRisikoController extends Controller
         }
 
         if ($request->ajax()) {
-            return view('pages.daftar-risiko._table', compact('risikos', 'units', 'activePeriode', 'viewPeriodeId', 'pulledActivities'))->render();
+            return view('pages.daftar-risiko._table', compact('risikos', 'units', 'activePeriode', 'viewPeriodeId', 'pulledActivities', 'viewTriwulan'))->render();
         }
 
-        return view('pages.daftar-risiko.index', compact('risikos', 'units', 'activePeriode', 'periodes', 'viewPeriodeId', 'pulledActivities'));
+        return view('pages.daftar-risiko.index', compact('risikos', 'units', 'activePeriode', 'periodes', 'viewPeriodeId', 'pulledActivities', 'viewTriwulan'));
     }
 }

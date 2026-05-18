@@ -327,6 +327,44 @@
             border: 1px solid rgba(0, 0, 0, 0.1);
             flex-shrink: 0;
         }
+
+        /* Segmented Control / Larik Button Group Style (Premium Hijau Azra - Mini) */
+        .larik-wrapper {
+            display: inline-flex;
+            background-color: #f1f5f9 !important;
+            padding: 3px;
+            border-radius: 9px;
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .btn-larik {
+            padding: 3px 12px;
+            border-radius: 7px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: #007774;
+            opacity: 0.65;
+            text-decoration: none !important;
+            transition: all 0.15s ease-in-out;
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            cursor: pointer;
+            line-height: 1.2;
+        }
+        .btn-larik:hover {
+            opacity: 1;
+            background-color: rgba(0, 119, 116, 0.05);
+        }
+        .btn-larik.active {
+            background-color: #007774 !important;
+            color: #fff !important;
+            opacity: 1;
+            box-shadow: 0 2px 6px rgba(0, 119, 116, 0.25);
+        }
     </style>
 
     <style>

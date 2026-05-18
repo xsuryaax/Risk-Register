@@ -384,62 +384,84 @@
 
 @section('content')
     <div class="container-fluid px-2 pb-2">
+        {{-- Sub-Period / Larik Selector --}}
+        <div class="row mb-4 mt-n2">
+            <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div></div>
+                <div class="larik-wrapper">
+                    @php
+                        $currTri = request('view_triwulan', 'all');
+                        $lariks = ['all' => 'Tahunan', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
+                    @endphp
+                    @foreach($lariks as $val => $lbl)
+                        <button type="button" 
+                           onclick="updateDashboard('{{ $val }}')"
+                           class="btn-larik {{ $currTri == $val ? 'active' : '' }}"
+                           id="btn-tri-{{ $val }}">
+                            {{ $lbl }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        </div>
 
-        {{-- ═══════════════════════════════════════════ KPI CARDS ══════════════════════════════════════════ --}}
-        <div class="kpi-grid mb-4">
+        <style>
+            .text-teal { color: #007774 !important; }
+        </style>
+        <div class="kpi-grid mb-4" id="kpiGrid">
             <a href="{{ route('daftar-risiko.index') }}" class="kpi-card kpi-dark text-decoration-none">
                 <div class="kpi-icon"><i class="fas fa-database"></i></div>
                 <div class="kpi-label">Total Risiko</div>
-                <div class="kpi-value">{{ $allIdentifikasi->count() }}</div>
+                <div class="kpi-value" id="kpi-totalRisks">{{ $allIdentifikasi->count() }}</div>
                 <div class="kpi-sub">TOTAL REGISTERED</div>
             </a>
             <a href="{{ route('analisis-risiko.index', ['peringkat' => 'SANGAT TINGGI']) }}"
                 class="kpi-card kpi-red text-decoration-none">
                 <div class="kpi-icon"><i class="fas fa-radiation-alt"></i></div>
                 <div class="kpi-label">Sangat Tinggi</div>
-                <div class="kpi-value">{{ $levelStats['SANGAT TINGGI'] }}</div>
+                <div class="kpi-value" id="kpi-st">{{ $levelStats['SANGAT TINGGI'] }}</div>
                 <div class="kpi-sub">EXTREME RISK</div>
             </a>
             <a href="{{ route('analisis-risiko.index', ['peringkat' => 'TINGGI']) }}"
                 class="kpi-card kpi-orange text-decoration-none">
                 <div class="kpi-icon"><i class="fas fa-fire-alt"></i></div>
                 <div class="kpi-label">Tinggi</div>
-                <div class="kpi-value">{{ $levelStats['TINGGI'] }}</div>
+                <div class="kpi-value" id="kpi-t">{{ $levelStats['TINGGI'] }}</div>
                 <div class="kpi-sub">HIGH RISK</div>
             </a>
             <a href="{{ route('analisis-risiko.index', ['peringkat' => 'SEDANG']) }}"
                 class="kpi-card kpi-yellow text-decoration-none">
                 <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
                 <div class="kpi-label">Sedang</div>
-                <div class="kpi-value">{{ $levelStats['SEDANG'] }}</div>
+                <div class="kpi-value" id="kpi-s">{{ $levelStats['SEDANG'] }}</div>
                 <div class="kpi-sub">MEDIUM RISK</div>
             </a>
             <a href="{{ route('analisis-risiko.index', ['peringkat' => 'RENDAH']) }}"
                 class="kpi-card kpi-blue text-decoration-none">
                 <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
                 <div class="kpi-label">Rendah</div>
-                <div class="kpi-value">{{ $levelStats['RENDAH'] }}</div>
+                <div class="kpi-value" id="kpi-r">{{ $levelStats['RENDAH'] }}</div>
                 <div class="kpi-sub">LOW RISK</div>
             </a>
             <a href="{{ route('analisis-risiko.index', ['peringkat' => 'SANGAT RENDAH']) }}"
                 class="kpi-card kpi-green text-decoration-none">
                 <div class="kpi-icon"><i class="fas fa-leaf"></i></div>
                 <div class="kpi-label">Sangat Rendah</div>
-                <div class="kpi-value">{{ $levelStats['SANGAT RENDAH'] }}</div>
+                <div class="kpi-value" id="kpi-sr">{{ $levelStats['SANGAT RENDAH'] }}</div>
                 <div class="kpi-sub">INSIGNIFICANT</div>
             </a>
             <a href="{{ route('analisis-risiko.index', ['status' => 'pending']) }}"
                 class="kpi-card kpi-gray text-decoration-none">
                 <div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div>
                 <div class="kpi-label">Belum Ditangani</div>
-                <div class="kpi-value">{{ $pendingRisks }}</div>
+                <div class="kpi-value" id="kpi-pendingRisks">{{ $pendingRisks }}</div>
                 <div class="kpi-sub">RISK OPEN</div>
             </a>
             <a href="{{ route('analisis-risiko.index', ['status' => 'evaluated']) }}"
                 class="kpi-card kpi-teal text-decoration-none">
                 <div class="kpi-icon"><i class="fas fa-check-double"></i></div>
                 <div class="kpi-label">Selesai</div>
-                <div class="kpi-value">{{ $completedRisks }}</div>
+                <div class="kpi-value" id="kpi-completedRisks">{{ $completedRisks }}</div>
                 <div class="kpi-sub">EVALUATED</div>
             </a>
         </div>
@@ -514,7 +536,7 @@
                                         STATUS</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="topRiskBody">
                                 @foreach ($criticalRisks as $rk)
                                     <tr class="risk-row" style="border-bottom:1px solid #f0f2f5;">
                                         <td class="text-center py-3 ps-3 fw-bold"
@@ -594,7 +616,7 @@
                                 <div class="hm-y-text"
                                     style="font-size:0.5rem; letter-spacing:1px; writing-mode:vertical-lr; transform:rotate(180deg); color:#94a3b8; font-weight:800;">
                                     KEMUNGKINAN</div>
-                                <div>
+                                <div id="heatmapContainer">
                                     <div class="hm-grid">
                                         @for ($d = 5; $d >= 1; $d--)
                                             <div class="hm-axis-label"
@@ -604,38 +626,18 @@
                                                 @php
                                                     $count = $heatmap[$d][$p] ?? 0;
                                                     $score = $p * $d;
-                                                    if ($score >= 15) {
-                                                        $col = '#c00000';
-                                                    }
-                                                    // Red
-                                                    elseif ($score >= 10) {
-                                                        $col = '#ff9900';
-                                                    }
-                                                    // Orange
-                                                    elseif ($score >= 5) {
-                                                        $col = '#ffeb3b';
-                                                    }
-                                                    // Yellow
-                                                    elseif ($score >= 3) {
-                                                        $col = '#0d6efd';
-                                                    }
-                                                    // Blue
-                                                    else {
-                                                        $col = '#198754';
-                                                    } // Green
+                                                    if ($score >= 15) { $col = '#c00000'; }
+                                                    elseif ($score >= 10) { $col = '#ff9900'; }
+                                                    elseif ($score >= 5) { $col = '#ffeb3b'; }
+                                                    elseif ($score >= 3) { $col = '#0d6efd'; }
+                                                    else { $col = '#198754'; }
                                                 @endphp
                                                 @php
-                                                    if ($score >= 15) {
-                                                        $rankText = 'SANGAT TINGGI';
-                                                    } elseif ($score >= 10) {
-                                                        $rankText = 'TINGGI';
-                                                    } elseif ($score >= 5) {
-                                                        $rankText = 'SEDANG';
-                                                    } elseif ($score >= 3) {
-                                                        $rankText = 'RENDAH';
-                                                    } else {
-                                                        $rankText = 'SANGAT RENDAH';
-                                                    }
+                                                    if ($score >= 15) { $rankText = 'SANGAT TINGGI'; } 
+                                                    elseif ($score >= 10) { $rankText = 'TINGGI'; } 
+                                                    elseif ($score >= 5) { $rankText = 'SEDANG'; } 
+                                                    elseif ($score >= 3) { $rankText = 'RENDAH'; } 
+                                                    else { $rankText = 'SANGAT RENDAH'; }
                                                 @endphp
                                                 <a href="{{ route('analisis-risiko.index', ['peringkat' => $rankText]) }}"
                                                     class="hm-cell text-decoration-none"
@@ -701,8 +703,12 @@
 @push('js')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         let activeChart;
+        let levelPieChart;
+        let currentSubView = '{{ in_array(auth()->user()->role_id, [1, 2]) ? "unit" : "trend" }}';
+        
         const ds = {
             unit: {
                 title: 'Risiko per Unit / Divisi',
@@ -727,7 +733,6 @@
             const d = ds[key];
             document.getElementById('toggleTitle').textContent = d.title;
 
-            // Create Premium Gradient
             let background;
             if (key === 'unit') {
                 background = ctx.createLinearGradient(0, 0, canvas.width, 0);
@@ -760,82 +765,30 @@
                     indexAxis: key === 'unit' ? 'y' : 'x',
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: {
-                        padding: {
-                            right: 20
-                        }
-                    },
+                    layout: { padding: { right: 20 } },
                     plugins: {
-                        legend: {
-                            display: false
-                        },
+                        legend: { display: false },
                         datalabels: {
                             display: key === 'unit',
                             anchor: 'end',
                             align: 'right',
                             color: '#475569',
-                            font: {
-                                weight: '800',
-                                size: 11
-                            },
+                            font: { weight: '800', size: 11 },
                             formatter: (value) => value > 0 ? value : '',
                             offset: 8
                         },
-                        tooltip: {
-                            backgroundColor: '#1e293b',
-                            padding: 12,
-                            titleFont: {
-                                size: 13,
-                                weight: '700'
-                            },
-                            bodyFont: {
-                                size: 12
-                            },
-                            cornerRadius: 8,
-                            displayColors: false
-                        }
+                        tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8, displayColors: false }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            suggestedMax: 5,
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                font: {
-                                    size: 10,
-                                    weight: '700'
-                                },
-                                color: '#64748b',
-                                stepSize: 5
-                            }
-                        },
-                        x: {
-                            beginAtZero: true,
-                            suggestedMax: 5,
-                            grid: {
-                                color: '#f1f5f9',
-                                display: key === 'unit',
-                                drawBorder: false,
-                                borderDash: [5, 5]
-                            },
-                            ticks: {
-                                font: {
-                                    size: 10,
-                                    weight: '700'
-                                },
-                                color: '#64748b',
-                                stepSize: 5
-                            }
-                        }
+                        y: { beginAtZero: true, suggestedMax: 5, grid: { display: false, drawBorder: false }, ticks: { font: { size: 10, weight: '700' }, color: '#64748b' } },
+                        x: { beginAtZero: true, suggestedMax: 5, grid: { color: '#f1f5f9', display: key === 'unit', drawBorder: false }, ticks: { font: { size: 10, weight: '700' }, color: '#64748b' } }
                     }
                 }
             });
         }
 
         function switchView(key) {
+            currentSubView = key;
             const keys = ['unit', 'trend'];
             keys.forEach(k => {
                 const btn = document.getElementById('btn' + k.charAt(0).toUpperCase() + k.slice(1));
@@ -846,43 +799,101 @@
             buildChart(key);
         }
 
+        function updateDashboard(val) {
+            // UI State
+            $('.btn-larik').removeClass('active');
+            $(`#btn-tri-${val}`).addClass('active');
+
+            // Apply slight fade to show loading
+            $('.kpi-value, #topRiskBody, #heatmapContainer, #mainChart, #levelPieChart').css('opacity', '0.5');
+
+            axios.get(`/dashboard`, { params: { view_triwulan: val }, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => {
+                const d = res.data;
+                
+                // 1. KPIs
+                $('#kpi-totalRisks').text(d.totalRisks);
+                $('#kpi-st').text(d.levelStats['SANGAT TINGGI']);
+                $('#kpi-t').text(d.levelStats['TINGGI']);
+                $('#kpi-s').text(d.levelStats['SEDANG']);
+                $('#kpi-r').text(d.levelStats['RENDAH']);
+                $('#kpi-sr').text(d.levelStats['SANGAT RENDAH']);
+                $('#kpi-pendingRisks').text(d.pendingRisks);
+                $('#kpi-completedRisks').text(d.completedRisks);
+
+                // 2. Main Chart Data Source Update
+                ds.unit.labels = d.unitData.map(u => u.nama_unit);
+                ds.unit.data = d.unitData.map(u => u.identifikasi_count);
+                ds.trend.labels = d.trendData.map(t => t.month);
+                ds.trend.data = d.trendData.map(t => t.total);
+                buildChart(currentSubView);
+
+                // 3. Pie Chart Update
+                levelPieChart.data.labels = d.categoryStats.map(c => c.name);
+                levelPieChart.data.datasets[0].data = d.categoryStats.map(c => c.count);
+                levelPieChart.update();
+
+                // 4. Top Risk Table Update
+                let tableHtml = '';
+                d.criticalRisks.forEach((rk, index) => {
+                    let bg = rk.rank == 'SANGAT TINGGI' ? '#c00000' : (rk.rank == 'TINGGI' ? '#ff9900' : (rk.rank == 'SEDANG' ? '#ffeb3b' : (rk.rank == 'RENDAH' ? '#0d6efd' : '#198754')));
+                    let txtC = (rk.rank == 'SEDANG' ? '#1a1a2e' : '#fff');
+                    let statusHtml = rk.status == 'SELESAI' ? `<div style="font-size:0.6rem; font-weight:800; color:#198754;"><i class="fas fa-check-circle me-1"></i>SELESAI</div>` : `<div style="font-size:0.6rem; font-weight:800; color:#ff9900;"><i class="fas fa-history me-1"></i>PROSES</div>`;
+                    
+                    tableHtml += `
+                        <tr class="risk-row" style="border-bottom:1px solid #f0f2f5;">
+                            <td class="text-center py-3 ps-3 fw-bold" style="border:1px solid #e9ecef; color:#94a3b8; font-size:0.65rem;">${index + 1}</td>
+                            <td class="py-3 ps-2" style="border:1px solid #e9ecef; min-width: 250px;">
+                                <div class="fw-bold text-dark" style="font-size:0.74rem; line-height:1.4; white-space: normal;">${rk.kegiatan}</div>
+                                <div style="font-size:0.58rem; color:#007774; font-weight:800; letter-spacing:0.5px; margin-top:4px;"><i class="fas fa-tag me-1 opacity-5"></i>${rk.kode || '-'}</div>
+                            </td>
+                            <td class="text-center py-3 fw-900" style="border:1px solid #e9ecef; color:#1e293b; font-size:0.8rem; background: #f8f9fa;">${rk.score}</td>
+                            <td class="text-center py-3 fw-bold" style="border:1px solid #e9ecef; background:${bg}; color:${txtC}; font-size:0.62rem; letter-spacing:0.5px;">${rk.rank}</td>
+                            <td class="text-center py-3" style="border:1px solid #e9ecef;">${statusHtml}</td>
+                        </tr>`;
+                });
+                $('#topRiskBody').html(tableHtml || '<tr><td colspan="5" class="text-center py-4 text-xs text-secondary">Tidak ada data risiko kritikal.</td></tr>');
+
+                // 5. Heatmap Update
+                for (let d_val = 1; d_val <= 5; d_val++) {
+                    for (let p_val = 1; p_val <= 5; p_val++) {
+                        let count = d.heatmap[d_val] ? (d.heatmap[d_val][p_val] || 0) : 0;
+                        let cell = $(`.hm-cell[title*="P=${d_val} × D=${p_val}"]`);
+                        if (count > 0) {
+                            cell.html(`<div class="hm-bubble" style="width:22px; height:22px; font-size:0.75rem; font-weight:900; background:rgba(255,255,255,0.95); color:#1a1a2e;">${count}</div>`);
+                        } else {
+                            cell.html(`<span class="hm-dash" style="font-size:0.6rem; opacity:0.15;">–</span>`);
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error(err))
+            .finally(() => {
+                $('.kpi-value, #topRiskBody, #heatmapContainer, #mainChart, #levelPieChart').css('opacity', '1');
+            });
+        }
+
         $(function() {
             if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = '#8392ab';
-            Chart.defaults.animation = false;
+            Chart.defaults.animation = { duration: 400 };
 
-            new Chart(document.getElementById('levelPieChart'), {
+            levelPieChart = new Chart(document.getElementById('levelPieChart'), {
                 type: 'pie',
                 data: {
                     labels: @json($categoryStats->pluck('name')),
                     datasets: [{
                         data: @json($categoryStats->pluck('count')),
-                        backgroundColor: ['#007774', '#c00000', '#ff9900', '#0d6efd', '#198754',
-                            '#ffeb3b', '#6f42c1', '#fd7e14'
-                        ],
-                        borderWidth: 1.5,
-                        borderColor: '#ffffff',
+                        backgroundColor: ['#007774', '#c00000', '#ff9900', '#0d6efd', '#198754', '#ffeb3b', '#6f42c1', '#fd7e14'],
+                        borderWidth: 1.5, borderColor: '#ffffff',
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        datalabels: {
-                            display: false
-                        },
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 8,
-                                padding: 10,
-                                font: {
-                                    size: 9,
-                                    weight: 600
-                                }
-                            }
-                        },
+                        datalabels: { display: false },
+                        legend: { position: 'bottom', labels: { boxWidth: 8, padding: 10, font: { size: 9, weight: 600 } } },
                         tooltip: {
                             callbacks: {
                                 label: ctx => {
@@ -896,8 +907,7 @@
                 }
             });
 
-            const isSpecial = @json(in_array(auth()->user()->role_id, [1, 2]));
-            buildChart(isSpecial ? 'unit' : 'trend');
+            buildChart(currentSubView);
         });
     </script>
 @endpush

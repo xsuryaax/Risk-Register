@@ -6,15 +6,68 @@
 @section('page_description', 'Tahap Ketiga: Analisis kecukupan pengendalian yang ada dan tentukan rencana pengendalian baru.')
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="card mb-3 border-radius-lg shadow-sm">
-            <div class="card-header py-2 px-3">
-                <form action="{{ route('analisis-kecukupan.index') }}" method="GET" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <div class="input-group input-group-sm mb-0" style="width: 220px;">
-                        <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
+    <div class="row mb-3">
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 bg-white border px-3 py-1 shadow-none" style="border-radius: 50px !important; border-color: #e9ecef !important; background-color: #fbfbfb !important;">
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #c00000; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SANGAT TINGGI</span>
                     </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #ff9900; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">TINGGI</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #ffeb3b; display: inline-block; border: 1px solid #dee2e6;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SEDANG</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #0d6efd; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">RENDAH</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #198754; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SANGAT RENDAH</span>
+                    </div>
+                </div>
+
+                @if(($activePeriode && $activePeriode->id != request('periode_id', $activePeriode->id)))
+                    <span class="badge bg-soft-teal text-teal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                        <i class="fa fa-history me-1"></i> MODE LIBRARY
+                    </span>
+                @endif
+            </div>
+            <div class="larik-wrapper">
+                @php
+                    $lariks = ['all' => 'All', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
+                    $currTri = $viewTriwulan ?? 'all';
+                @endphp
+                @foreach($lariks as $val => $lbl)
+                    <button type="button" 
+                            onclick="$('input[name=view_triwulan]').val('{{ $val }}').trigger('change'); $('.btn-larik').removeClass('active'); $(this).addClass('active');"
+                            class="btn-larik {{ $currTri == $val ? 'active' : '' }}">
+                        {{ $lbl }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .text-teal { color: #007774 !important; }
+    </style>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3 border-radius-lg shadow-sm">
+                <div class="card-header py-2 px-3">
+                    <form action="{{ route('analisis-kecukupan.index') }}" method="GET" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <input type="hidden" name="view_triwulan" class="filter-input" value="{{ $currTri }}">
+                        <div class="input-group input-group-sm mb-0" style="width: 220px;">
+                            <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
+                        </div>
                     <div class="d-flex gap-2 w-100 w-md-auto">
                             <select name="peringkat" class="form-select form-select-sm select-filter select-pewarna filter-input" id="filterPeringkat">
                                 <option value="">Semua Warna</option>
@@ -88,12 +141,17 @@
                                 </td>
 
 
+                                @php
+                                    $targetVal = ($currTri == 's1' ? [1, 2] : ($currTri == 's2' ? [3, 4] : [$currTri]));
+                                    $isMatch = $currTri == 'all' || in_array($item->triwulan, $targetVal);
+                                @endphp
+
                                 <!-- Rencana Pengendalian (DIISI USER) -->
                                 <td class="px-2 text-start bg-gray-50">
-                                    <p class="text-xs mb-0 text-wrap text-dark" style="min-width: 250px;">{{ $item->analisisKecukupan->uraian_rencana ?? '-' }}</p>
+                                    <p class="text-xs mb-0 text-wrap text-dark" style="min-width: 250px;">{{ $isMatch ? ($item->analisisKecukupan->uraian_rencana ?? '-') : '-' }}</p>
                                 </td>
                                 <td class="align-middle text-center px-1 bg-gray-50">
-                                    <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $item->analisisKecukupan->jadwal ?? '-' }}</p>
+                                    <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $isMatch ? ($item->analisisKecukupan->jadwal ?? '-') : '-' }}</p>
                                 </td>
 
                                 <td class="align-middle text-center px-1">
@@ -128,12 +186,12 @@
                                     </div>
                                 </td>
                                 <td class="align-middle text-center px-1 bg-gray-50">
-                                    <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? '-' }}</p>
+                                    <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $isMatch ? ($item->analisisKecukupan->pj_tindak_lanjut ?? '-') : '-' }}</p>
                                 </td>
 
                                 <td class="align-middle text-center px-1">
-                                    <a href="{{ route('analisis-kecukupan.edit', $item->id) }}" class="btn-action btn-edit" title="{{ isset($item->analisisKecukupan) ? 'Edit Rencana' : 'Tambah Rencana' }}">
-                                        <i class="fa {{ isset($item->analisisKecukupan) ? 'fa-edit' : 'fa-plus' }}"></i>
+                                    <a href="{{ route('analisis-kecukupan.edit', $item->id) }}?view_triwulan={{ $currTri }}" class="btn-action btn-edit" title="{{ isset($item->analisisKecukupan) && $item->triwulan == $currTri ? 'Edit Rencana' : 'Tambah Rencana' }}">
+                                        <i class="fa {{ isset($item->analisisKecukupan) && $item->triwulan == $currTri ? 'fa-edit' : 'fa-plus' }}"></i>
                                     </a>
                                 </td>
                             </tr>

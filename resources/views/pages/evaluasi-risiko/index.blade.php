@@ -6,15 +6,68 @@
 @section('page_description', 'Tahap Akhir: Hitung risiko residu dan persentase penurunan tingkat risiko.')
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="card mb-3 border-radius-lg shadow-sm">
-            <div class="card-header py-2 px-3">
-                <form action="{{ route('evaluasi-risiko.index') }}" method="GET" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <div class="input-group input-group-sm mb-0" style="width: 220px;">
-                        <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
+    <div class="row mb-3">
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 bg-white border px-3 py-1 shadow-none" style="border-radius: 50px !important; border-color: #e9ecef !important; background-color: #fbfbfb !important;">
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #c00000; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SANGAT TINGGI</span>
                     </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #ff9900; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">TINGGI</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #ffeb3b; display: inline-block; border: 1px solid #dee2e6;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SEDANG</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #0d6efd; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">RENDAH</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #198754; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SANGAT RENDAH</span>
+                    </div>
+                </div>
+
+                @if(($activePeriode && $activePeriode->id != request('periode_id', $activePeriode->id)))
+                    <span class="badge bg-soft-teal text-teal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                        <i class="fa fa-history me-1"></i> MODE LIBRARY
+                    </span>
+                @endif
+            </div>
+            <div class="larik-wrapper">
+                @php
+                    $lariks = ['all' => 'Tahunan', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
+                    $currTri = $viewTriwulan ?? 'all';
+                @endphp
+                @foreach($lariks as $val => $lbl)
+                    <button type="button" 
+                            onclick="$('input[name=view_triwulan]').val('{{ $val }}').trigger('change'); $('.btn-larik').removeClass('active'); $(this).addClass('active');"
+                            class="btn-larik {{ $currTri == $val ? 'active' : '' }}">
+                        {{ $lbl }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .text-teal { color: #007774 !important; }
+    </style>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3 border-radius-lg shadow-sm">
+                <div class="card-header py-2 px-3">
+                    <form action="{{ route('evaluasi-risiko.index') }}" method="GET" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <input type="hidden" name="view_triwulan" class="filter-input" value="{{ $currTri }}">
+                        <div class="input-group input-group-sm mb-0" style="width: 220px;">
+                            <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-xs"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Cari kode atau risiko..." value="{{ request('search') }}">
+                        </div>
                     <div class="d-flex gap-2 w-100 w-md-auto">
                         <select name="peringkat" class="form-select form-select-sm select-filter select-pewarna filter-input" id="filterPeringkat">
                             <option value="">Semua Warna</option>
@@ -132,28 +185,54 @@
                                     </div>
                                 </td>
 
+                                @php
+                                    $frekuensi = $item->frekuensi_pelaporan ?? 'triwulan';
+                                    $viewTri = $currTri ?? 'all';
+                                    $showValue = false;
+
+                                    if ($viewTri == 'all') {
+                                        $showValue = true;
+                                    } else {
+                                        $targetArr = ($viewTri == 's1' ? [1, 2] : ($viewTri == 's2' ? [3, 4] : [$viewTri]));
+                                        if ($frekuensi == 'tahunan') {
+                                            $showValue = true;
+                                        } elseif ($frekuensi == 'semester') {
+                                            $itemSem = $item->triwulan <= 2 ? [1, 2] : [3, 4];
+                                            if (array_intersect($targetArr, $itemSem)) {
+                                                $showValue = true;
+                                            }
+                                        } elseif ($frekuensi == 'triwulan') {
+                                            if (in_array($item->triwulan, $targetArr)) {
+                                                $showValue = true;
+                                            }
+                                        }
+                                    }
+
+                                    $isMatch = $showValue;
+                                @endphp
+
                                 <!-- Risiko Residu -->
                                 <td class="align-middle text-center bg-info-soft">
-                                    <span class="text-xs text-dark">{{ $item->evaluasi?->probabilitas?->nilai_probabilitas ?? '-' }}</span>
+                                    <span class="text-xs text-dark">{{ $isMatch ? ($item->evaluasi?->probabilitas?->nilai_probabilitas ?? '-') : '-' }}</span>
                                 </td>
                                 <td class="align-middle text-center bg-info-soft">
-                                    <span class="text-xs text-dark">{{ $item->evaluasi?->dampak?->nilai_dampak ?? '-' }}</span>
+                                    <span class="text-xs text-dark">{{ $isMatch ? ($item->evaluasi?->dampak?->nilai_dampak ?? '-') : '-' }}</span>
                                 </td>
                                 @php
-                                    $resScore = $item->evaluasi->skor_residu ?? null;
+                                    $resScore = $isMatch ? ($item->evaluasi->skor_residu ?? null) : null;
                                     $resRank = $resScore !== null ? ($resScore >= 15 ? 'Sangat Tinggi' : ($resScore >= 10 ? 'Tinggi' : ($resScore >= 5 ? 'Sedang' : ($resScore >= 3 ? 'Rendah' : 'Sangat Rendah')))) : '-';
                                     $resBgColor = $resScore !== null ? ($resScore >= 15 ? '#c00000' : ($resScore >= 10 ? '#ff9900' : ($resScore >= 5 ? '#ffeb3b' : ($resScore >= 3 ? '#0d6efd' : '#198754')))) : '';
                                     $resTextColor = ($resScore !== null && $resScore >= 5 && $resScore < 10) ? 'text-dark' : 'text-white';
                                 @endphp
-                                <td class="align-middle text-center" style="{{ isset($item->evaluasi) ? 'background-color: '.$resBgColor.';' : '' }}">
-                                    <span class="text-xs font-weight-bold {{ isset($item->evaluasi) ? $resTextColor : 'text-dark' }}">{{ $item->evaluasi->skor_residu ?? '-' }}</span>
+                                <td class="align-middle text-center" style="{{ $resScore !== null ? 'background-color: '.$resBgColor.';' : '' }}">
+                                    <span class="text-xs font-weight-bold {{ $resScore !== null ? $resTextColor : 'text-dark' }}">{{ $resScore ?? '-' }}</span>
                                 </td>
                                 <td class="align-middle text-center">
-                                    <span class="text-xxs font-weight-bold text-dark">{{ isset($item->evaluasi) ? $resRank : '-' }}</span>
+                                    <span class="text-xxs font-weight-bold text-dark">{{ $resScore !== null ? $resRank : '-' }}</span>
                                 </td>
 
                                 <td class="align-middle text-center">
-                                    @if(isset($item->evaluasi))
+                                    @if($resScore !== null)
                                         <span class="text-xs font-weight-bold text-success">{{ number_format($item->evaluasi->penurunan_persen, 0) }}%</span>
                                     @else
                                         <span class="text-xs text-secondary">-</span>
@@ -161,8 +240,8 @@
                                 </td>
 
                                 <td class="align-middle text-center">
-                                    <a href="{{ route('evaluasi-risiko.edit', $item->id) }}" class="btn-action btn-edit" title="Evaluasi Residu">
-                                        <i class="fa {{ isset($item->evaluasi) ? 'fa-edit' : 'fa-plus' }}"></i>
+                                    <a href="{{ route('evaluasi-risiko.edit', $item->id) }}?view_triwulan={{ $currTri }}" class="btn-action btn-edit" title="{{ $isMatch && isset($item->evaluasi) ? 'Edit Evaluasi' : 'Tambah Evaluasi' }}">
+                                        <i class="fa {{ $isMatch && isset($item->evaluasi) ? 'fa-edit' : 'fa-plus' }}"></i>
                                     </a>
                                 </td>
                             </tr>

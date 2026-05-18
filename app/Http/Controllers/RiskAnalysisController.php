@@ -15,6 +15,7 @@ class RiskAnalysisController extends Controller
     {
         $user = auth()->user();
         $activePeriode = \App\Models\Periode::getActive();
+        $viewTriwulan = $request->view_triwulan ?? 'all';
         $query = IdentifikasiRisiko::with([
             'analisis.probabilitas', 
             'analisis.dampak', 
@@ -27,6 +28,29 @@ class RiskAnalysisController extends Controller
 
         if ($activePeriode) {
             $query->where('periode_id', $activePeriode->id);
+            
+            /**
+             * MASTER LIST LOGIC:
+             * - Shows every unique risk in the period exactly once.
+             * - Priority: Matches current triwulan filter.
+             * - Fallback: Latest (max) triwulan available for that risk.
+             */
+            $targetVal = ($viewTriwulan == 's1' ? [1, 2] : ($viewTriwulan == 's2' ? [3, 4] : [$viewTriwulan]));
+            $ids = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                ->get()
+                ->groupBy('kode_risiko')
+                ->map(function($group) use ($targetVal, $viewTriwulan) {
+                    if ($viewTriwulan === 'all') {
+                        return $group->sortByDesc('triwulan')->first()->id;
+                    }
+                    
+                    $match = $group->first(fn($item) => in_array($item->triwulan, $targetVal));
+                    return $match ? $match->id : $group->sortByDesc('triwulan')->first()->id;
+                })
+                ->values()
+                ->toArray();
+
+            $query->whereIn('id', $ids);
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -75,16 +99,16 @@ class RiskAnalysisController extends Controller
             $query->where('unit_id', $request->unit_id);
         }
 
-        $data = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $data = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
         $units = \App\Models\Unit::orderBy('nama_unit')->get();
         $probs = Probabilitas::orderBy('nilai_probabilitas')->get();
         $damps = Dampak::orderBy('nilai_dampak')->get();
 
         if ($request->ajax()) {
-            return view('pages.analisis-risiko._table', compact('data', 'units', 'probs', 'damps'))->render();
+            return view('pages.analisis-risiko._table', compact('data', 'units', 'probs', 'damps', 'viewTriwulan', 'activePeriode'))->render();
         }
 
-        return view('pages.analisis-risiko.index', compact('data', 'units', 'probs', 'damps'));
+        return view('pages.analisis-risiko.index', compact('data', 'units', 'probs', 'damps', 'viewTriwulan', 'activePeriode'));
     }
     public function edit($id)
     {
@@ -110,7 +134,45 @@ class RiskAnalysisController extends Controller
 
         // Security: Prevent accessing other unit's risks
         if (!in_array($user->role_id, [1, 2]) && $identifikasi->unit_id != $user->unit_id) {
-            return redirect()->route('analisis-risiko.index')->with('error', 'Anda tidak memiliki hak akses ke data ini.');
+            return response()->json(['success' => false, 'message' => 'Akses ditolak'], 403);
+        }
+
+        // --- IMPROVED: Frequency-Aware Smart Auto-Duplication ---
+        $targetTW = $request->view_triwulan_active;
+        $activeTW = $identifikasi->triwulan;
+        $frekuensi = $identifikasi->frekuensi_pelaporan ?? 'triwulan';
+        
+        $shouldDuplicate = false;
+        if (in_array($targetTW, ['1', '2', '3', '4']) && $activeTW != $targetTW) {
+            if ($frekuensi === 'triwulan') {
+                $shouldDuplicate = true;
+            } elseif ($frekuensi === 'semester') {
+                // Duplicate only if moving to a different semester
+                $currentSem = $activeTW <= 2 ? 1 : 2;
+                $targetSem = $targetTW <= 2 ? 1 : 2;
+                if ($currentSem != $targetSem) {
+                    $shouldDuplicate = true;
+                }
+            }
+            // For 'tahunan', $shouldDuplicate stays false -> use same record for all q
+        }
+        
+        if ($shouldDuplicate) {
+            // Check if a copy already exists for this target TW
+            $existing = IdentifikasiRisiko::where('kode_risiko', $identifikasi->kode_risiko)
+                ->where('triwulan', $targetTW)
+                ->where('periode_id', $identifikasi->periode_id)
+                ->first();
+            
+            if ($existing) {
+                $id = $existing->id;
+            } else {
+                // Duplicate identity
+                $newIdent = $identifikasi->replicate();
+                $newIdent->triwulan = $targetTW;
+                $newIdent->save();
+                $id = $newIdent->id;
+            }
         }
 
         $request->validate([
@@ -160,6 +222,7 @@ class RiskAnalysisController extends Controller
                 'score' => $score,
                 'rank' => ucfirst(strtolower($ranking)),
                 'color' => $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754'))),
+                'new_id' => $id,
                 'text_color' => ($ranking == 'SEDANG') ? 'text-dark' : 'text-white'
             ]);
         }

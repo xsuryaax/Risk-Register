@@ -8,11 +8,64 @@
 @section('content')
 
 
+    <div class="row mb-3">
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 bg-white border px-3 py-1 shadow-none" style="border-radius: 50px !important; border-color: #e9ecef !important; background-color: #fbfbfb !important;">
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #c00000; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SANGAT TINGGI</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #ff9900; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">TINGGI</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #ffeb3b; display: inline-block; border: 1px solid #dee2e6;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SEDANG</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #0d6efd; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">RENDAH</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #198754; display: inline-block;"></span>
+                        <span class="text-xxs font-weight-bold text-dark" style="font-size: 0.62rem !important; letter-spacing: 0.2px;">SANGAT RENDAH</span>
+                    </div>
+                </div>
+
+                @if($viewPeriodeId != ($activePeriode->id ?? 0))
+                    <span class="badge bg-soft-teal text-teal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                        <i class="fa fa-history me-1"></i> MODE LIBRARY
+                    </span>
+                @endif
+            </div>
+            <div class="larik-wrapper">
+                @php
+                    $lariks = ['all' => 'Tahunan', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
+                    $currTri = $viewTriwulan ?? 'all';
+                @endphp
+                @foreach($lariks as $val => $lbl)
+                    <button type="button" 
+                            onclick="$('input[name=view_triwulan]').val('{{ $val }}').trigger('change'); $('.btn-larik').removeClass('active'); $(this).addClass('active');"
+                            class="btn-larik {{ $currTri == $val ? 'active' : '' }}">
+                        {{ $lbl }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .text-teal { color: #007774 !important; }
+    </style>
+
     <div class="row">
         <div class="col-12">
             <div class="card mb-3 border-radius-lg shadow-sm">
                 <div class="card-header pb-2 py-2 px-3">
                     <form action="{{ route('daftar-risiko.index') }}" method="GET" id="filterForm">
+                        <input type="hidden" name="view_triwulan" class="filter-input" value="{{ $currTri }}">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
                             <div>
                                 <div class="input-group input-group-sm mb-0" style="width: 220px; height: 32px;">
@@ -128,8 +181,12 @@
         .dl-kegiatan { width: 120px; }
         .dl-risiko { width: 130px; }
         .dl-sebab { width: 110px; }
-        .dl-num { width: 22px; }
-        .dl-rank { width: 85px; }
+        .dl-num { 
+            width: 20px !important; 
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .dl-rank { width: 80px; }
         .dl-pengendalian { width: 130px; }
         .dl-rencana { width: 150px; }
         .dl-pj { width: 90px; }

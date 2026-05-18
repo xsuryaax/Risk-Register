@@ -12,19 +12,19 @@ class PeriodeSeeder extends Seeder
      */
     public function run(): void
     {
-        $p2024 = \App\Models\Periode::create([
-            'tahun' => '2024',
+        $p2026 = \App\Models\Periode::create([
+            'tahun' => '2026',
             'status' => true,
             'keterangan' => 'Periode Berjalan'
         ]);
 
         \App\Models\Periode::create([
-            'tahun' => '2025',
+            'tahun' => '2027',
             'status' => false,
             'keterangan' => 'Periode Mendatang'
         ]);
 
-        // Assign existing risks to 2024
-        \App\Models\IdentifikasiRisiko::whereNull('periode_id')->update(['periode_id' => $p2024->id]);
+        // Assign existing risks to 2026
+        \App\Models\IdentifikasiRisiko::whereNull('periode_id')->update(['periode_id' => $p2026->id]);
     }
 }

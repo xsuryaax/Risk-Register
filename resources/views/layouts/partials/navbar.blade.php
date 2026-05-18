@@ -42,6 +42,7 @@
                     $currentViewId = request('view_periode', $globalActivePeriode->id);
                     $currentViewPeriode = $globalPeriodes->firstWhere('id', $currentViewId) ?? $globalActivePeriode;
                 @endphp
+                <!-- Year Selector -->
                 <li class="nav-item d-flex align-items-center me-3 d-none d-md-flex dropdown">
                     <a href="#" class="d-flex align-items-center shadow-sm border-radius-lg overflow-hidden text-decoration-none" 
                        style="height: 30px; border: 1px solid rgba(0, 119, 116, 0.2); {{ !Route::is('dashboard') ? 'cursor: default;' : '' }}" 
@@ -49,25 +50,25 @@
                         <div class="px-2 h-100 d-flex align-items-center" style="background-color: rgba(0, 119, 116, 0.08);">
                             <i class="fa fa-calendar-alt text-teal me-1" style="font-size: 10px; color: #007774;"></i>
                             <span class="text-uppercase font-weight-bolder" style="font-size: 9px; letter-spacing: 0.5px; color: #007774;">
-                                Periode
+                                Tahun
                             </span>
                             @if(Route::is('dashboard'))
                                 <i class="fa fa-chevron-down ms-1 text-teal" style="font-size: 8px; color: #007774;"></i>
                             @endif
                         </div>
                         <div class="px-3 h-100 d-flex align-items-center" style="background-color: #007774;">
-                            <span class="text-white font-weight-bold" style="font-size: 12px; letter-spacing: 0.5px;">{{ $currentViewPeriode->tahun }}</span>
+                            <span class="text-white font-weight-bold" style="font-size: 11px; letter-spacing: 0.5px;">{{ $currentViewPeriode->tahun }}</span>
                         </div>
                     </a>
                     @if(Route::is('dashboard'))
                     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 border-radius-lg mt-2 py-2" aria-labelledby="dropdownPeriode">
                         <li class="px-3 py-1 mb-1 border-bottom">
-                            <span class="text-xxs font-weight-bolder text-uppercase text-secondary">Pilih Periode</span>
+                            <span class="text-xxs font-weight-bolder text-uppercase text-secondary">Pilih Tahun</span>
                         </li>
                         @foreach($globalPeriodes as $p)
                         <li>
                             <a class="dropdown-item py-2 px-3 border-radius-md {{ $currentViewId == $p->id ? 'bg-soft-teal active-periode' : '' }}" 
-                               href="{{ route('dashboard', ['view_periode' => $p->id]) }}">
+                               href="{{ url()->current() }}?view_periode={{ $p->id }}&view_triwulan={{ request('view_triwulan', 'all') }}">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <span class="font-weight-bold {{ $currentViewId == $p->id ? 'text-teal' : 'text-dark' }}" style="font-size: 0.8rem;">
                                         {{ $p->tahun }}

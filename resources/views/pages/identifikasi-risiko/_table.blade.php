@@ -2,12 +2,17 @@
     <table class="table align-items-center mb-0 table-bordered-light" id="mainTable">
         <thead class="bg-light">
             <tr>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">No</th>
+                @if($isLibraryView)
+                <th class="text-center px-2" style="width: 40px;">
+                    <div class="form-check d-flex justify-content-center p-0">
+                        <input class="form-check-input" type="checkbox" id="checkAll">
+                    </div>
+                </th>
+                @endif
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 40px;">No</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kode</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kegiatan</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Tujuan</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kategori</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Ruang Lingkup</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Pernyataan</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Sebab</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">UC/C</th>
@@ -17,30 +22,36 @@
         </thead>
         <tbody>
             @forelse($data as $item)
-            <tr class="">
+            @php
+                $isPulled = in_array($item->kegiatan, $pulledActivities);
+            @endphp
+            <tr class="{{ $isPulled ? 'bg-light-soft' : '' }}">
+                @if($isLibraryView)
+                <td class="align-middle text-center px-2">
+                    <div class="form-check d-flex justify-content-center p-0">
+                        <input class="form-check-input risk-checkbox" type="checkbox" value="{{ $item->id }}" 
+                            {{ $isPulled ? 'disabled' : '' }}>
+                    </div>
+                </td>
+                @endif
                 <td class="align-middle text-center px-1">
                     <span class="text-dark text-xs font-weight-bold">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
                 </td>
+
                 <td class="align-middle text-center px-1">
                     <span class="text-xs font-weight-bold text-primary">{{ $item->kode_risiko }}</span>
                 </td>
                 <td class="px-1">
-                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark">{{ $item->kegiatan }}</p>
-                </td>
-                <td class="px-1 text-wrap">
-                    <p class="text-xs mb-0 text-wrap text-dark">{{ $item->tujuan_kegiatan }}</p>
+                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark" style="max-width: 150px;">{{ $item->kegiatan }}</p>
                 </td>
                 <td class="align-middle text-center px-1">
                     <p class="text-xs mb-0 text-wrap text-dark">{{ $item->kategori->nama_kategori ?? '-' }}</p>
                 </td>
-                <td class="align-middle text-center px-1">
-                    <p class="text-xs mb-0 text-wrap text-dark">{{ $item->ruangLingkup->nama_ruang_lingkup ?? '-' }}</p>
+                <td class="px-1">
+                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 180px;">{{ $item->pernyataan_risiko }}</p>
                 </td>
                 <td class="px-1">
-                    <p class="text-xs mb-0 text-wrap text-dark">{{ $item->pernyataan_risiko }}</p>
-                </td>
-                <td class="px-1">
-                    <p class="text-xs mb-0 text-wrap text-dark">{{ $item->sebab }}</p>
+                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 150px;">{{ $item->sebab }}</p>
                 </td>
                 <td class="align-middle text-center px-1">
                     <span class="text-xs font-weight-bold text-dark">{{ $item->jenis_risiko }}</span>
@@ -50,22 +61,33 @@
                 </td>
                 <td class="align-middle text-center px-1">
                     <div class="d-flex justify-content-center align-items-center">
-                        <a href="{{ route('identifikasi-risiko.edit', $item->id) }}" class="btn-action btn-edit me-1" title="Edit Data">
-                            <i class="fa fa-edit"></i>
-                        </a>
-                        <form action="{{ route('identifikasi-risiko.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus identifikasi risiko ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn-action btn-delete" title="Hapus Data">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </form>
+                        @if($isLibraryView)
+                            @if($isPulled)
+                                <span class="badge badge-sm bg-success border-radius-sm" style="font-size: 0.6rem;">Sudah Ada</span>
+                            @else
+                                <button type="button" class="btn btn-xs text-white mb-0 btn-copy-risk border-radius-sm px-2 py-1" 
+                                    style="background-color: #007774 !important;" data-id="{{ $item->id }}" title="Tarik ke Periode Aktif">
+                                    <i class="fa fa-download me-1"></i> Tarik
+                                </button>
+                            @endif
+                        @else
+                            <a href="{{ route('identifikasi-risiko.edit', $item->id) }}" class="btn-action btn-edit me-1" title="Edit Data">
+                                <i class="fa fa-edit text-white"></i>
+                            </a>
+                            <form action="{{ route('identifikasi-risiko.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus identifikasi risiko ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-action btn-delete" title="Hapus Data">
+                                    <i class="fa fa-trash text-white"></i>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="13" class="text-center py-6">
+                <td colspan="10" class="text-center py-6">
                     <div class="empty-state py-4">
                         <h6 class="text-secondary font-weight-bold">Data Kosong</h6>
                         <p class="text-xs text-muted">Belum ada identifikasi risiko untuk periode ini.</p>

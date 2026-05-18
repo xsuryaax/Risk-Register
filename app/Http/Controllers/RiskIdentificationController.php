@@ -41,11 +41,15 @@ class RiskIdentificationController extends Controller
         
         // Target period to view
         $viewPeriodeId = $request->periode_id ?? ($activePeriode->id ?? null);
+        $viewTriwulan = $request->triwulan ?? 'all';
         
         $query = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup']);
 
         if ($viewPeriodeId) {
             $query->where('periode_id', $viewPeriodeId);
+            
+            // Identification is annual master data, show everything for the period
+            $viewTriwulan = 'all';
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -66,13 +70,18 @@ class RiskIdentificationController extends Controller
             });
         }
 
-        $data = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $data = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
         $units = Unit::all();
 
         // Get list of activities already pulled to active period to prevent duplicates
         $pulledActivities = [];
         if ($activePeriode && $viewPeriodeId != $activePeriode->id) {
             $pulledActivities = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                ->when($viewTriwulan !== 'all', function($q) use ($viewTriwulan) {
+                    if ($viewTriwulan === 's1') $q->whereIn('triwulan', [1, 2]);
+                    elseif ($viewTriwulan === 's2') $q->whereIn('triwulan', [3, 4]);
+                    else $q->where('triwulan', $viewTriwulan);
+                })
                 ->when(!in_array($user->role_id, [1, 2]), function($q) use ($user) {
                     $q->where('unit_id', $user->unit_id);
                 })
@@ -81,10 +90,10 @@ class RiskIdentificationController extends Controller
         }
             
         if ($request->ajax()) {
-            return view('pages.identifikasi-risiko._table', compact('data', 'activePeriode', 'viewPeriodeId', 'pulledActivities'));
+            return view('pages.identifikasi-risiko._table', compact('data', 'activePeriode', 'viewPeriodeId', 'pulledActivities', 'viewTriwulan'));
         }
             
-        return view('pages.identifikasi-risiko.index', compact('data', 'units', 'activePeriode', 'periodes', 'viewPeriodeId', 'pulledActivities'));
+        return view('pages.identifikasi-risiko.index', compact('data', 'units', 'activePeriode', 'periodes', 'viewPeriodeId', 'pulledActivities', 'viewTriwulan'));
     }
 
     public function create()
@@ -136,6 +145,7 @@ class RiskIdentificationController extends Controller
             'sebab' => 'required',
             'jenis_risiko' => 'required',
             'dampak' => 'required',
+            'triwulan' => 'required|integer|min:1|max:4',
         ]);
 
         // Handle Kode Risiko
@@ -154,6 +164,8 @@ class RiskIdentificationController extends Controller
         IdentifikasiRisiko::create([
             'unit_id' => Auth::user()->unit_id ?? 1,
             'periode_id' => \App\Models\Periode::getActive()->id ?? null,
+            'triwulan' => $request->triwulan,
+            'frekuensi_pelaporan' => $request->frekuensi_pelaporan ?? 'triwulan',
             'kegiatan' => $request->kegiatan,
             'tujuan_kegiatan' => $request->tujuan_kegiatan,
             'kode_risiko' => $kode,
@@ -188,6 +200,7 @@ class RiskIdentificationController extends Controller
             'sebab' => 'required',
             'jenis_risiko' => 'required',
             'dampak' => 'required',
+            'frekuensi_pelaporan' => 'required|in:tahunan,semester,triwulan',
         ]);
 
         $risk->update($request->except('unit_id'));
@@ -223,7 +236,7 @@ class RiskIdentificationController extends Controller
         $kat = KategoriRisiko::find($original->kategori_risiko_id);
         $prefix = $kat ? substr($kat->nama_kategori, 0, 1) : 'R';
 
-        // Optimized Code Generation (Cross-database compatible)
+        // Optimized Code Generation
         $lastCode = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
             ->where('kode_risiko', 'like', "$prefix-$year-%")
             ->orderBy('kode_risiko', 'desc')
@@ -236,11 +249,18 @@ class RiskIdentificationController extends Controller
         }
         $newCode = sprintf("%s-%s-%03d", $prefix, $year, $nextNum);
 
+        // Determine target triwulan (default to current calendar if not specified)
+        $targetTW = $request->triwulan;
+        if (!$targetTW || in_array($targetTW, ['all', 's1', 's2'])) {
+            $targetTW = ceil(date('n') / 3);
+        }
+
         try {
-            return \DB::transaction(function () use ($original, $activePeriode, $newCode) {
+            return \DB::transaction(function () use ($original, $activePeriode, $newCode, $targetTW) {
                 $newRisk = new IdentifikasiRisiko();
                 $newRisk->unit_id = $original->unit_id;
                 $newRisk->periode_id = $activePeriode->id;
+                $newRisk->triwulan = $targetTW;
                 $newRisk->kode_risiko = $newCode;
                 $newRisk->kegiatan = $original->kegiatan;
                 $newRisk->tujuan_kegiatan = $original->tujuan_kegiatan;
@@ -255,7 +275,7 @@ class RiskIdentificationController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Risiko berhasil ditarik ke periode ' . $activePeriode->tahun,
+                    'message' => 'Risiko berhasil ditarik ke periode ' . $activePeriode->tahun . ' (TW ' . $targetTW . ')',
                     'redirect' => route('identifikasi-risiko.index')
                 ]);
             });
@@ -304,17 +324,24 @@ class RiskIdentificationController extends Controller
             return response()->json(['success' => false, 'message' => 'Tidak ada data terpilih'], 400);
         }
 
+        // Determine target triwulan
+        $targetTW = $request->triwulan;
+        if (!$targetTW || in_array($targetTW, ['all', 's1', 's2'])) {
+            $targetTW = ceil(date('n') / 3);
+        }
+
         $year = $activePeriode->tahun;
         $successCount = 0;
 
         try {
-            \DB::transaction(function () use ($ids, $activePeriode, $year, &$successCount) {
+            \DB::transaction(function () use ($ids, $activePeriode, $year, $targetTW, &$successCount) {
                 foreach ($ids as $id) {
                     $original = IdentifikasiRisiko::find($id);
                     if (!$original) continue;
 
-                    // Skip if already exists in this period
+                    // Skip if already exists in this period AND this triwulan
                     $exists = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                        ->where('triwulan', $targetTW)
                         ->where('kegiatan', $original->kegiatan)
                         ->where('unit_id', $original->unit_id)
                         ->exists();
@@ -338,6 +365,7 @@ class RiskIdentificationController extends Controller
                     $newRisk = new IdentifikasiRisiko();
                     $newRisk->unit_id = $original->unit_id;
                     $newRisk->periode_id = $activePeriode->id;
+                    $newRisk->triwulan = $targetTW;
                     $newRisk->kode_risiko = $newCode;
                     $newRisk->kegiatan = $original->kegiatan;
                     $newRisk->tujuan_kegiatan = $original->tujuan_kegiatan;
@@ -368,7 +396,7 @@ class RiskIdentificationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "$successCount risiko berhasil ditarik ke periode " . $activePeriode->tahun
+                'message' => "$successCount risiko berhasil ditarik ke periode " . $activePeriode->tahun . " (TW $targetTW)"
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal bulk pull: ' . $e->getMessage()], 500);

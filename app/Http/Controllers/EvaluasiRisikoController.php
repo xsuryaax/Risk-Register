@@ -14,10 +14,26 @@ class EvaluasiRisikoController extends Controller
     {
         $user = auth()->user();
         $activePeriode = \App\Models\Periode::getActive();
+        $viewTriwulan = $request->view_triwulan ?? 'all';
         $query = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup', 'analisis', 'evaluasi']);
 
         if ($activePeriode) {
             $query->where('periode_id', $activePeriode->id);
+            
+            $targetVal = ($viewTriwulan == 's1' ? [1, 2] : ($viewTriwulan == 's2' ? [3, 4] : [$viewTriwulan]));
+            $ids = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                ->get()
+                ->groupBy('kode_risiko')
+                ->map(function($group) use ($targetVal, $viewTriwulan) {
+                    if ($viewTriwulan === 'all') {
+                        return $group->sortByDesc('triwulan')->first()->id;
+                    }
+                    $match = $group->first(fn($item) => in_array($item->triwulan, $targetVal));
+                    return $match ? $match->id : $group->sortByDesc('triwulan')->first()->id;
+                })
+                ->values()->toArray();
+
+            $query->whereIn('id', $ids);
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -61,14 +77,14 @@ class EvaluasiRisikoController extends Controller
             $query->where('unit_id', $request->unit_id);
         }
 
-        $data = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $data = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
         $units = \App\Models\Unit::orderBy('nama_unit')->get();
 
         if ($request->ajax()) {
-            return view('pages.evaluasi-risiko.index', compact('data', 'units'))->render();
+            return view('pages.evaluasi-risiko.index', compact('data', 'units', 'viewTriwulan', 'activePeriode'))->render();
         }
 
-        return view('pages.evaluasi-risiko.index', compact('data', 'units'));
+        return view('pages.evaluasi-risiko.index', compact('data', 'units', 'viewTriwulan', 'activePeriode'));
     }
 
     public function edit($id)
@@ -100,6 +116,51 @@ class EvaluasiRisikoController extends Controller
         // Security: Prevent accessing other unit's risks
         if (!in_array($user->role_id, [1, 2]) && $identifikasi->unit_id != $user->unit_id) {
             return redirect()->route('evaluasi-risiko.index')->with('error', 'Anda tidak memiliki hak akses ke data ini.');
+        }
+
+        // --- IMPROVED: Frequency-Aware Smart Auto-Duplication ---
+        $targetTW = $request->view_triwulan;
+        $activeTW = $identifikasi->triwulan;
+        $frekuensi = $identifikasi->frekuensi_pelaporan ?? 'triwulan';
+        
+        $shouldDuplicate = false;
+        if (in_array($targetTW, ['1', '2', '3', '4']) && $activeTW != $targetTW) {
+            if ($frekuensi === 'triwulan') {
+                $shouldDuplicate = true;
+            } elseif ($frekuensi === 'semester') {
+                $currentSem = $activeTW <= 2 ? 1 : 2;
+                $targetSem = $targetTW <= 2 ? 1 : 2;
+                if ($currentSem != $targetSem) {
+                    $shouldDuplicate = true;
+                }
+            }
+        }
+        
+        if ($shouldDuplicate) {
+            $existing = IdentifikasiRisiko::where('kode_risiko', $identifikasi->kode_risiko)
+                ->where('triwulan', $targetTW)
+                ->where('periode_id', $identifikasi->periode_id)
+                ->first();
+            
+            if ($existing) {
+                $id = $existing->id;
+            } else {
+                $newIdent = $identifikasi->replicate();
+                $newIdent->triwulan = $targetTW;
+                $newIdent->save();
+                
+                if ($identifikasi->analisis) {
+                    $newAnalisis = $identifikasi->analisis->replicate();
+                    $newAnalisis->identifikasi_risiko_id = $newIdent->id;
+                    $newAnalisis->save();
+                }
+                if ($identifikasi->analisisKecukupan) {
+                    $newKecukupan = $identifikasi->analisisKecukupan->replicate();
+                    $newKecukupan->identifikasi_risiko_id = $newIdent->id;
+                    $newKecukupan->save();
+                }
+                $id = $newIdent->id;
+            }
         }
 
         $request->validate([

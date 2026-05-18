@@ -43,6 +43,39 @@
                                         <small class="text-xs text-muted mt-1 d-block font-italic">* Belum tersusun sementara kosongkan</small>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td class="label-cell"><label class="mb-0">Frekuensi Pelaporan</label></td>
+                                    <td class="input-cell text-start">
+                                        @php
+                                            $month = date('n');
+                                            $currentTW = ceil($month / 3);
+                                        @endphp
+                                        <input type="hidden" name="triwulan" value="{{ $currentTW }}">
+                                        <div class="d-flex gap-3 custom-radio-group">
+                                            <div class="custom-radio">
+                                                <input type="radio" name="frekuensi_pelaporan" value="tahunan" id="frekTahunan">
+                                                <label for="frekTahunan">
+                                                    <i class="fa fa-check-circle check-icon"></i> Tahunan
+                                                    <small class="text-muted ms-1">(1x/tahun)</small>
+                                                </label>
+                                            </div>
+                                            <div class="custom-radio">
+                                                <input type="radio" name="frekuensi_pelaporan" value="semester" id="frekSemester">
+                                                <label for="frekSemester">
+                                                    <i class="fa fa-check-circle check-icon"></i> Semester
+                                                    <small class="text-muted ms-1">(2x/tahun)</small>
+                                                </label>
+                                            </div>
+                                            <div class="custom-radio">
+                                                <input type="radio" name="frekuensi_pelaporan" value="triwulan" id="frekTriwulan" checked>
+                                                <label for="frekTriwulan">
+                                                    <i class="fa fa-check-circle check-icon"></i> Triwulan
+                                                    <small class="text-muted ms-1">(4x/tahun)</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
 
                                 <!-- Bagian II -->
                                 <tr>

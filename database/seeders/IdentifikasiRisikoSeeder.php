@@ -10733,7 +10733,8 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
         $probMap = Probabilitas::all()->pluck('id', 'nilai_probabilitas')->toArray();
         $dmpMap = Dampak::all()->pluck('id', 'nilai_dampak')->toArray();
 
-        foreach ($risks as $item) {
+        $activePeriode = \App\Models\Periode::where('tahun', '2026')->first();
+        foreach ($risks as $index => $item) {
             // Map strictly to existing Unit, if not exactly matched, leave it empty (null)
             $unitId = $unitMap[$item['unit']] ?? null;
 
@@ -10776,6 +10777,9 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
                 'sebab' => $item['sebab'],
                 'jenis_risiko' => $item['jenis'],
                 'dampak' => $item['pernyataan'],
+                'triwulan' => ($index % 4) + 1,
+                'frekuensi_pelaporan' => 'triwulan',
+                'periode_id' => $activePeriode->id,
                 'created_at' => $randomDate,
                 'updated_at' => $randomDate,
             ]);

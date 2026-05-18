@@ -20,7 +20,8 @@ class IdentifikasiRisiko extends Model
         'jenis_risiko',
         'dampak',
         'user_id',
-        'periode_id'
+        'periode_id',
+        'frekuensi_pelaporan'
     ];
 
     public function periode()

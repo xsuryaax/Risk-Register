@@ -15,6 +15,7 @@
             <div class="card-body p-0">
                 <form action="{{ route('evaluasi-risiko.store', $identifikasi->id) }}" method="POST">
                     @csrf
+                    <input type="hidden" name="view_triwulan" value="{{ request('view_triwulan') }}">
                     
                     <div class="table-responsive">
                         <table class="table mb-0 table-form border-bottom">

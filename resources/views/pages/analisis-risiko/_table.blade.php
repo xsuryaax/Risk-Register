@@ -39,13 +39,43 @@
         <tbody>
             @forelse($data as $item)
             @php
-                $analisis = $item->analisis;
+                $rawAnalisis = $item->analisis;
+                $frekuensi = $item->frekuensi_pelaporan ?? 'triwulan';
+                $viewTri = $viewTriwulan ?? 'all';
+                $showValue = false;
+
+                if ($viewTri == 'all') {
+                    $showValue = true;
+                } else {
+                    $targetArr = ($viewTri == 's1' ? [1, 2] : ($viewTri == 's2' ? [3, 4] : [$viewTri]));
+                    if ($frekuensi == 'tahunan') {
+                        $showValue = true;
+                    } elseif ($frekuensi == 'semester') {
+                        $itemSem = $item->triwulan <= 2 ? [1, 2] : [3, 4];
+                        if (array_intersect($targetArr, $itemSem)) {
+                            $showValue = true;
+                        }
+                    } elseif ($frekuensi == 'triwulan') {
+                        if (in_array($item->triwulan, $targetArr)) {
+                            $showValue = true;
+                        }
+                    }
+                }
+
+                $analisis = $showValue ? $rawAnalisis : null;
                 $pId = $analisis->probabilitas_id ?? null;
                 $dId = $analisis->dampak_id ?? null;
                 $score = $analisis->skor_risiko ?? null;
-                $rank = $score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')));
-                $bgColor = $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')));
-                $textColor = ($score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
+
+                $rank = null;
+                $bgColor = 'transparent';
+                $textColor = 'text-dark';
+
+                if ($score !== null) {
+                    $rank = $score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')));
+                    $bgColor = $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')));
+                    $textColor = ($score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
+                }
             @endphp
             <tr data-id="{{ $item->id }}" class="row-analisis">
                 <td class="align-middle text-center px-1">

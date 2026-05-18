@@ -6,7 +6,7 @@
 @section('page_description', 'Langkah Pertama: Identifikasi kegiatan, tujuan, dan potensi risiko yang mungkin terjadi.')
 
 @section('content')
-    <div class="d-flex justify-content-end mb-2" style="margin-top: -10px;">
+    <div class="d-flex justify-content-end" style="margin-top: -10px;">
         @if ($activePeriode)
             <a href="{{ route('identifikasi-risiko.create') }}" id="btnTambahData"
                 class="btn btn-sm text-white shadow-sm border-radius-lg mb-0 text-capitalize py-2 px-3"
@@ -15,6 +15,24 @@
             </a>
         @endif
     </div>
+
+    <div class="row mb-3">
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center">
+                
+                @if($viewPeriodeId != ($activePeriode->id ?? 0))
+                    <span class="badge bg-soft-teal text-teal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                        <i class="fa fa-history me-1"></i> MODE LIBRARY (TAHUN {{ $periodes->find($viewPeriodeId)->tahun }})
+                    </span>
+                @endif
+            </div>
+
+        </div>
+    </div>
+
+    <style>
+        .text-teal { color: #007774 !important; }
+    </style>
 
     <div class="row">
         <div class="col-12">
@@ -32,10 +50,27 @@
                             </div>
 
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <input type="hidden" name="periode_id" value="{{ $activePeriode->id ?? '' }}">
+                                <select name="periode_id" class="form-select form-select-sm" style="width: 130px; height: 32px;">
+                                    @foreach($periodes as $p)
+                                        <option value="{{ $p->id }}" {{ $viewPeriodeId == $p->id ? 'selected' : '' }}>
+                                            Tahun {{ $p->tahun }} {{ $p->status ? '(Aktif)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                {{-- Hidden select for JS to handle --}}
+                                <select name="triwulan" class="d-none">
+                                    <option value="all" {{ $viewTriwulan == 'all' ? 'selected' : '' }}>Semua Larik</option>
+                                    <option value="s1" {{ $viewTriwulan == 's1' ? 'selected' : '' }}>Semester 1</option>
+                                    <option value="s2" {{ $viewTriwulan == 's2' ? 'selected' : '' }}>Semester 2</option>
+                                    <option value="1" {{ $viewTriwulan == '1' ? 'selected' : '' }}>Triwulan 1</option>
+                                    <option value="2" {{ $viewTriwulan == '2' ? 'selected' : '' }}>Triwulan 2</option>
+                                    <option value="3" {{ $viewTriwulan == '3' ? 'selected' : '' }}>Triwulan 3</option>
+                                    <option value="4" {{ $viewTriwulan == '4' ? 'selected' : '' }}>Triwulan 4</option>
+                                </select>
 
                                 @if (in_array(auth()->user()->role_id, [1, 2]))
-                                    <select name="unit_id" id="filterUnit" style="width: 180px;">
+                                    <select name="unit_id" id="filterUnit" class="form-select form-select-sm" style="width: 180px; height: 32px;">
                                         <option value="">Semua Unit</option>
                                         @foreach ($units as $u)
                                             <option value="{{ $u->id }}"
@@ -44,6 +79,32 @@
                                         @endforeach
                                     </select>
                                 @endif
+
+                                @php
+                                    $isLibraryView = $activePeriode && $viewPeriodeId != $activePeriode->id;
+                                @endphp
+                                @if ($isLibraryView && count($data) > 0)
+                                    <button type="button" id="btnBulkCopy"
+                                        class="btn btn-sm text-white shadow-sm border-radius-lg mb-0 text-capitalize py-1 px-3 d-none"
+                                        style="background-color: #007774 !important; height: 32px;">
+                                        <i class="fa fa-download me-1"></i> Tarik (<span id="selectedCount">0</span>)
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Select All Global Banner -->
+                        <div id="selectAllGlobalContainer" class="alert alert-info py-2 px-3 mb-2 mt-2 border-radius-lg d-none" style="background-color: rgba(0, 119, 116, 0.05); border: 1px solid rgba(0, 119, 116, 0.1);">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="text-xs text-dark" id="selectAllText"></span>
+                                <div class="d-flex gap-2">
+                                    <button type="button" id="btnSelectAllGlobal" class="btn btn-xs bg-white text-teal mb-0 border-radius-sm shadow-sm font-weight-bold">
+                                        Pilih Semua Risiko di Semua Halaman
+                                    </button>
+                                    <button type="button" id="btnClearSelection" class="btn btn-xs bg-white text-danger mb-0 border-radius-sm shadow-sm font-weight-bold d-none">
+                                        Bersihkan Seleksi
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -182,8 +243,8 @@
                 });
             }
 
-            // --- Periode Filter ---
-            $('select[name="periode_id"]').on('change', function() {
+            // --- Periode & Triwulan Filter ---
+            $('select[name="periode_id"], select[name="triwulan"]').on('change', function() {
                 reloadTable();
             });
             // --- Individual Copy ---
@@ -320,6 +381,7 @@
                             _token: "{{ csrf_token() }}",
                             select_all: selectAllGlobal,
                             view_periode_id: $('select[name="periode_id"]').val(),
+                            triwulan: $('select[name="triwulan"]').val(),
                             unit_id: $('select[name="unit_id"]').val(),
                             search: $('input[name="search"]').val()
                         };
