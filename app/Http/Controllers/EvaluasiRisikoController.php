@@ -81,7 +81,7 @@ class EvaluasiRisikoController extends Controller
         $units = \App\Models\Unit::orderBy('nama_unit')->get();
 
         if ($request->ajax()) {
-            return view('pages.evaluasi-risiko.index', compact('data', 'units', 'viewTriwulan', 'activePeriode'))->render();
+            return view('pages.evaluasi-risiko._table', compact('data', 'units', 'viewTriwulan', 'activePeriode'))->render();
         }
 
         return view('pages.evaluasi-risiko.index', compact('data', 'units', 'viewTriwulan', 'activePeriode'));
@@ -192,7 +192,7 @@ class EvaluasiRisikoController extends Controller
             $ranking = 'SANGAT RENDAH';
         }
 
-        // Calculate % Reduction
+        // Calculate % Change (Positive = Reduction, Negative = Increase)
         $reduction = $initialScore > 0 ? (($initialScore - $score) / $initialScore) * 100 : 0;
 
         EvaluasiRisiko::updateOrCreate(

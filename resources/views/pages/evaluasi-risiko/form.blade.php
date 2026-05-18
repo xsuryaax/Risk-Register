@@ -197,8 +197,16 @@
                 document.getElementById('displayRank').innerText = rank;
                 document.getElementById('displayRank').style.color = color;
 
-                const reduction = initialScore > 0 ? ((initialScore - score) / initialScore * 100).toFixed(0) : 0;
-                document.getElementById('displayReduction').innerText = '↓ ' + reduction + '% Penurunan';
+                const val = initialScore > 0 ? ((initialScore - score) / initialScore * 100) : 0;
+                const displayEl = document.getElementById('displayReduction');
+                
+                if (val > 0) {
+                    displayEl.innerHTML = '<span class="text-success">&darr; ' + Math.abs(val).toFixed(0) + '%</span>';
+                } else if (val < 0) {
+                    displayEl.innerHTML = '<span class="text-danger">&uarr; ' + Math.abs(val).toFixed(0) + '%</span>';
+                } else {
+                    displayEl.innerHTML = '<span class="text-secondary">0%</span>';
+                }
             }
         }
 

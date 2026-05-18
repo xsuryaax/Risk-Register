@@ -76,7 +76,7 @@ class AnalisisKecukupanController extends Controller
         $units = Unit::orderBy('nama_unit')->get();
         
         if ($request->ajax()) {
-            return view('pages.analisis-kecukupan.index', compact('data', 'units', 'viewTriwulan', 'activePeriode'))->render();
+            return view('pages.analisis-kecukupan._table', compact('data', 'units', 'viewTriwulan', 'activePeriode'))->render();
         }
 
         return view('pages.analisis-kecukupan.index', compact('data', 'units', 'viewTriwulan', 'activePeriode'));
@@ -160,6 +160,39 @@ class AnalisisKecukupanController extends Controller
                 'pj_tindak_lanjut' => $request->pj_tindak_lanjut,
             ]
         );
+
+        // --- IMPROVED: Full Multi-Quarter Sync ---
+        $allQuarters = [1, 2, 3, 4];
+        foreach ($allQuarters as $q) {
+            if ($q == $targetTW || $q == $activeTW) continue;
+
+            $otherIdent = IdentifikasiRisiko::where('kode_risiko', $identifikasi->kode_risiko)
+                ->where('periode_id', $identifikasi->periode_id)
+                ->where('triwulan', $q)
+                ->first();
+
+            if (!$otherIdent) {
+                $otherIdent = $identifikasi->replicate();
+                $otherIdent->triwulan = $q;
+                $otherIdent->save();
+                
+                // If we created a new Ident, we should also copy the analysis if it exists
+                if ($identifikasi->analisis) {
+                    $newAnalisis = $identifikasi->analisis->replicate();
+                    $newAnalisis->identifikasi_risiko_id = $otherIdent->id;
+                    $newAnalisis->save();
+                }
+            }
+
+            if (!$otherIdent->analisisKecukupan) {
+                AnalisisKecukupan::create([
+                    'identifikasi_risiko_id' => $otherIdent->id,
+                    'uraian_rencana' => $request->uraian_rencana,
+                    'jadwal' => $request->jadwal,
+                    'pj_tindak_lanjut' => $request->pj_tindak_lanjut,
+                ]);
+            }
+        }
 
         return redirect()->route('analisis-kecukupan.index')->with('success', 'Analisis kecukupan berhasil disimpan.');
     }

@@ -1,8 +1,8 @@
 <div class="table-responsive p-0">
     <table class="table align-items-center mb-0 table-bordered-light table-compact-analisis" id="mainTable">
         <colgroup>
-            <col style="width: 2%;"> <!-- No -->
-            <col style="width: 80px;"> <!-- Kode -->
+            <col style="width: 25px;"> <!-- No -->
+            <col style="width: 70px;"> <!-- Kode -->
             <col style="width: 15%;"> <!-- Kegiatan -->
             <col style="width: 25%;"> <!-- Uraian -->
             <col style="width: 100px;"> <!-- Desain -->
@@ -62,7 +62,7 @@
                     }
                 }
 
-                $analisis = $showValue ? $rawAnalisis : null;
+                $analisis = $rawAnalisis;
                 $pId = $analisis->probabilitas_id ?? null;
                 $dId = $analisis->dampak_id ?? null;
                 $score = $analisis->skor_risiko ?? null;
@@ -174,10 +174,17 @@
                 {{-- Pemilik Risiko --}}
                 <td class="align-middle text-center px-1">
                     @php
-                        $rawPemilik = $analisis->pemilik_risiko ?? $item->unit?->nama_unit;
-                        $pemiliks = array_filter(explode(',', $rawPemilik));
-                        $firstPemilik = $pemiliks[0] ?? '-';
-                        $extraCount = count($pemiliks) > 1 ? count($pemiliks) - 1 : 0;
+                        $rawPemilik = $analisis->pemilik_risiko ?? ($item->unit_id ? (string)$item->unit_id : null);
+                        $pemilikIdArray = array_filter(explode(',', $rawPemilik));
+                        
+                        // Map ID to Name
+                        $pemilikNames = collect($pemilikIdArray)->map(function($id) use ($units) {
+                            $unit = $units->firstWhere('id', (int)trim($id));
+                            return $unit ? $unit->nama_unit : '-';
+                        })->toArray();
+                        
+                        $firstPemilik = $pemilikNames[0] ?? '-';
+                        $extraCount = count($pemilikNames) > 1 ? count($pemilikNames) - 1 : 0;
                     @endphp
                     <div class="view-mode">
                         <div class="custom-tooltip-wrapper">
@@ -188,12 +195,12 @@
                                 @endif
                             </span>
 
-                            @if(count($pemiliks) > 1)
+                            @if(count($pemilikNames) > 1)
                             <div class="custom-tooltip-content">
                                 <div class="px-2 py-1">
                                     <div class="mb-1 font-weight-bold border-bottom pb-1 text-white opacity-8" style="font-size: 10px;">DAFTAR PEMILIK :</div>
                                     <ul class="list-unstyled mb-0 text-start label-pemilik-list">
-                                        @foreach($pemiliks as $p)
+                                        @foreach($pemilikNames as $p)
                                             <li class="py-1" style="font-size: 11px; white-space: nowrap;">
                                                 <i class="fa fa-caret-right me-1 text-info"></i> {{ $p }}
                                             </li>
@@ -207,14 +214,17 @@
                     <div class="edit-mode d-none">
                         <select class="edit-pemilik ts-multi" multiple style="min-width: 150px;">
                             @foreach($units as $u)
-                                <option value="{{ $u->nama_unit }}" {{ in_array($u->nama_unit, $pemiliks) ? 'selected' : '' }}>{{ $u->nama_unit }}</option>
+                                <option value="{{ $u->id }}" {{ in_array((string)$u->id, $pemilikIdArray) ? 'selected' : '' }}>{{ $u->nama_unit }}</option>
                             @endforeach
                         </select>
                     </div>
                 </td>
 
                 <td class="align-middle text-center px-1">
-                    <div class="view-mode">
+                    <div class="view-mode d-flex gap-1 justify-content-center">
+                        <a href="{{ route('pdf.profile', $item->id) }}?type=analisis" class="btn-action bg-info border-0" title="Cetak Profile PDF" target="_blank" style="background-color: #17a2b8 !important;">
+                            <i class="fa fa-file-pdf text-white"></i>
+                        </a>
                         <button type="button" class="btn-action btn-edit btn-toggle-edit" title="{{ $analisis ? 'Edit Analisis' : 'Isi Analisis' }}">
                             <i class="fa {{ $analisis ? 'fa-edit' : 'fa-plus' }}"></i>
                         </button>

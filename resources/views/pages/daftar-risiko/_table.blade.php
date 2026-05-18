@@ -47,11 +47,9 @@
                 <th rowspan="2"
                     class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 dl-pj">
                     PJ</th>
-                @if($activePeriode && $viewPeriodeId != $activePeriode->id)
                 <th rowspan="2"
-                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 50px !important; min-width: 50px !important;">
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 80px !important; min-width: 80px !important;">
                     Aksi</th>
-                @endif
             </tr>
             <tr>
                 <th
@@ -172,25 +170,29 @@
                         <span
                             class="text-xs text-dark">{{ $analisisKecukupan->pj_tindak_lanjut ?? ($analisis->pemilik_risiko ?? '-') }}</span>
                     </td>
-                    @if($activePeriode && $viewPeriodeId != $activePeriode->id)
-                    <td class="align-middle text-center" style="width: 50px !important;">
-                        @if(!$isPulled)
-                            <button type="button" class="btn-action btn-copy-single" 
-                                data-id="{{ $item->id }}" 
-                                title="Tarik ke Periode Aktif" 
-                                style="background-color: #ff9800; border: none; color: white; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                <i class="fa fa-copy" style="font-size: 0.75rem;"></i>
-                            </button>
-                        @else
-                            <i class="fa fa-check-double" style="color: #007774; font-size: 0.7rem;" title="Sudah ditarik"></i>
-                        @endif
+                    <td class="align-middle text-center" style="width: 80px !important;">
+                         <div class="d-flex gap-1 justify-content-center">
+                            <a href="{{ route('pdf.profile', $item->id) }}?type=daftar" class="btn-action bg-info border-0" title="Cetak Profile PDF" target="_blank" style="width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #17a2b8 !important;">
+                                <i class="fa fa-file-pdf text-white" style="font-size: 0.75rem;"></i>
+                            </a>
+                            @if($activePeriode && $viewPeriodeId != $activePeriode->id)
+                                @if(!$isPulled)
+                                    <button type="button" class="btn-action btn-copy-single" 
+                                        data-id="{{ $item->id }}" 
+                                        title="Tarik ke Periode Aktif" 
+                                        style="background-color: #ff9800; border: none; color: white; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                        <i class="fa fa-copy" style="font-size: 0.75rem;"></i>
+                                    </button>
+                                @else
+                                    <i class="fa fa-check-double" style="color: #007774; font-size: 0.7rem; align-self: center;" title="Sudah ditarik"></i>
+                                @endif
+                            @endif
+                         </div>
                     </td>
-                    @endif
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ $activePeriode && $viewPeriodeId != $activePeriode->id ? '12' : '11' }}" class="text-center py-6 text-secondary text-xs">Belum ada daftar
-                        lengkap risiko.</td>
+                    <td colspan="12" class="text-center py-6 text-secondary text-xs">Belum ada daftar lengkap risiko.</td>
                 </tr>
             @endforelse
         </tbody>

@@ -10735,8 +10735,30 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
 
         $activePeriode = \App\Models\Periode::where('tahun', '2026')->first();
         foreach ($risks as $index => $item) {
-            // Map strictly to existing Unit, if not exactly matched, leave it empty (null)
-            $unitId = $unitMap[$item['unit']] ?? null;
+            // Map Unit dynamically and flexibly
+            $unitName = trim($item['unit']);
+            $unitId = null;
+            
+            // 1. Exact case-insensitive match
+            foreach ($unitMap as $key => $id) {
+                if (strtolower($key) == strtolower($unitName)) {
+                    $unitId = $id;
+                    break;
+                }
+            }
+            
+            // 2. Fuzzy match (e.g. "Rumah Tangga" matches "Rumah Tangga & K3RS")
+            if (!$unitId) {
+                foreach ($unitMap as $key => $id) {
+                    if (str_contains(strtolower($key), strtolower($unitName)) || str_contains(strtolower($unitName), strtolower($key))) {
+                        $unitId = $id;
+                        break;
+                    }
+                }
+            }
+            
+            // 3. Fallback: Leave as null if truly not found (no creation)
+            // if (!$unitId) { ... } // Removed per request
 
             // Get or Create Kategori
             if (!isset($katMap[$item['kategori']])) {
@@ -10761,8 +10783,8 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
             $counters[$prefix]++;
             $kode = $prefix . '-2026-' . str_pad($counters[$prefix], 3, '0', STR_PAD_LEFT);
 
-            // Generate a random date within the last 12 months to populate trend charts
-            $randomDate = now()->subMonths(rand(0, 11))->subDays(rand(0, 28));
+            // Generate a random date within Q1 (Jan-Mar) to remain consistent with Triwulan 1
+            $randomDate = now()->setMonth(rand(1, 3))->setDay(rand(1, 28));
 
             // Create Identifikasi
             $identifikasi = IdentifikasiRisiko::create([
@@ -10777,7 +10799,7 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
                 'sebab' => $item['sebab'],
                 'jenis_risiko' => $item['jenis'],
                 'dampak' => $item['pernyataan'],
-                'triwulan' => ($index % 4) + 1,
+                'triwulan' => 1, // Set everything to Q1 as requested
                 'frekuensi_pelaporan' => 'triwulan',
                 'periode_id' => $activePeriode->id,
                 'created_at' => $randomDate,
@@ -10812,6 +10834,27 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
             elseif (stripos($efektifitas, 'Efektif') !== false || stripos($efektifitas, 'Cukup') !== false) $efektifitas = 'Efektif';
             else $efektifitas = 'Tidak Efektif';
 
+            // Base mapping function for Pemilik -> Unit ID
+            $rawPem = trim($item['pemilik']) ?: trim($item['unit']);
+            $pemilikId = null;
+            if (!empty($rawPem)) {
+                // Exact
+                foreach ($unitMap as $key => $id) {
+                    if (strtolower($key) == strtolower($rawPem)) {
+                        $pemilikId = $id; break;
+                    }
+                }
+                // Fuzzy
+                if (!$pemilikId) {
+                    foreach ($unitMap as $key => $id) {
+                        if (str_contains(strtolower($key), strtolower($rawPem)) || str_contains(strtolower($rawPem), strtolower($key))) {
+                            $pemilikId = $id; break;
+                        }
+                    }
+                }
+            }
+            if (!$pemilikId) $pemilikId = $unitId; // Fallback to regular unit
+
             AnalisisRisiko::create([
                 'identifikasi_risiko_id' => $identifikasi->id,
                 'uraian_pengendalian' => $item['uraian_pengendalian'],
@@ -10821,7 +10864,7 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
                 'dampak_id' => $dmpMap[$item['dmp']] ?? null,
                 'skor_risiko' => $skor,
                 'peringkat_risiko' => $peringkat,
-                'pemilik_risiko' => $item['pemilik'] ?: $item['unit'],
+                'pemilik_risiko' => (string)$pemilikId, // Store as string ID
                 'created_at' => $randomDate,
                 'updated_at' => $randomDate,
             ]);
@@ -10836,8 +10879,8 @@ Melakukan monitoring terhadap pelaksanaan dari hasil pelatihan',
                 'updated_at' => $randomDate,
             ]);
 
-            // Create Evaluasi (70% chance to show transition effect on Dashboard)
-            if (rand(1, 10) <= 7) {
+            // Create Evaluasi (50% chance for Q1 evaluation in seeds)
+            if (rand(1, 10) <= 5) {
                 $resProb = rand(1, floor($item['prob']));
                 $resDmp = rand(1, floor($item['dmp']));
                 $resScore = $resProb * $resDmp;

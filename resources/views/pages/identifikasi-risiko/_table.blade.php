@@ -9,14 +9,14 @@
                     </div>
                 </th>
                 @endif
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 40px;">No</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kode</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kegiatan</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 20px;">No</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 70px;">Kode</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 15%;">Kegiatan</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Kategori</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Pernyataan</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Sebab</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 20%;">Pernyataan</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 15%;">Sebab</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">UC/C</th>
-                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Dampak</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 15%;">Dampak</th>
                 <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Aksi</th>
             </tr>
         </thead>
@@ -42,22 +42,22 @@
                     <span class="text-xs font-weight-bold text-primary">{{ $item->kode_risiko }}</span>
                 </td>
                 <td class="px-1">
-                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark" style="max-width: 150px;">{{ $item->kegiatan }}</p>
+                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark" style="max-width: 200px;">{{ $item->kegiatan }}</p>
                 </td>
                 <td class="align-middle text-center px-1">
                     <p class="text-xs mb-0 text-wrap text-dark">{{ $item->kategori->nama_kategori ?? '-' }}</p>
                 </td>
                 <td class="px-1">
-                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 180px;">{{ $item->pernyataan_risiko }}</p>
+                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 250px;">{{ $item->pernyataan_risiko }}</p>
                 </td>
                 <td class="px-1">
-                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 150px;">{{ $item->sebab }}</p>
+                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 180px;">{{ $item->sebab }}</p>
                 </td>
                 <td class="align-middle text-center px-1">
                     <span class="text-xs font-weight-bold text-dark">{{ $item->jenis_risiko }}</span>
                 </td>
                 <td class="px-1">
-                    <p class="text-xs mb-0 text-wrap text-dark">{{ $item->dampak }}</p>
+                    <p class="text-xs mb-0 text-wrap text-dark" style="max-width: 180px;">{{ $item->dampak }}</p>
                 </td>
                 <td class="align-middle text-center px-1">
                     <div class="d-flex justify-content-center align-items-center">
@@ -71,6 +71,9 @@
                                 </button>
                             @endif
                         @else
+                            <a href="{{ route('pdf.profile', $item->id) }}?type=identifikasi" class="btn-action bg-info border-0 me-1" title="Cetak Profile PDF" target="_blank" style="background-color: #17a2b8 !important;">
+                                <i class="fa fa-file-pdf text-white"></i>
+                            </a>
                             <a href="{{ route('identifikasi-risiko.edit', $item->id) }}" class="btn-action btn-edit me-1" title="Edit Data">
                                 <i class="fa fa-edit text-white"></i>
                             </a>

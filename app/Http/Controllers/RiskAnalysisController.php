@@ -215,6 +215,41 @@ class RiskAnalysisController extends Controller
             ]
         );
 
+        // --- IMPROVED: Full Multi-Quarter Sync ---
+        // We want to ensure that triwulans 1, 2, 3, 4 all have this data if they were empty.
+        $allQuarters = [1, 2, 3, 4];
+        foreach ($allQuarters as $q) {
+            if ($q == $targetTW || $q == $activeTW) continue; // Already handled or current
+
+            // Find or Copy Identification for this quarter
+            $otherIdent = IdentifikasiRisiko::where('kode_risiko', $identifikasi->kode_risiko)
+                ->where('periode_id', $identifikasi->periode_id)
+                ->where('triwulan', $q)
+                ->first();
+
+            if (!$otherIdent) {
+                // If the quarter doesn't even have the risk record yet, create it
+                $otherIdent = $identifikasi->replicate();
+                $otherIdent->triwulan = $q;
+                $otherIdent->save();
+            }
+
+            // Now check if it has analysis. If empty, sync it.
+            if (!$otherIdent->analisis) {
+                AnalisisRisiko::create([
+                    'identifikasi_risiko_id' => $otherIdent->id,
+                    'uraian_pengendalian' => $request->uraian_pengendalian,
+                    'desain_pengendalian' => $request->desain_pengendalian,
+                    'efektifitas_pengendalian' => $request->efektifitas_pengendalian,
+                    'probabilitas_id' => $request->probabilitas_id,
+                    'dampak_id' => $request->dampak_id,
+                    'skor_risiko' => $score,
+                    'peringkat_risiko' => $ranking,
+                    'pemilik_risiko' => $request->pemilik_risiko,
+                ]);
+            }
+        }
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,

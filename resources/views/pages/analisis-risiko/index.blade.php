@@ -38,18 +38,24 @@
                     </span>
                 @endif
             </div>
-            <div class="larik-wrapper">
-                @php
-                    $lariks = ['all' => 'Tahunan', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
-                    $currTri = $viewTriwulan ?? 'all';
-                @endphp
-                @foreach($lariks as $val => $lbl)
-                    <button type="button" 
-                            onclick="$('input[name=view_triwulan]').val('{{ $val }}').trigger('change'); $('.btn-larik').removeClass('active'); $(this).addClass('active');"
-                            class="btn-larik {{ $currTri == $val ? 'active' : '' }}">
-                        {{ $lbl }}
-                    </button>
-                @endforeach
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('pdf.analisis-risiko.all', request()->query()) }}" id="btnExportPdf"
+                    class="btn btn-sm bg-white text-dark shadow-sm border-radius-lg mb-0 text-capitalize py-2 px-3 border">
+                    <i class="fa fa-file-pdf me-2 text-info"></i> Cetak PDF
+                </a>
+                <div class="larik-wrapper">
+                    @php
+                        $lariks = ['all' => 'Tahunan', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
+                        $currTri = $viewTriwulan ?? 'all';
+                    @endphp
+                    @foreach($lariks as $val => $lbl)
+                        <button type="button" 
+                                onclick="$('input[name=view_triwulan]').val('{{ $val }}').trigger('change'); $('.btn-larik').removeClass('active'); $(this).addClass('active');"
+                                class="btn-larik {{ $currTri == $val ? 'active' : '' }}">
+                            {{ $lbl }}
+                        </button>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
@@ -118,6 +124,35 @@
 <script>
 $(document).ready(function() {
     let fadeTimer;
+
+    let xhr;
+    function loadAjax(url) {
+        if (xhr) xhr.abort();
+        
+        // Update PDF link with current form state
+        const form = $('#filterForm').length ? $('#filterForm') : $('form').first();
+        const params = form.serialize();
+        const pdfUrl = "{{ route('pdf.analisis-risiko.all') }}?" + params;
+        $('#btnExportPdf').attr('href', pdfUrl);
+
+        $('#tableContainer').css('opacity', '0.8');
+        
+        xhr = $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(data) {
+                $('#tableContainer').html(data);
+                $('#tableContainer').css('opacity', '1');
+                window.history.pushState(null, '', url);
+            },
+            error: function(err) {
+                if (err.statusText !== 'abort') {
+                    $('#tableContainer').css('opacity', '1');
+                    console.error(err);
+                }
+            }
+        });
+    }
 
     $('form input[name="search"]').on('keyup', function() {
         clearTimeout(fadeTimer);

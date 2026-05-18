@@ -85,8 +85,30 @@ Route::middleware('auth')->group(function () {
     Route::get('/evaluasi-risiko', [App\Http\Controllers\EvaluasiRisikoController::class, 'index'])->name('evaluasi-risiko.index');
     Route::get('/evaluasi-risiko/{id}/edit', [App\Http\Controllers\EvaluasiRisikoController::class, 'edit'])->name('evaluasi-risiko.edit');
     Route::post('/evaluasi-risiko/{id}', [App\Http\Controllers\EvaluasiRisikoController::class, 'store'])->name('evaluasi-risiko.store');
+
+    // PDF Routes
+    Route::prefix('pdf')->group(function () {
+        Route::get('/identifikasi-risiko', [App\Http\Controllers\PdfController::class, 'identifikasiRisikoAll'])->name('pdf.identifikasi-risiko.all');
+        Route::get('/analisis-risiko', [App\Http\Controllers\PdfController::class, 'analisisRisikoAll'])->name('pdf.analisis-risiko.all');
+        Route::get('/analisis-kecukupan', [App\Http\Controllers\PdfController::class, 'analisisKecukupanAll'])->name('pdf.analisis-kecukupan.all');
+        Route::get('/evaluasi-risiko', [App\Http\Controllers\PdfController::class, 'evaluasiRisikoAll'])->name('pdf.evaluasi-risiko.all');
+        Route::get('/daftar-risiko', [App\Http\Controllers\PdfController::class, 'daftarRisikoAll'])->name('pdf.daftar-risiko.all');
+        
+        // Single Risk Profile
+        Route::get('/profile/{id}', [App\Http\Controllers\PdfController::class, 'singleProfile'])->name('pdf.profile');
+    });
 });
 
-
-
-
+Route::get('/fix-data', function() {
+    App\Models\EvaluasiRisiko::all()->each(function($e){
+        $i = App\Models\IdentifikasiRisiko::with('analisis')->find($e->identifikasi_risiko_id);
+        if($i && $i->analisis) {
+            $initial = $i->analisis->skor_risiko;
+            $residu = $e->skor_residu;
+            $val = $initial > 0 ? (($initial - $residu)/$initial)*100 : 0;
+            $e->penurunan_persen = $val;
+            $e->save();
+        }
+    });
+    return "Data berhasil diperbaiki! Silakan kembali ke halaman sebelumnya dan refresh.";
+});

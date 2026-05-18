@@ -6,7 +6,11 @@
 @section('page_description', 'Langkah Pertama: Identifikasi kegiatan, tujuan, dan potensi risiko yang mungkin terjadi.')
 
 @section('content')
-    <div class="d-flex justify-content-end" style="margin-top: -10px;">
+    <div class="d-flex justify-content-end gap-2" style="margin-top: -10px;">
+        <a href="{{ route('pdf.identifikasi-risiko.all', request()->query()) }}" id="btnExportPdf"
+            class="btn btn-sm bg-white text-dark shadow-sm border-radius-lg mb-0 text-capitalize py-2 px-3 border">
+            <i class="fa fa-file-pdf me-2 text-info"></i> Cetak PDF
+        </a>
         @if ($activePeriode)
             <a href="{{ route('identifikasi-risiko.create') }}" id="btnTambahData"
                 class="btn btn-sm text-white shadow-sm border-radius-lg mb-0 text-capitalize py-2 px-3"
@@ -188,13 +192,21 @@
         $(document).ready(function() {
             const filterForm = $('#filterForm');
 
+            let xhr;
             function reloadTable() {
-                const fetchUrl = filterForm.attr('action') + '?' + filterForm.serialize();
+                if (xhr) xhr.abort();
 
-                // Show loading state
-                $('#tableContainer').css('opacity', '0.5');
+                const fetchParams = filterForm.serialize();
+                const fetchUrl = filterForm.attr('action') + '?' + fetchParams;
+                
+                // Update PDF link immediately
+                const pdfUrl = "{{ route('pdf.identifikasi-risiko.all') }}?" + fetchParams;
+                $('#btnExportPdf').attr('href', pdfUrl);
 
-                $.ajax({
+                // Show loading state (subtle)
+                $('#tableContainer').css('opacity', '0.8');
+
+                xhr = $.ajax({
                     url: fetchUrl,
                     type: 'GET',
                     success: function(response) {
@@ -216,9 +228,11 @@
                         // Update URL
                         window.history.pushState(null, '', fetchUrl);
                     },
-                    error: function() {
-                        $('#tableContainer').css('opacity', '1');
-                        Swal.fire('Error', 'Gagal memuat data.', 'error');
+                    error: function(err) {
+                        if (err.statusText !== 'abort') {
+                            $('#tableContainer').css('opacity', '1');
+                            console.error(err);
+                        }
                     }
                 });
             }

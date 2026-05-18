@@ -273,9 +273,25 @@ class RiskIdentificationController extends Controller
                 $newRisk->user_id = \Auth::id() ?? $original->user_id;
                 $newRisk->save();
 
+                // 1. Copy Analisis
+                if ($original->analisis) {
+                    $newAnalisis = $original->analisis->replicate();
+                    $newAnalisis->identifikasi_risiko_id = $newRisk->id;
+                    $newAnalisis->save();
+                }
+
+                // 2. Copy Analisis Kecukupan (Mitigasi)
+                if ($original->analisisKecukupan) {
+                    $newKecukupan = $original->analisisKecukupan->replicate();
+                    $newKecukupan->identifikasi_risiko_id = $newRisk->id;
+                    $newKecukupan->save();
+                }
+
+                // 3. Evaluation is NOT copied (Stay fresh)
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Risiko berhasil ditarik ke periode ' . $activePeriode->tahun . ' (TW ' . $targetTW . ')',
+                    'message' => 'Risiko beserta Analisis & Mitigasi berhasil ditarik ke periode ' . $activePeriode->tahun . ' (TW ' . $targetTW . ')',
                     'redirect' => route('identifikasi-risiko.index')
                 ]);
             });
@@ -384,11 +400,13 @@ class RiskIdentificationController extends Controller
                         $newAnalisis->save();
                     }
 
-                    if ($original->evaluasi) {
-                        $newEvaluasi = $original->evaluasi->replicate();
-                        $newEvaluasi->identifikasi_risiko_id = $newRisk->id;
-                        $newEvaluasi->save();
+                    if ($original->analisisKecukupan) {
+                        $newKecukupan = $original->analisisKecukupan->replicate();
+                        $newKecukupan->identifikasi_risiko_id = $newRisk->id;
+                        $newKecukupan->save();
                     }
+
+                    // Evaluation is NOT copied (Stay fresh)
                     
                     $successCount++;
                 }

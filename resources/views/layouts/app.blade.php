@@ -431,6 +431,9 @@
             border-left-color: #f5365c;
         }
 
+        .text-teal { color: #007774 !important; }
+        .bg-teal { background-color: #007774 !important; }
+
         .icon-shape-premium {
             width: 48px;
             height: 48px;
@@ -875,7 +878,7 @@
         // Global AJAX Navigation Function
         function loadAjax(url, target = '#tableContainer') {
             if ($(target).length) {
-                $(target).css('opacity', '0.5'); // Visual feedback
+                $(target).css('opacity', '0.85'); // Visual feedback
 
                 $.ajax({
                     url: url,
@@ -1021,6 +1024,44 @@
                     row.toggle(text.indexOf(value) > -1);
                 });
             });
+            // PDF Export Loading Animation (Subtle & Accurate)
+            $(document).on('click', 'a[href*="/pdf/"], a#btnExportPdf, .btn-action.bg-danger', function(e) {
+                const url = $(this).attr('href');
+                if (!url || url === '#' || url.includes('javascript:void(0)')) return;
+
+                // Reset and show subtle top bar
+                $('#pdfLoadingBar').stop().css({'width': '0', 'display': 'block'});
+                
+                let progress = 5;
+                $('#pdfLoadingBar').css('width', '10%');
+
+                const progressInterval = setInterval(() => {
+                    if (progress < 90) {
+                        progress += Math.random() * 3;
+                        $('#pdfLoadingBar').css('width', progress + '%');
+                    }
+                }, 400);
+
+                // Polling for cookie to detect download start
+                const checkCookie = setInterval(() => {
+                    const cookies = document.cookie.split(';');
+                    const hasFinished = cookies.some(c => c.trim().startsWith('pdf_download_complete='));
+                    
+                    if (hasFinished) {
+                        clearInterval(progressInterval);
+                        clearInterval(checkCookie);
+                        
+                        $('#pdfLoadingBar').css('width', '100%');
+                        setTimeout(() => {
+                            $('#pdfLoadingBar').fadeOut(400, function() {
+                                $(this).css('width', '0');
+                            });
+                            // Clear the cookie immediately
+                            document.cookie = "pdf_download_complete=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                        }, 500);
+                    }
+                }, 500);
+            });
         });
 
         $(document).ready(function() {
@@ -1047,6 +1088,7 @@
         });
     </script>
 
+    <div id="pdfLoadingBar" style="position:fixed; top:0; left:0; width:0; height:3px; background-color:#007774; z-index:10000; transition: width 0.3s ease; display:none;"></div>
     @stack('js')
 </body>
 

@@ -38,18 +38,24 @@
                     </span>
                 @endif
             </div>
-            <div class="larik-wrapper">
-                @php
-                    $lariks = ['all' => 'All', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
-                    $currTri = $viewTriwulan ?? 'all';
-                @endphp
-                @foreach($lariks as $val => $lbl)
-                    <button type="button" 
-                            onclick="$('input[name=view_triwulan]').val('{{ $val }}').trigger('change'); $('.btn-larik').removeClass('active'); $(this).addClass('active');"
-                            class="btn-larik {{ $currTri == $val ? 'active' : '' }}">
-                        {{ $lbl }}
-                    </button>
-                @endforeach
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('pdf.analisis-kecukupan.all', request()->query()) }}" id="btnExportPdf"
+                    class="btn btn-sm bg-white text-dark shadow-sm border-radius-lg mb-0 text-capitalize py-2 px-3 border">
+                    <i class="fa fa-file-pdf me-2 text-info"></i> Cetak PDF
+                </a>
+                <div class="larik-wrapper">
+                    @php
+                        $lariks = ['all' => 'All', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
+                        $currTri = $viewTriwulan ?? 'all';
+                    @endphp
+                    @foreach($lariks as $val => $lbl)
+                        <button type="button" 
+                                onclick="$('input[name=view_triwulan]').val('{{ $val }}').trigger('change'); $('.btn-larik').removeClass('active'); $(this).addClass('active');"
+                                class="btn-larik {{ $currTri == $val ? 'active' : '' }}">
+                            {{ $lbl }}
+                        </button>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
@@ -87,129 +93,7 @@
                 </form>
             </div>
             <div class="card-body px-0 pt-0 pb-2" id="tableContainer">
-                <div class="table-responsive p-0">
-                    <table class="table align-items-center mb-0 table-bordered-light" id="mainTable">
-                        <thead class="bg-light">
-                            <!-- Header Row 1 -->
-                            <tr>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">No</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 80px;">Kode</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Pernyataan Risiko</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 50px;">PR</th>
-                                <th colspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 border-bottom bg-gray-100">Analisis Kecukupan</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1" style="width: 100px;">Pemilik</th>
-                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100" style="width: 100px;">PJ Lanjut</th>
-                                <th rowspan="3" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1">Action</th>
-                            </tr>
-                            <!-- Header Row 2 -->
-                            <tr>
-                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top" style="min-width: 250px;">Uraian Rencana</th>
-                                <th rowspan="2" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-top" style="width: 120px;">Jadwal</th>
-                            </tr>
-                            <!-- Header Row 3 -->
-                            <tr>
-                                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 px-1 bg-gray-100 border-bottom">Petugas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($data as $item)
-                            <tr data-peringkat="{{ strtolower($item->analisis->peringkat_risiko ?? '') }}" data-pemilik="{{ strtolower($item->analisis->pemilik_risiko ?? '') }}">
-                                <td class="align-middle text-center px-1">
-                                    <span class="text-dark text-xs font-weight-bold">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
-                                </td>
-                                <td class="align-middle text-center px-1">
-                                    <span class="text-xs font-weight-bold text-primary">{{ $item->kode_risiko }}</span>
-                                </td>
-                                <td class="px-2 text-start">
-                                    <p class="text-xs font-weight-bold mb-0 text-wrap text-dark">{{ $item->kegiatan }}</p>
-                                </td>
-
-                                @php
-                                    $score = $item->analisis->skor_risiko ?? null;
-                                    $rankLabel = $score !== null ? ($score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')))) : '-';
-                                    $bgColor = $score !== null ? ($score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')))) : '';
-                                    $textColor = ($score !== null && $score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
-                                @endphp
-                                <td class="align-middle text-center px-1" style="{{ $score !== null ? 'background-color: '.$bgColor.';' : '' }}">
-                                    @if($score !== null)
-                                        <span class="text-xs font-weight-bold {{ $textColor }}">
-                                            {{ $rankLabel }}
-                                        </span>
-                                    @else
-                                        <span class="text-xs text-secondary">-</span>
-                                    @endif
-                                </td>
-
-
-                                @php
-                                    $targetVal = ($currTri == 's1' ? [1, 2] : ($currTri == 's2' ? [3, 4] : [$currTri]));
-                                    $isMatch = $currTri == 'all' || in_array($item->triwulan, $targetVal);
-                                @endphp
-
-                                <!-- Rencana Pengendalian (DIISI USER) -->
-                                <td class="px-2 text-start bg-gray-50">
-                                    <p class="text-xs mb-0 text-wrap text-dark" style="min-width: 250px;">{{ $isMatch ? ($item->analisisKecukupan->uraian_rencana ?? '-') : '-' }}</p>
-                                </td>
-                                <td class="align-middle text-center px-1 bg-gray-50">
-                                    <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $isMatch ? ($item->analisisKecukupan->jadwal ?? '-') : '-' }}</p>
-                                </td>
-
-                                <td class="align-middle text-center px-1">
-                                    @php
-                                        $rawPemilik = $item->analisis->pemilik_risiko ?? '-';
-                                        $pemiliks = array_filter(explode(',', $rawPemilik));
-                                        $firstPemilik = $pemiliks[0] ?? '-';
-                                        $extraCount = count($pemiliks) > 1 ? count($pemiliks) - 1 : 0;
-                                    @endphp
-                                    <div class="custom-tooltip-wrapper">
-                                        <span class="text-xs text-dark cursor-pointer">
-                                            {{ $firstPemilik }}
-                                            @if($extraCount > 0)
-                                                <span class="badge bg-soft-info text-primary p-1 ms-1" style="font-size: 0.65rem;">+{{ $extraCount }}</span>
-                                            @endif
-                                        </span>
-
-                                        @if(count($pemiliks) > 1)
-                                        <div class="custom-tooltip-content">
-                                            <div class="px-2 py-1">
-                                                <div class="mb-1 font-weight-bold border-bottom pb-1 text-white opacity-8" style="font-size: 10px;">DAFTAR PEMILIK :</div>
-                                                <ul class="list-unstyled mb-0 text-start">
-                                                    @foreach($pemiliks as $p)
-                                                        <li class="py-1" style="font-size: 11px; white-space: nowrap;">
-                                                            <i class="fa fa-caret-right me-1 text-info"></i> {{ $p }}
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td class="align-middle text-center px-1 bg-gray-50">
-                                    <p class="text-xs text-dark text-wrap mb-0" style="min-width: 100px;">{{ $isMatch ? ($item->analisisKecukupan->pj_tindak_lanjut ?? '-') : '-' }}</p>
-                                </td>
-
-                                <td class="align-middle text-center px-1">
-                                    <a href="{{ route('analisis-kecukupan.edit', $item->id) }}?view_triwulan={{ $currTri }}" class="btn-action btn-edit" title="{{ isset($item->analisisKecukupan) && $item->triwulan == $currTri ? 'Edit Rencana' : 'Tambah Rencana' }}">
-                                        <i class="fa {{ isset($item->analisisKecukupan) && $item->triwulan == $currTri ? 'fa-edit' : 'fa-plus' }}"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="9" class="text-center py-6 text-secondary text-xs">Belum ada data analisis risiko.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @if($data->hasPages())
-                <div class="card-footer py-3 border-top">
-                    <div class="d-flex justify-content-center">
-                        {{ $data->links() }}
-                    </div>
-                </div>
-                @endif
+                @include('pages.analisis-kecukupan._table')
             </div>
         </div>
     </div>
@@ -269,6 +153,34 @@
 <script>
 $(document).ready(function() {
     let fadeTimer;
+
+    let xhr;
+    function loadAjax(url) {
+        if (xhr) xhr.abort();
+        
+        // Update PDF link with current form state
+        const params = url.split('?')[1] || '';
+        const pdfUrl = "{{ route('pdf.analisis-kecukupan.all') }}?" + params;
+        $('#btnExportPdf').attr('href', pdfUrl);
+
+        $('#tableContainer').css('opacity', '0.8');
+        
+        xhr = $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(data) {
+                $('#tableContainer').html(data);
+                $('#tableContainer').css('opacity', '1');
+                window.history.pushState(null, '', url);
+            },
+            error: function(err) {
+                if (err.statusText !== 'abort') {
+                    $('#tableContainer').css('opacity', '1');
+                    console.error(err);
+                }
+            }
+        });
+    }
 
     $('form input[name="search"]').on('keyup', function() {
         clearTimeout(fadeTimer);
