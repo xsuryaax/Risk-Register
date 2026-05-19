@@ -107,8 +107,12 @@ class AnalisisKecukupanController extends Controller
         }
 
         // --- IMPROVED: Frequency-Aware Smart Auto-Duplication ---
-        $targetTW = $request->view_triwulan;
+        $rawTarget = $request->view_triwulan;
         $activeTW = $identifikasi->triwulan;
+        
+        // Ensure $targetTW is a real number (1-4)
+        $targetTW = in_array($rawTarget, ['1', '2', '3', '4']) ? (int)$rawTarget : $activeTW;
+        
         $frekuensi = $identifikasi->frekuensi_pelaporan ?? 'triwulan';
         
         $shouldDuplicate = false;
@@ -183,15 +187,15 @@ class AnalisisKecukupanController extends Controller
                 }
             }
 
-            // Overwrite future quarters to keep them synced with current change
-            AnalisisKecukupan::updateOrCreate(
-                ['identifikasi_risiko_id' => $otherIdent->id],
-                [
+            // NEW: Only sync if future quarter doesn't have adequacy analysis yet (Fill if Empty)
+            if (!$otherIdent->analisisKecukupan) {
+                AnalisisKecukupan::create([
+                    'identifikasi_risiko_id' => $otherIdent->id,
                     'uraian_rencana' => $request->uraian_rencana,
                     'jadwal' => $request->jadwal,
                     'pj_tindak_lanjut' => $request->pj_tindak_lanjut,
-                ]
-            );
+                ]);
+            }
         }
 
         return redirect()->route('analisis-kecukupan.index')->with('success', 'Analisis kecukupan berhasil disimpan.');

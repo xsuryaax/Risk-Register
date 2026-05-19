@@ -93,9 +93,10 @@ class PdfController extends Controller
         $query = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup']);
         $query = $this->applyFilters($query, $request);
         $data = $query->orderBy('id', 'asc')->get();
+        $units = Unit::all();
         
         $common = $this->getCommonData($request);
-        $pdf = Pdf::loadView('pdf.identifikasi', array_merge(['data' => $data], $common))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('pdf.identifikasi', array_merge(['data' => $data, 'units' => $units], $common))->setPaper('a4', 'landscape');
         return $pdf->download('Identifikasi_Risiko_' . date('Ymd') . '.pdf')
                    ->withCookie(cookie('pdf_download_complete', '1', 1, null, null, false, false));
     }
@@ -105,9 +106,10 @@ class PdfController extends Controller
         $query = IdentifikasiRisiko::with(['unit', 'analisis.probabilitas', 'analisis.dampak']);
         $query = $this->applyFilters($query, $request);
         $data = $query->orderBy('id', 'asc')->get();
+        $units = Unit::all();
         
         $common = $this->getCommonData($request);
-        $pdf = Pdf::loadView('pdf.analisis', array_merge(['data' => $data], $common))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('pdf.analisis', array_merge(['data' => $data, 'units' => $units], $common))->setPaper('a4', 'landscape');
         return $pdf->download('Analisis_Risiko_' . date('Ymd') . '.pdf')
                    ->withCookie(cookie('pdf_download_complete', '1', 1, null, null, false, false));
     }
@@ -117,9 +119,10 @@ class PdfController extends Controller
         $query = IdentifikasiRisiko::with(['unit', 'analisis', 'analisisKecukupan']);
         $query = $this->applyFilters($query, $request);
         $data = $query->orderBy('id', 'asc')->get();
+        $units = Unit::all();
         
         $common = $this->getCommonData($request);
-        $pdf = Pdf::loadView('pdf.kecukupan', array_merge(['data' => $data], $common))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('pdf.kecukupan', array_merge(['data' => $data, 'units' => $units], $common))->setPaper('a4', 'landscape');
         return $pdf->download('Analisis_Kecukupan_' . date('Ymd') . '.pdf')
                    ->withCookie(cookie('pdf_download_complete', '1', 1, null, null, false, false));
     }
@@ -129,9 +132,10 @@ class PdfController extends Controller
         $query = IdentifikasiRisiko::with(['unit', 'analisis.probabilitas', 'analisis.dampak', 'evaluasi.probabilitas', 'evaluasi.dampak']);
         $query = $this->applyFilters($query, $request);
         $data = $query->orderBy('id', 'asc')->get();
+        $units = Unit::all();
         
         $common = $this->getCommonData($request);
-        $pdf = Pdf::loadView('pdf.evaluasi', array_merge(['data' => $data], $common))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('pdf.evaluasi', array_merge(['data' => $data, 'units' => $units], $common))->setPaper('a4', 'landscape');
         return $pdf->download('Evaluasi_Risiko_' . date('Ymd') . '.pdf')
                    ->withCookie(cookie('pdf_download_complete', '1', 1, null, null, false, false));
     }
@@ -141,9 +145,10 @@ class PdfController extends Controller
         $query = IdentifikasiRisiko::with(['unit', 'analisis.probabilitas', 'analisis.dampak', 'analisisKecukupan', 'evaluasi.probabilitas', 'evaluasi.dampak']);
         $query = $this->applyFilters($query, $request);
         $data = $query->orderBy('id', 'asc')->get();
+        $units = Unit::all();
         
         $common = $this->getCommonData($request);
-        $pdf = Pdf::loadView('pdf.daftar', array_merge(['data' => $data], $common))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('pdf.daftar', array_merge(['data' => $data, 'units' => $units], $common))->setPaper('a4', 'landscape');
         return $pdf->download('Daftar_Risiko_' . date('Ymd') . '.pdf')
                    ->withCookie(cookie('pdf_download_complete', '1', 1, null, null, false, false));
     }
@@ -168,7 +173,8 @@ class PdfController extends Controller
         ];
         $prefix = $filenameMap[$type] ?? 'Profil_Risiko_';
 
-        $pdf = Pdf::loadView('pdf.profile', compact('item', 'type'))->setPaper('a4', 'portrait');
+        $units = Unit::all();
+        $pdf = Pdf::loadView('pdf.profile', compact('item', 'type', 'units'))->setPaper('a4', 'portrait');
         return $pdf->download($prefix . $item->kode_risiko . '.pdf')
                    ->withCookie(cookie('pdf_download_complete', '1', 1, null, null, false, false));
     }

@@ -37,28 +37,24 @@ class RiskIdentificationController extends Controller
     {
         $user = Auth::user();
         $activePeriode = \App\Models\Periode::getActive();
-        $periodes = \App\Models\Periode::orderBy('tahun', 'desc')->get();
         
-        // Target period to view
-        $viewPeriodeId = $request->periode_id ?? ($activePeriode->id ?? null);
         $viewTriwulan = $request->triwulan ?? 'all';
-        
         $query = IdentifikasiRisiko::with(['unit', 'kategori', 'ruangLingkup']);
 
-        if ($viewPeriodeId) {
-            $query->where('periode_id', $viewPeriodeId);
+        if ($activePeriode) {
+            $query->where('periode_id', $activePeriode->id);
             
             // Identification is annual master data, only show one row per risk
-            $ids = IdentifikasiRisiko::where('periode_id', $viewPeriodeId)
+            // Group by kode_risiko and pick the latest entry
+            $ids = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
                 ->get()
                 ->groupBy('kode_risiko')
                 ->map(fn($group) => $group->sortByDesc('triwulan')->first()->id)
                 ->values()->toArray();
 
             $query->whereIn('id', $ids);
-            $viewTriwulan = 'all';
         } else {
-            $query->whereRaw('1 = 0');
+            $query->whereRaw('1 = 0'); // No active period, no data
         }
 
         // Security: Non-Admin/Mutu can only see their own unit
@@ -79,28 +75,12 @@ class RiskIdentificationController extends Controller
 
         $data = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
         $units = Unit::all();
-
-        // Get list of activities already pulled to active period to prevent duplicates
-        $pulledActivities = [];
-        if ($activePeriode && $viewPeriodeId != $activePeriode->id) {
-            $pulledActivities = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
-                ->when($viewTriwulan !== 'all', function($q) use ($viewTriwulan) {
-                    if ($viewTriwulan === 's1') $q->whereIn('triwulan', [1, 2]);
-                    elseif ($viewTriwulan === 's2') $q->whereIn('triwulan', [3, 4]);
-                    else $q->where('triwulan', $viewTriwulan);
-                })
-                ->when(!in_array($user->role_id, [1, 2]), function($q) use ($user) {
-                    $q->where('unit_id', $user->unit_id);
-                })
-                ->pluck('kegiatan')
-                ->toArray();
-        }
             
         if ($request->ajax()) {
-            return view('pages.identifikasi-risiko._table', compact('data', 'activePeriode', 'viewPeriodeId', 'pulledActivities', 'viewTriwulan'));
+            return view('pages.identifikasi-risiko._table', compact('data', 'activePeriode'));
         }
             
-        return view('pages.identifikasi-risiko.index', compact('data', 'units', 'activePeriode', 'periodes', 'viewPeriodeId', 'pulledActivities', 'viewTriwulan'));
+        return view('pages.identifikasi-risiko.index', compact('data', 'units', 'activePeriode'));
     }
 
     public function create()

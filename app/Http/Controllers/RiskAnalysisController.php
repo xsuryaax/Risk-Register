@@ -237,11 +237,10 @@ class RiskAnalysisController extends Controller
                 $otherIdent->save();
             }
 
-            // Now check if it has analysis. If empty, sync it.
-            // We overwrite future quarters if the user edits a previous one (Forward Override)
-            AnalisisRisiko::updateOrCreate(
-                ['identifikasi_risiko_id' => $otherIdent->id],
-                [
+            // NEW: Only sync to future quarters if they don't have analysis yet (Fill if Empty)
+            if (!$otherIdent->analisis) {
+                AnalisisRisiko::create([
+                    'identifikasi_risiko_id' => $otherIdent->id,
                     'uraian_pengendalian' => $request->uraian_pengendalian,
                     'desain_pengendalian' => $request->desain_pengendalian,
                     'efektifitas_pengendalian' => $request->efektifitas_pengendalian,
@@ -250,11 +249,17 @@ class RiskAnalysisController extends Controller
                     'skor_risiko' => $score,
                     'peringkat_risiko' => $ranking,
                     'pemilik_risiko' => $request->pemilik_risiko,
-                ]
-            );
+                ]);
+            }
         }
 
         if ($request->ajax()) {
+            // Get formatted owners for immediate UI update
+            $pemilikIds = array_filter(explode(',', $request->pemilik_risiko));
+            $units = \App\Models\Unit::whereIn('id', $pemilikIds)->pluck('nama_unit')->toArray();
+            $firstPemilik = $units[0] ?? '-';
+            $extraCount = count($units) > 1 ? count($units) - 1 : 0;
+
             return response()->json([
                 'success' => true,
                 'message' => 'Analisis berhasil disimpan',
@@ -262,7 +267,10 @@ class RiskAnalysisController extends Controller
                 'rank' => ucfirst(strtolower($ranking)),
                 'color' => $score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754'))),
                 'new_id' => $id,
-                'text_color' => ($ranking == 'SEDANG') ? 'text-dark' : 'text-white'
+                'text_color' => ($ranking == 'SEDANG') ? 'text-dark' : 'text-white',
+                'pemilik_text' => $firstPemilik,
+                'pemilik_extra' => $extraCount,
+                'pemilik_list' => $units
             ]);
         }
 

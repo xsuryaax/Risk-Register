@@ -256,20 +256,20 @@ $(document).ready(function() {
                     row.find('.label-prob').text(row.find('.edit-prob option:selected').text() || '-');
                     row.find('.label-dampak').text(row.find('.edit-dampak option:selected').text() || '-');
                     
-                    // Update Pemilik View (+1 logic)
-                    const pArray = data.pemilik_risiko ? data.pemilik_risiko.split(',').filter(x => x.trim()) : [];
-                    const firstP = pArray[0] || '-';
-                    const eCount = pArray.length > 1 ? pArray.length - 1 : 0;
+                    // Update Pemilik View using response data (Name mapping)
+                    const firstP = res.pemilik_text || '-';
+                    const eCount = res.pemilik_extra || 0;
+                    const pList = res.pemilik_list || [];
                     
                     row.find('.label-pemilik-text').text(firstP);
                     
                     // Update the list inside the custom tooltip
                     const listContainer = row.find('.label-pemilik-list');
                     listContainer.empty();
-                    pArray.forEach(p => {
-                        listContainer.append(`<li class="py-1" style="font-size: 11px; white-space: nowrap;"><i class="fa fa-caret-right me-1 text-info"></i> ${p}</li>`);
+                    pList.forEach(p => {
+                        listContainer.append(`<li class="py-1" style="font-size: 11px; white-space: nowrap;"><i class="fa fa-circle text-info me-1" style="font-size: 6px;"></i> ${p}</li>`);
                     });
-
+                    
                     // Manage badge and tooltip visibility
                     const extraBadge = row.find('.label-pemilik-extra');
                     const tooltipContent = row.find('.custom-tooltip-content');
@@ -279,7 +279,8 @@ $(document).ready(function() {
                         if (extraBadge.length) {
                             extraBadge.removeClass('d-none').text('+' + eCount);
                         } else {
-                            row.find('.label-pemilik-container').append(`<span class="badge bg-soft-info text-primary p-1 ms-1 label-pemilik-extra" style="font-size: 0.65rem;">+${eCount}</span>`);
+                            // Find the d-flex container inside the tooltip wrapper
+                            row.find('.label-pemilik-container').append(`<span class="badge bg-soft-info text-primary p-1 label-pemilik-extra" style="font-size: 0.65rem; min-width: 18px;">+${eCount}</span>`);
                         }
                     } else {
                         extraBadge.addClass('d-none');

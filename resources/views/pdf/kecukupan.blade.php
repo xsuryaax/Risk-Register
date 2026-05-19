@@ -32,6 +32,16 @@
                         elseif ($score >= 3) $rankClass = 'rank-r';
                         else $rankClass = 'rank-sr';
                     }
+
+                    // Mapping Pemilik
+                    $rawPemilik = $item->analisis->pemilik_risiko ?? '';
+                    $pemilikIds = array_filter(explode(',', $rawPemilik));
+                    $pemilikNames = collect($pemilikIds)->map(function($id) use ($units) {
+                        $u = $units->firstWhere('id', trim($id));
+                        return $u ? $u->nama_unit : '-';
+                    })->toArray();
+                    $firstPemilik = $pemilikNames[0] ?? '-';
+                    $extraCount = count($pemilikNames) > 1 ? count($pemilikNames) - 1 : 0;
                 @endphp
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
@@ -42,7 +52,12 @@
                     </td>
                     <td>{{ $item->analisisKecukupan->uraian_rencana ?? '-' }}</td>
                     <td class="text-center">{{ $item->analisisKecukupan->jadwal ?? '-' }}</td>
-                    <td class="text-center">{{ $item->analisis->pemilik_risiko ?? '-' }}</td>
+                    <td class="text-center">
+                        {{ $firstPemilik }}
+                        @if($extraCount > 0)
+                            <br><small>(+{{ $extraCount }} unit lainnya)</small>
+                        @endif
+                    </td>
                     <td class="text-center">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? '-' }}</td>
                 </tr>
             @endforeach

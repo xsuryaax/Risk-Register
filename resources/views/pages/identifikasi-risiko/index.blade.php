@@ -23,12 +23,7 @@
     <div class="row mb-3">
         <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div class="d-flex align-items-center">
-                
-                @if($viewPeriodeId != ($activePeriode->id ?? 0))
-                    <span class="badge bg-soft-teal text-teal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
-                        <i class="fa fa-history me-1"></i> MODE LIBRARY (TAHUN {{ $periodes->find($viewPeriodeId)->tahun }})
-                    </span>
-                @endif
+                {{-- Library Mode badge removed as this page is now strictly for the active period --}}
             </div>
 
         </div>
@@ -54,25 +49,11 @@
                             </div>
 
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <select name="periode_id" class="form-select form-select-sm" style="width: 130px; height: 32px;">
-                                    @foreach($periodes as $p)
-                                        <option value="{{ $p->id }}" {{ $viewPeriodeId == $p->id ? 'selected' : '' }}>
-                                            Tahun {{ $p->tahun }} {{ $p->status ? '(Aktif)' : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                {{-- Year Filter Removed: Managing Active Period only --}}
+                                <input type="hidden" name="periode_id" value="{{ $activePeriode->id ?? '' }}">
 
-                                {{-- Hidden select for JS to handle --}}
-                                <select name="triwulan" class="d-none">
-                                    <option value="all" {{ $viewTriwulan == 'all' ? 'selected' : '' }}>Semua Larik</option>
-                                    <option value="s1" {{ $viewTriwulan == 's1' ? 'selected' : '' }}>Semester 1</option>
-                                    <option value="s2" {{ $viewTriwulan == 's2' ? 'selected' : '' }}>Semester 2</option>
-                                    <option value="1" {{ $viewTriwulan == '1' ? 'selected' : '' }}>Triwulan 1</option>
-                                    <option value="2" {{ $viewTriwulan == '2' ? 'selected' : '' }}>Triwulan 2</option>
-                                    <option value="3" {{ $viewTriwulan == '3' ? 'selected' : '' }}>Triwulan 3</option>
-                                    <option value="4" {{ $viewTriwulan == '4' ? 'selected' : '' }}>Triwulan 4</option>
-                                </select>
-
+                                {{-- Triwulan Filter removed as this page manages annual identification --}}
+                                
                                 @if (in_array(auth()->user()->role_id, [1, 2]))
                                     <select name="unit_id" id="filterUnit" class="form-select form-select-sm" style="width: 180px; height: 32px;">
                                         <option value="">Semua Unit</option>
@@ -82,17 +63,6 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                @endif
-
-                                @php
-                                    $isLibraryView = $activePeriode && $viewPeriodeId != $activePeriode->id;
-                                @endphp
-                                @if ($isLibraryView && count($data) > 0)
-                                    <button type="button" id="btnBulkCopy"
-                                        class="btn btn-sm text-white shadow-sm border-radius-lg mb-0 text-capitalize py-1 px-3 d-none"
-                                        style="background-color: #007774 !important; height: 32px;">
-                                        <i class="fa fa-download me-1"></i> Tarik (<span id="selectedCount">0</span>)
-                                    </button>
                                 @endif
                             </div>
                         </div>
@@ -193,14 +163,14 @@
             const filterForm = $('#filterForm');
 
             let xhr;
-            function reloadTable() {
+            function reloadTable(url) {
                 if (xhr) xhr.abort();
 
-                const fetchParams = filterForm.serialize();
-                const fetchUrl = filterForm.attr('action') + '?' + fetchParams;
+                const fetchUrl = url || filterForm.attr('action') + '?' + filterForm.serialize();
                 
                 // Update PDF link immediately
-                const pdfUrl = "{{ route('pdf.identifikasi-risiko.all') }}?" + fetchParams;
+                const params = fetchUrl.split('?')[1] || '';
+                const pdfUrl = "{{ route('pdf.identifikasi-risiko.all') }}?" + params;
                 $('#btnExportPdf').attr('href', pdfUrl);
 
                 // Show loading state (subtle)
@@ -213,18 +183,6 @@
                         $('#tableContainer').html(response);
                         $('#tableContainer').css('opacity', '1');
 
-                        // Toggle Top Buttons
-                        const selectedPeriode = $('select[name="periode_id"]').val();
-                        const activePeriodeId = "{{ $activePeriode->id ?? '' }}";
-
-                        if (selectedPeriode == activePeriodeId) {
-                            $('#btnTambahData').removeClass('d-none');
-                            updateBulkBtn();
-                        } else {
-                            $('#btnTambahData').addClass('d-none');
-                            updateBulkBtn();
-                        }
-
                         // Update URL
                         window.history.pushState(null, '', fetchUrl);
                     },
@@ -236,6 +194,15 @@
                     }
                 });
             }
+
+            // --- AJAX Pagination ---
+            $(document).on('click', '#tableContainer .pagination a', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
+                if (url && url !== '#') {
+                    reloadTable(url);
+                }
+            });
 
             // --- Search Bar AJAX (with debounce) ---
             let searchTimer;
@@ -257,8 +224,8 @@
                 });
             }
 
-            // --- Periode & Triwulan Filter ---
-            $('select[name="periode_id"], select[name="triwulan"]').on('change', function() {
+            // --- Triwulan Filter ---
+            $('select[name="triwulan"]').on('change', function() {
                 reloadTable();
             });
             // --- Individual Copy ---

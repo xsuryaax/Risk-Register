@@ -39,6 +39,15 @@
                         elseif ($score >= 3) $rankClass = 'rank-r';
                         else $rankClass = 'rank-sr';
                     }
+
+                    // Mapping Pemilik (Fallback for PJ)
+                    $rawPemilik = $analisis->pemilik_risiko ?? '';
+                    $pemilikIds = array_filter(explode(',', $rawPemilik));
+                    $pemilikNames = collect($pemilikIds)->map(function($id) use ($units) {
+                        $u = $units->firstWhere('id', trim($id));
+                        return $u ? $u->nama_unit : '-';
+                    })->toArray();
+                    $firstPemilik = $pemilikNames[0] ?? '-';
                 @endphp
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
@@ -50,7 +59,7 @@
                     <td class="text-center font-bold">{{ $rankLabel }}</td>
                     <td>{{ $analisis->uraian_pengendalian ?? '-' }}</td>
                     <td>{{ $item->analisisKecukupan->uraian_rencana ?? '-' }}</td>
-                    <td class="text-center">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? ($analisis->pemilik_risiko ?? '-') }}</td>
+                    <td class="text-center">{{ $item->analisisKecukupan->pj_tindak_lanjut ?? ($firstPemilik ?? '-') }}</td>
                 </tr>
             @endforeach
         </tbody>

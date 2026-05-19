@@ -373,7 +373,22 @@
                     </tr>
                     <tr>
                         <th>Pemilik Risiko</th>
-                        <td>{{ $item->analisis->pemilik_risiko ?? ($item->unit->nama_unit ?? '-') }}</td>
+                        <td>
+                            @php
+                                $rawPemilik = $item->analisis->pemilik_risiko ?? '';
+                                $pemilikIds = array_filter(explode(',', $rawPemilik));
+                                $pemilikNames = collect($pemilikIds)->map(function($id) use ($units) {
+                                    $u = $units->firstWhere('id', trim($id));
+                                    return $u ? $u->nama_unit : null;
+                                })->filter()->toArray();
+                                
+                                if (empty($pemilikNames)) {
+                                    echo $item->unit->nama_unit ?? '-';
+                                } else {
+                                    echo implode(', ', $pemilikNames);
+                                }
+                            @endphp
+                        </td>
                     </tr>
                 </table>
             @else
