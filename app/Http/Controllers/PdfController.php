@@ -14,20 +14,21 @@ class PdfController extends Controller
     private function applyFilters($query, Request $request)
     {
         $user = Auth::user();
+        $periodeId = $request->periode_id ?? (Periode::getActive()->id ?? null);
+        $viewTriwulan = $request->view_triwulan ?? 'all';
 
-        // Target period
-        if ($request->filled('periode_id')) {
-            $query->where('periode_id', $request->periode_id);
+        // 1. Initial Filtering by Period and Security
+        if ($periodeId) {
+            $query->where('periode_id', $periodeId);
         }
 
-        // Security: Non-Admin/Mutu can only see their own unit
         if (!in_array($user->role_id, [1, 2])) {
             $query->where('unit_id', $user->unit_id);
         } elseif ($request->filled('unit_id')) {
             $query->where('unit_id', $request->unit_id);
         }
 
-        // Search
+        // 2. SEARCH Filter (Need this BEFORE grouping to find matching codes/activities)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -36,40 +37,36 @@ class PdfController extends Controller
             });
         }
 
-        // Peringkat Filter
+        // 3. MASTER LIST GROUPING LOGIC (One row per risk code)
+        // We pick the IDs we want to show based on the Triwulan selection
+        $targetVal = ($viewTriwulan == 's1' ? [1, 2] : ($viewTriwulan == 's2' ? [3, 4] : ($viewTriwulan == 'all' ? [1,2,3,4] : [(int)$viewTriwulan])));
+        
+        // Use a sub-query style search to get unique IDs per risk code matching criteria
+        $ids = IdentifikasiRisiko::where('periode_id', $periodeId)
+            ->when(!in_array($user->role_id, [1, 2]), function($q) use ($user) {
+                $q->where('unit_id', $user->unit_id);
+            })
+            ->when($request->filled('unit_id'), function($q) use ($request) {
+                $q->where('unit_id', $request->unit_id);
+            })
+            ->get()
+            ->groupBy('kode_risiko')
+            ->map(function($group) use ($targetVal, $viewTriwulan) {
+                $group = $group->sortByDesc('triwulan');
+                if ($viewTriwulan == 'all') return $group->first()->id;
+                
+                $match = $group->first(fn($item) => in_array($item->triwulan, $targetVal));
+                return $match ? $match->id : $group->first()->id;
+            })
+            ->values()->toArray();
+
+        $query->whereIn('id', $ids);
+
+        // 4. Peringkat/Warna Filter (Final check on the selected rows)
         if ($request->filled('peringkat')) {
             $peringkat = $request->peringkat;
             $query->whereHas('analisis', function($q) use ($peringkat) {
                 $q->where('peringkat_risiko', $peringkat);
-            });
-        }
-
-        // Larik Filter (Triwulan) with Fallback Logic
-        if ($request->filled('view_triwulan') && $request->view_triwulan != 'all') {
-            $tri = $request->view_triwulan;
-            $query->where(function($q) use ($tri) {
-                // 1. Match specific triwulan
-                if (in_array($tri, [1, 2, 3, 4])) {
-                    $q->where('triwulan', $tri);
-                    // 2. Include Tahunan
-                    $q->orWhere('frekuensi_pelaporan', 'tahunan');
-                    // 3. Include Semester
-                    if ($tri <= 2) {
-                        $q->orWhere(function($sq) {
-                            $sq->where('frekuensi_pelaporan', 'semester')->whereIn('triwulan', [1, 2]);
-                        });
-                    } else {
-                        $q->orWhere(function($sq) {
-                            $sq->where('frekuensi_pelaporan', 'semester')->whereIn('triwulan', [3, 4]);
-                        });
-                    }
-                } elseif ($tri == 's1') {
-                    $q->whereIn('triwulan', [1, 2])
-                      ->orWhere('frekuensi_pelaporan', 'tahunan');
-                } elseif ($tri == 's2') {
-                    $q->whereIn('triwulan', [3, 4])
-                      ->orWhere('frekuensi_pelaporan', 'tahunan');
-                }
             });
         }
 

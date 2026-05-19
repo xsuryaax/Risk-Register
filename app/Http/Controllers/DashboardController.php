@@ -75,45 +75,38 @@ class DashboardController extends Controller
 
         foreach($allIdentifikasi as $item) {
             /** 
-             * DASHBOARD VISIBILITY LOGIC (Sync with Table)
+             * DASHBOARD VISIBILITY LOGIC (Forward-Sync Enabled)
+             * Count the stats for the record if it's the 'best available' 
+             * one from masterIds, regardless of its original quarter.
              */
-            $frekuensi = $item->frekuensi_pelaporan ?? 'triwulan';
-            $showValue = false;
-            
-            if ($triwulan === 'all') {
-                $showValue = true;
-            } else {
-                $targetArr = ($triwulan == 's1' ? [1, 2] : ($triwulan == 's2' ? [3, 4] : [$triwulan]));
-                if ($frekuensi == 'tahunan') {
-                    $showValue = true;
-                } elseif ($frekuensi == 'semester') {
-                    $itemSem = $item->triwulan <= 2 ? [1, 2] : [3, 4];
-                    if (array_intersect($targetArr, $itemSem)) $showValue = true;
-                } elseif ($frekuensi == 'triwulan') {
-                    if (in_array($item->triwulan, $targetArr)) $showValue = true;
-                }
-            }
+            $showValue = true; 
 
             if ($showValue) {
                 $analysis = $item->analisis;
                 $evaluasi = $item->evaluasi;
+
+                // LOGIC: If this is a fallback record from a PREVIOUS quarter, 
+                // we treat it as 'Not Yet Evaluated' for the CURRENT view.
+                $isFallback = ($triwulan !== 'all' && !in_array($item->triwulan, ($triwulan == 's1' ? [1, 2] : ($triwulan == 's2' ? [3, 4] : [$triwulan]))));
                 
-                $score = $evaluasi ? $evaluasi->skor_residu : ($analysis ? $analysis->skor_risiko : null);
-                $rank = $evaluasi ? $evaluasi->peringkat_residu : ($analysis ? $analysis->peringkat_risiko : null);
+                $finalEvaluasi = $isFallback ? null : $evaluasi;
+                
+                $score = $finalEvaluasi ? $finalEvaluasi->skor_residu : ($analysis ? $analysis->skor_risiko : null);
+                $rank = $finalEvaluasi ? $finalEvaluasi->peringkat_residu : ($analysis ? $analysis->peringkat_risiko : null);
                 
                 if($rank && isset($levelStats[strtoupper(trim($rank))])) {
                     $levelStats[strtoupper(trim($rank))]++;
                 }
 
                 // Heatmap coords
-                $pVal = $evaluasi ? ($evaluasi->probabilitas->nilai_probabilitas ?? null) : ($analysis->probabilitas ?? null ? $analysis->probabilitas->nilai_probabilitas : null);
-                $dVal = $evaluasi ? ($evaluasi->dampak->nilai_dampak ?? null) : ($analysis->dampak ?? null ? $analysis->dampak->nilai_dampak : null);
+                $pVal = $finalEvaluasi ? ($finalEvaluasi->probabilitas->nilai_probabilitas ?? null) : ($analysis->probabilitas ?? null ? $analysis->probabilitas->nilai_probabilitas : null);
+                $dVal = $finalEvaluasi ? ($finalEvaluasi->dampak->nilai_dampak ?? null) : ($analysis->dampak ?? null ? $analysis->dampak->nilai_dampak : null);
                 if($pVal && $dVal && isset($heatmap[$dVal][$pVal])) {
                     $heatmap[$dVal][$pVal]++;
                 }
 
                 if ($analysis) $totalAnalyzed++;
-                if ($evaluasi) $totalEvaluated++;
+                if ($finalEvaluasi) $totalEvaluated++;
             }
         }
 

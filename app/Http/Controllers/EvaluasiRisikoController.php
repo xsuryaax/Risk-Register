@@ -21,19 +21,23 @@ class EvaluasiRisikoController extends Controller
             $query->where('periode_id', $activePeriode->id);
             
             $targetVal = ($viewTriwulan == 's1' ? [1, 2] : ($viewTriwulan == 's2' ? [3, 4] : [$viewTriwulan]));
-            $ids = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+            $masterIds = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
                 ->get()
                 ->groupBy('kode_risiko')
                 ->map(function($group) use ($targetVal, $viewTriwulan) {
+                    // Sort DESC to get latest triwulan (Q2 over Q1)
+                    $group = $group->sortByDesc('triwulan');
+
                     if ($viewTriwulan === 'all') {
-                        return $group->sortByDesc('triwulan')->first()->id;
+                        return $group->first()->id;
                     }
+
                     $match = $group->first(fn($item) => in_array($item->triwulan, $targetVal));
-                    return $match ? $match->id : $group->sortByDesc('triwulan')->first()->id;
+                    return $match ? $match->id : $group->first()->id;
                 })
                 ->values()->toArray();
 
-            $query->whereIn('id', $ids);
+            $query->whereIn('id', $masterIds);
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -100,6 +104,14 @@ class EvaluasiRisikoController extends Controller
         // Ensure analysis exists first
         if (!$identifikasi->analisis) {
             return redirect()->route('evaluasi-risiko.index')->with('error', 'Selesaikan Analisis Risiko terlebih dahulu.');
+        }
+
+        // --- NEW: Forward-Sync UI Clean Slate ---
+        // If we are editing from a fallback (viewing Q2 but record is Q1),
+        // we must not show the Q1 evaluation data in the form.
+        $targetTW = request('view_triwulan');
+        if ($targetTW && $targetTW !== 'all' && $identifikasi->triwulan != $targetTW) {
+            $identifikasi->setRelation('evaluasi', null);
         }
 
         $probabilitas = Probabilitas::orderBy('nilai_probabilitas', 'asc')->get();

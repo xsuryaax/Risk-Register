@@ -258,6 +258,53 @@
             padding-top: 1rem !important;
             padding-bottom: 1rem !important;
         }
+
+        /* Custom Tooltip Styles */
+        .custom-tooltip-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .custom-tooltip-content {
+            display: none;
+            width: 190px;
+            background-color: #2c3e50;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 10px;
+            position: absolute;
+            z-index: 9999;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        .custom-tooltip-content::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #2c3e50 transparent transparent transparent;
+        }
+
+        .custom-tooltip-wrapper:hover .custom-tooltip-content {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive tooltips for table edges */
+        .table-responsive {
+            overflow: visible !important;
+        }
     </style>
 
 @endsection

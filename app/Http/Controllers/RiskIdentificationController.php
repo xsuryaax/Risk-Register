@@ -48,7 +48,14 @@ class RiskIdentificationController extends Controller
         if ($viewPeriodeId) {
             $query->where('periode_id', $viewPeriodeId);
             
-            // Identification is annual master data, show everything for the period
+            // Identification is annual master data, only show one row per risk
+            $ids = IdentifikasiRisiko::where('periode_id', $viewPeriodeId)
+                ->get()
+                ->groupBy('kode_risiko')
+                ->map(fn($group) => $group->sortByDesc('triwulan')->first()->id)
+                ->values()->toArray();
+
+            $query->whereIn('id', $ids);
             $viewTriwulan = 'all';
         } else {
             $query->whereRaw('1 = 0');

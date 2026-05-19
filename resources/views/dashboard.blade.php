@@ -387,20 +387,50 @@
         {{-- Sub-Period / Larik Selector --}}
         <div class="row mb-4 mt-n2">
             <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div></div>
-                <div class="larik-wrapper">
-                    @php
-                        $currTri = request('view_triwulan', 'all');
-                        $lariks = ['all' => 'Tahunan', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
-                    @endphp
-                    @foreach($lariks as $val => $lbl)
-                        <button type="button" 
-                           onclick="updateDashboard('{{ $val }}')"
-                           class="btn-larik {{ $currTri == $val ? 'active' : '' }}"
-                           id="btn-tri-{{ $val }}">
-                            {{ $lbl }}
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-xxs font-weight-bolder text-secondary text-uppercase" style="letter-spacing: 1px;">Pilih Tahun:</span>
+                    <div class="dropdown">
+                        <button class="btn-larik active d-flex align-items-center gap-2 shadow-sm border" type="button" id="dropdownYear" data-bs-toggle="dropdown" aria-expanded="false" 
+                                style="background-color: #007774; color: #fff; padding: 5px 16px; border-radius: 8px; border-color: #007774 !important;">
+                            <i class="fas fa-calendar-alt opacity-8" style="font-size: 10px;"></i>
+                            <span id="selectedYearText" style="font-size: 0.75rem; letter-spacing: 0.5px;">{{ $globalPeriodes->firstWhere('id', request('view_periode', $globalActivePeriode->id))->tahun ?? $globalActivePeriode->tahun }}</span>
+                            <i class="fas fa-chevron-down opacity-5" style="font-size: 8px;"></i>
                         </button>
-                    @endforeach
+                        <ul class="dropdown-menu shadow-xl border-0 border-radius-lg py-2 px-1 mt-1 animate__animated animate__fadeIn animate__faster" aria-labelledby="dropdownYear" style="min-width: 120px; z-index: 1000; background: #ffffff; border: 1px solid rgba(0,0,0,0.05) !important;">
+                            <li class="px-3 py-1 mb-1 border-bottom">
+                                <span class="text-xxs font-weight-bolder text-uppercase text-secondary" style="font-size: 0.55rem; letter-spacing: 1px;">Daftar Tahun</span>
+                            </li>
+                            @foreach($globalPeriodes as $p)
+                            <li>
+                                <a class="dropdown-item py-2 border-radius-md" href="javascript:;" onclick="updatePeriod({{ $p->id }}, '{{ $p->tahun }}')">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="text-xs font-weight-bold {{ (request('view_periode', $globalActivePeriode->id) == $p->id) ? 'text-teal' : 'text-dark' }}">{{ $p->tahun }}</span>
+                                        @if(request('view_periode', $globalActivePeriode->id) == $p->id)
+                                            <i class="fas fa-check-circle text-teal" style="font-size: 9px;"></i>
+                                        @endif
+                                    </div>
+                                </a>
+                            </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-xxs font-weight-bolder text-secondary text-uppercase" style="letter-spacing: 1px;">Sub-Periode:</span>
+                    <div class="larik-wrapper">
+                        @php
+                            $currTri = request('view_triwulan', 'all');
+                            $lariks = ['all' => 'Tahunan', 's1' => 'S1', 's2' => 'S2', '1' => 'Q1', '2' => 'Q2', '3' => 'Q3', '4' => 'Q4'];
+                        @endphp
+                        @foreach($lariks as $val => $lbl)
+                            <button type="button" 
+                               onclick="updateTriwulan('{{ $val }}')"
+                               class="btn-larik btn-tri {{ $currTri == $val ? 'active' : '' }}"
+                               id="btn-tri-{{ $val }}">
+                                {{ $lbl }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
@@ -708,6 +738,8 @@
         let activeChart;
         let levelPieChart;
         let currentSubView = '{{ in_array(auth()->user()->role_id, [1, 2]) ? "unit" : "trend" }}';
+        let currentPeriodeId = {{ request('view_periode', $globalActivePeriode->id) }};
+        let currentTriwulan = '{{ request('view_triwulan', 'all') }}';
         
         const ds = {
             unit: {
@@ -753,7 +785,9 @@
                         borderColor: key === 'unit' ? 'transparent' : '#007774',
                         borderWidth: key === 'unit' ? 0 : 3,
                         borderRadius: 6,
-                        maxBarThickness: 32,
+                        maxBarThickness: 22,
+                        barPercentage: 0.9,
+                        categoryPercentage: 0.9,
                         fill: key === 'trend',
                         tension: 0.4,
                         pointBackgroundColor: '#007774',
@@ -773,15 +807,34 @@
                             anchor: 'end',
                             align: 'right',
                             color: '#475569',
-                            font: { weight: '800', size: 11 },
+                            font: { weight: '800', size: 8.5 },
                             formatter: (value) => value > 0 ? value : '',
                             offset: 8
                         },
                         tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8, displayColors: false }
                     },
                     scales: {
-                        y: { beginAtZero: true, suggestedMax: 5, grid: { display: false, drawBorder: false }, ticks: { font: { size: 10, weight: '700' }, color: '#64748b' } },
-                        x: { beginAtZero: true, suggestedMax: 5, grid: { color: '#f1f5f9', display: key === 'unit', drawBorder: false }, ticks: { font: { size: 10, weight: '700' }, color: '#64748b' } }
+                        y: { 
+                            beginAtZero: true, 
+                            suggestedMax: 5, 
+                            grid: { display: false, drawBorder: false }, 
+                            ticks: { 
+                                font: { size: 8, weight: '700' }, 
+                                color: '#64748b',
+                                padding: 4,
+                                autoSkip: false
+                            } 
+                        },
+                        x: { 
+                            beginAtZero: true, 
+                            suggestedMax: 5, 
+                            grid: { color: '#f1f5f9', display: key === 'unit', drawBorder: false }, 
+                            ticks: { 
+                                font: { size: 8, weight: '700' }, 
+                                color: '#64748b',
+                                autoSkip: false
+                            } 
+                        }
                     }
                 }
             });
@@ -799,15 +852,39 @@
             buildChart(key);
         }
 
-        function updateDashboard(val) {
-            // UI State
-            $('.btn-larik').removeClass('active');
-            $(`#btn-tri-${val}`).addClass('active');
+        function updatePeriod(id, year) {
+            currentPeriodeId = id;
+            $('#selectedYearText').text(year);
+            
+            // Update UI in dropdown
+            $('.dropdown-item span').removeClass('text-teal').addClass('text-dark');
+            $('.dropdown-item .fa-check-circle').remove();
+            
+            const $activeItem = $(`.dropdown-item:contains("${year}")`);
+            $activeItem.find('span').removeClass('text-dark').addClass('text-teal');
+            $activeItem.find('.justify-content-between').append('<i class="fas fa-check-circle text-teal" style="font-size: 9px;"></i>');
+            
+            updateDashboard();
+        }
 
+        function updateTriwulan(val) {
+            currentTriwulan = val;
+            $('.btn-tri').removeClass('active');
+            $(`#btn-tri-${val}`).addClass('active');
+            updateDashboard();
+        }
+
+        function updateDashboard() {
             // Apply slight fade to show loading
             $('.kpi-value, #topRiskBody, #heatmapContainer, #mainChart, #levelPieChart').css('opacity', '0.5');
 
-            axios.get(`/dashboard`, { params: { view_triwulan: val }, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            axios.get(`/dashboard`, { 
+                params: { 
+                    view_triwulan: currentTriwulan,
+                    view_periode: currentPeriodeId 
+                }, 
+                headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+            })
             .then(res => {
                 const d = res.data;
                 

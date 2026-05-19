@@ -40,12 +40,15 @@ class RiskAnalysisController extends Controller
                 ->get()
                 ->groupBy('kode_risiko')
                 ->map(function($group) use ($targetVal, $viewTriwulan) {
+                    // Sort descending to prioritize LATEST triwulan in range (e.g. Q2 > Q1)
+                    $group = $group->sortByDesc('triwulan');
+
                     if ($viewTriwulan === 'all') {
-                        return $group->sortByDesc('triwulan')->first()->id;
+                        return $group->first()->id;
                     }
                     
                     $match = $group->first(fn($item) => in_array($item->triwulan, $targetVal));
-                    return $match ? $match->id : $group->sortByDesc('triwulan')->first()->id;
+                    return $match ? $match->id : $group->first()->id;
                 })
                 ->values()
                 ->toArray();
@@ -215,11 +218,11 @@ class RiskAnalysisController extends Controller
             ]
         );
 
-        // --- IMPROVED: Full Multi-Quarter Sync ---
-        // We want to ensure that triwulans 1, 2, 3, 4 all have this data if they were empty.
+        // --- IMPROVED: Forward-Only Multi-Quarter Sync ---
+        // Sync logic: Only update/create records for FUTURE quarters.
         $allQuarters = [1, 2, 3, 4];
         foreach ($allQuarters as $q) {
-            if ($q == $targetTW || $q == $activeTW) continue; // Already handled or current
+            if ($q <= $targetTW) continue; // Only Sync Forward
 
             // Find or Copy Identification for this quarter
             $otherIdent = IdentifikasiRisiko::where('kode_risiko', $identifikasi->kode_risiko)
@@ -235,9 +238,10 @@ class RiskAnalysisController extends Controller
             }
 
             // Now check if it has analysis. If empty, sync it.
-            if (!$otherIdent->analisis) {
-                AnalisisRisiko::create([
-                    'identifikasi_risiko_id' => $otherIdent->id,
+            // We overwrite future quarters if the user edits a previous one (Forward Override)
+            AnalisisRisiko::updateOrCreate(
+                ['identifikasi_risiko_id' => $otherIdent->id],
+                [
                     'uraian_pengendalian' => $request->uraian_pengendalian,
                     'desain_pengendalian' => $request->desain_pengendalian,
                     'efektifitas_pengendalian' => $request->efektifitas_pengendalian,
@@ -246,8 +250,8 @@ class RiskAnalysisController extends Controller
                     'skor_risiko' => $score,
                     'peringkat_risiko' => $ranking,
                     'pemilik_risiko' => $request->pemilik_risiko,
-                ]);
-            }
+                ]
+            );
         }
 
         if ($request->ajax()) {

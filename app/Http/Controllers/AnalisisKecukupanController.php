@@ -20,30 +20,30 @@ class AnalisisKecukupanController extends Controller
         if ($activePeriode) {
             $query->where('periode_id', $activePeriode->id);
             
-            if ($viewTriwulan !== 'all') {
-                $targetVal = ($viewTriwulan == 's1' ? [1, 2] : ($viewTriwulan == 's2' ? [3, 4] : [$viewTriwulan]));
-                
-                $ids = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
-                    ->get()
-                    ->groupBy('kode_risiko')
-                    ->map(function($group) use ($targetVal, $viewTriwulan) {
-                        $match = $group->first(fn($item) => in_array($item->triwulan, $targetVal));
-                        if ($match) return $match->id;
-                        
-                        $first = $group->sortBy('triwulan')->first();
-                        $frekuensi = $first->frekuensi_pelaporan ?? 'triwulan';
-                        
-                        if ($frekuensi === 'tahunan') return $first->id;
-                        if ($frekuensi === 'semester') {
-                            $riskSemester = $first->triwulan <= 2 ? [1, 2] : [3, 4];
-                            if (array_intersect($targetVal, $riskSemester)) return $first->id;
-                        }
-                        return null;
-                    })
-                    ->filter()->values()->toArray();
+            $targetVal = ($viewTriwulan == 's1' ? [1, 2] : ($viewTriwulan == 's2' ? [3, 4] : ($viewTriwulan == 'all' ? [1,2,3,4] : [$viewTriwulan])));
+            
+            $ids = IdentifikasiRisiko::where('periode_id', $activePeriode->id)
+                ->get()
+                ->groupBy('kode_risiko')
+                ->map(function($group) use ($targetVal, $viewTriwulan) {
+                    // Sorting DESC so that we always pick the LATEST (e.g. Q2 over Q1 in S1)
+                    $group = $group->sortByDesc('triwulan');
 
-                $query->whereIn('id', $ids);
-            }
+                    // If 'all', just take the absolute latest available
+                    if ($viewTriwulan == 'all') {
+                        return $group->first()->id;
+                    }
+
+                    // 1. Priority: Match in target (e.g. pick Q4 if filtering for S2 and Q4 exists)
+                    $match = $group->first(fn($item) => in_array($item->triwulan, $targetVal));
+                    if ($match) return $match->id;
+                    
+                    // 2. Fallback: Take anything available (already sorted DESC)
+                    return $group->first()->id;
+                })
+                ->filter()->values()->toArray();
+
+            $query->whereIn('id', $ids);
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -161,10 +161,10 @@ class AnalisisKecukupanController extends Controller
             ]
         );
 
-        // --- IMPROVED: Full Multi-Quarter Sync ---
+        // --- IMPROVED: Forward-Only Multi-Quarter Sync ---
         $allQuarters = [1, 2, 3, 4];
         foreach ($allQuarters as $q) {
-            if ($q == $targetTW || $q == $activeTW) continue;
+            if ($q <= $targetTW) continue; // Only Sync Forward
 
             $otherIdent = IdentifikasiRisiko::where('kode_risiko', $identifikasi->kode_risiko)
                 ->where('periode_id', $identifikasi->periode_id)
@@ -176,7 +176,6 @@ class AnalisisKecukupanController extends Controller
                 $otherIdent->triwulan = $q;
                 $otherIdent->save();
                 
-                // If we created a new Ident, we should also copy the analysis if it exists
                 if ($identifikasi->analisis) {
                     $newAnalisis = $identifikasi->analisis->replicate();
                     $newAnalisis->identifikasi_risiko_id = $otherIdent->id;
@@ -184,14 +183,15 @@ class AnalisisKecukupanController extends Controller
                 }
             }
 
-            if (!$otherIdent->analisisKecukupan) {
-                AnalisisKecukupan::create([
-                    'identifikasi_risiko_id' => $otherIdent->id,
+            // Overwrite future quarters to keep them synced with current change
+            AnalisisKecukupan::updateOrCreate(
+                ['identifikasi_risiko_id' => $otherIdent->id],
+                [
                     'uraian_rencana' => $request->uraian_rencana,
                     'jadwal' => $request->jadwal,
                     'pj_tindak_lanjut' => $request->pj_tindak_lanjut,
-                ]);
-            }
+                ]
+            );
         }
 
         return redirect()->route('analisis-kecukupan.index')->with('success', 'Analisis kecukupan berhasil disimpan.');

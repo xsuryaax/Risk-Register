@@ -82,14 +82,21 @@
 
                 <td class="align-middle text-center px-2">
                     @php
-                        $rawPemilik = $item->analisis->pemilik_risiko ?? '-';
-                        $pemiliks = array_filter(explode(',', $rawPemilik));
-                        $firstPemilik = $pemiliks[0] ?? '-';
-                        $extraCount = count($pemiliks) > 1 ? count($pemiliks) - 1 : 0;
+                        $rawPemilik = $item->analisis->pemilik_risiko ?? ($item->unit_id ? (string)$item->unit_id : null);
+                        $pemilikIdArray = array_filter(explode(',', $rawPemilik));
+                        
+                        // Map ID to Name
+                        $pemilikNames = collect($pemilikIdArray)->map(function($id) use ($units) {
+                            $unit = $units->firstWhere('id', (int)trim($id));
+                            return $unit ? $unit->nama_unit : '-';
+                        })->toArray();
+                        
+                        $firstPemilik = $pemilikNames[0] ?? '-';
+                        $extraCount = count($pemilikNames) > 1 ? count($pemilikNames) - 1 : 0;
                     @endphp
-                    <div class="custom-tooltip-wrapper">
+                    <div class="custom-tooltip-wrapper text-center">
                         <div class="d-flex align-items-center justify-content-center">
-                            <span class="text-xs text-dark font-weight-bold cursor-pointer text-truncate" style="max-width: 100px;">
+                            <span class="text-xs text-dark font-weight-bold cursor-pointer text-truncate d-inline-block" style="max-width: 90px;" title="{{ $firstPemilik }}">
                                 {{ $firstPemilik }}
                             </span>
                             @if($extraCount > 0)
@@ -97,12 +104,12 @@
                             @endif
                         </div>
 
-                        @if(count($pemiliks) > 1)
+                        @if(count($pemilikNames) > 1)
                         <div class="custom-tooltip-content">
                             <div class="p-2">
                                 <div class="mb-2 font-weight-bold border-bottom pb-1 text-info" style="font-size: 10px; letter-spacing: 0.5px;">DAFTAR PEMILIK :</div>
                                 <ul class="list-unstyled mb-0 text-start">
-                                    @foreach($pemiliks as $p)
+                                    @foreach($pemilikNames as $p)
                                         <li class="py-1 d-flex align-items-start gap-2" style="font-size: 11px; line-height: 1.2;">
                                             <i class="fa fa-circle text-info mt-1" style="font-size: 6px;"></i>
                                             <span class="text-white">{{ trim($p) }}</span>

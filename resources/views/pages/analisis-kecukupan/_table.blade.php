@@ -62,7 +62,7 @@
 
                 @php
                     $score = $item->analisis->skor_risiko ?? null;
-                    $rankLabel = $score !== null ? ($score >= 15 ? 'ST' : ($score >= 10 ? 'T' : ($score >= 5 ? 'S' : ($score >= 3 ? 'R' : 'SR')))) : '-';
+                    $rankLabel = $score !== null ? ($score >= 15 ? 'Sangat Tinggi' : ($score >= 10 ? 'Tinggi' : ($score >= 5 ? 'Sedang' : ($score >= 3 ? 'Rendah' : 'Sangat Rendah')))) : '-';
                     $bgColor = $score !== null ? ($score >= 15 ? '#c00000' : ($score >= 10 ? '#ff9900' : ($score >= 5 ? '#ffeb3b' : ($score >= 3 ? '#0d6efd' : '#198754')))) : '';
                     $textColor = ($score !== null && $score >= 5 && $score < 10) ? 'text-dark' : 'text-white';
                 @endphp
@@ -86,25 +86,32 @@
 
                 <td class="align-middle text-center px-1">
                     @php
-                        $rawPemilik = $item->analisis->pemilik_risiko ?? '-';
-                        $pemiliks = array_filter(explode(',', $rawPemilik));
-                        $firstPemilik = $pemiliks[0] ?? '-';
-                        $extraCount = count($pemiliks) > 1 ? count($pemiliks) - 1 : 0;
+                        $rawPemilik = $item->analisis->pemilik_risiko ?? ($item->unit_id ? (string)$item->unit_id : null);
+                        $pemilikIdArray = array_filter(explode(',', $rawPemilik));
+                        
+                        // Map ID to Name
+                        $pemilikNames = collect($pemilikIdArray)->map(function($id) use ($units) {
+                            $unit = $units->firstWhere('id', (int)trim($id));
+                            return $unit ? $unit->nama_unit : '-';
+                        })->toArray();
+                        
+                        $firstPemilik = $pemilikNames[0] ?? '-';
+                        $extraCount = count($pemilikNames) > 1 ? count($pemilikNames) - 1 : 0;
                     @endphp
-                    <div class="custom-tooltip-wrapper">
-                        <span class="text-xs text-dark cursor-pointer">
+                    <div class="custom-tooltip-wrapper text-center">
+                        <span class="text-xs text-dark cursor-pointer text-truncate d-inline-block" style="max-width: 90px;" title="{{ $firstPemilik }}">
                             {{ $firstPemilik }}
-                            @if($extraCount > 0)
-                                <span class="badge bg-soft-info text-primary p-1 ms-1" style="font-size: 0.65rem;">+{{ $extraCount }}</span>
-                            @endif
                         </span>
+                        @if($extraCount > 0)
+                            <span class="badge bg-soft-info text-primary p-1 ms-1" style="font-size: 0.65rem;">+{{ $extraCount }}</span>
+                        @endif
 
-                        @if(count($pemiliks) > 1)
+                        @if(count($pemilikNames) > 1)
                         <div class="custom-tooltip-content">
                             <div class="px-2 py-1">
                                 <div class="mb-1 font-weight-bold border-bottom pb-1 text-white opacity-8" style="font-size: 10px;">DAFTAR PEMILIK :</div>
                                 <ul class="list-unstyled mb-0 text-start">
-                                    @foreach($pemiliks as $p)
+                                    @foreach($pemilikNames as $p)
                                         <li class="py-1" style="font-size: 11px; white-space: nowrap;">
                                             <i class="fa fa-caret-right me-1 text-info"></i> {{ $p }}
                                         </li>
