@@ -123,7 +123,7 @@
                                                 <div class="col">
                                                     <div class="text-xxs font-weight-bold text-uppercase text-secondary mb-1">Skor Residu | Peringkat | Penurunan</div>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span id="displayScore" class="badge bg-dark">-</span>
+                                                        <span id="displayScore" class="badge" style="background-color: #344767;">-</span>
                                                         <span id="displayRank" class="text-xs font-weight-bold">-</span>
                                                         <span class="text-secondary text-xs mx-1">|</span>
                                                         <span id="displayReduction" class="text-success font-weight-bold text-xs">-</span>
@@ -194,8 +194,14 @@
                 else if (score >= 3) { rank = 'Rendah'; color = '#0d6efd'; }
                 else { rank = 'Sangat Rendah'; color = '#198754'; }
                 
-                document.getElementById('displayRank').innerText = rank;
-                document.getElementById('displayRank').style.color = color;
+                const displayRank = document.getElementById('displayRank');
+                const displayScore = document.getElementById('displayScore');
+                
+                displayRank.innerText = rank;
+                displayScore.innerText = score;
+                displayScore.style.backgroundColor = color;
+                displayScore.style.color = (score >= 5 && score < 10) ? '#000' : '#fff';
+                displayRank.style.color = '#344767';
 
                 const val = initialScore > 0 ? ((initialScore - score) / initialScore * 100) : 0;
                 const displayEl = document.getElementById('displayReduction');

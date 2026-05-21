@@ -102,7 +102,7 @@ class RiskAnalysisController extends Controller
             $query->where('unit_id', $request->unit_id);
         }
 
-        $data = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
+        $data = $query->orderBy('kode_risiko', 'asc')->paginate(10)->withQueryString();
         $units = \App\Models\Unit::orderBy('nama_unit')->get();
         $probs = Probabilitas::orderBy('nilai_probabilitas')->get();
         $damps = Dampak::orderBy('nilai_dampak')->get();
@@ -141,7 +141,7 @@ class RiskAnalysisController extends Controller
         }
 
         // --- IMPROVED: Frequency-Aware Smart Auto-Duplication ---
-        $targetTW = $request->view_triwulan_active;
+        $targetTW = $request->view_triwulan_active ?? $request->view_triwulan;
         $activeTW = $identifikasi->triwulan;
         $frekuensi = $identifikasi->frekuensi_pelaporan ?? 'triwulan';
         
@@ -274,6 +274,7 @@ class RiskAnalysisController extends Controller
             ]);
         }
 
-        return redirect()->route('analisis-risiko.index')->with('success', 'Analisis risiko berhasil disimpan.');
+        return redirect()->route('analisis-risiko.index', ['view_triwulan' => $targetTW])
+            ->with('success', 'Analisis risiko berhasil disimpan.');
     }
 }

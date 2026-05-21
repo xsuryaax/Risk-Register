@@ -83,7 +83,7 @@ class DaftarRisikoController extends Controller
             });
         }
 
-        $risikos = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
+        $risikos = $query->orderBy('kode_risiko', 'asc')->paginate(10)->withQueryString();
         $units = \App\Models\Unit::orderBy('nama_unit')->get();
 
         // Get list of activities already pulled to active period to prevent duplicates

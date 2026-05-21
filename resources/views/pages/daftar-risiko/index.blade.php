@@ -86,7 +86,7 @@
                                 @php
                                     $isNotActivePeriod = $activePeriode && $viewPeriodeId != $activePeriode->id;
                                 @endphp
-                                @if ($isNotActivePeriod && count($risikos) > 0)
+                                @if ($isNotActivePeriod)
                                     <button type="button" id="btnBulkPull"
                                         class="btn btn-sm text-white shadow-sm border-radius-lg mb-0 text-capitalize py-1 px-3 d-none"
                                         style="background-color: #007774 !important; height: 32px;">
@@ -360,36 +360,41 @@ $(document).ready(function() {
 
     function updateSelectedCount() {
         const count = $('.risk-checkbox:checked').length;
-        const total = $('#tableWrapper').data('total');
+        const total = parseInt($('#tableWrapper').data('total')) || 0;
+        const $btnBulkPull = $('#btnBulkPull');
+        const $selectedCountSpan = $('#selectedCount');
+        const $selectAllGlobalContainer = $('#selectAllGlobalContainer');
+        const $btnSelectAllGlobal = $('#btnSelectAllGlobal');
+        const $btnClearSelection = $('#btnClearSelection');
         
         if (isSelectAllGlobal) {
-            $('#selectedCount').text(total);
-            $('#selectAllGlobalContainer').removeClass('d-none');
+            $selectedCountSpan.text(total);
+            $selectAllGlobalContainer.removeClass('d-none');
             $('#selectAllText').html(`Terpilih semua <strong>${total}</strong> risiko.`);
-            $('#btnSelectAllGlobal').addClass('d-none');
-            $('#btnClearSelection').removeClass('d-none');
-            $('#btnBulkPull').removeClass('d-none');
+            $btnSelectAllGlobal.addClass('d-none');
+            $btnClearSelection.removeClass('d-none');
+            $btnBulkPull.removeClass('d-none');
         } else {
-            $('#selectedCount').text(count);
+            $selectedCountSpan.text(count);
             if (count > 0) {
-                $('#btnBulkPull').removeClass('d-none');
+                $btnBulkPull.removeClass('d-none');
                 
                 // Show banner if all visible are checked AND there are more pages
                 const visibleCount = $('.risk-checkbox').length;
-                const visibleChecked = $('.risk-checkbox:checked').length;
+                const visibleChecked = count;
                 if (visibleChecked === visibleCount && total > visibleCount) {
-                    $('#selectAllGlobalContainer').removeClass('d-none');
+                    $selectAllGlobalContainer.removeClass('d-none');
                     $('#selectAllText').html(`Terpilih <strong>${visibleChecked}</strong> risiko di halaman ini.`);
-                    $('#btnSelectAllGlobal').removeClass('d-none');
+                    $btnSelectAllGlobal.removeClass('d-none');
                 } else {
-                    $('#selectAllGlobalContainer').addClass('d-none');
+                    $selectAllGlobalContainer.addClass('d-none');
                 }
             } else {
-                $('#btnBulkPull').addClass('d-none');
-                $('#selectAllGlobalContainer').addClass('d-none');
+                $btnBulkPull.addClass('d-none');
+                $selectAllGlobalContainer.addClass('d-none');
             }
-            $('#btnSelectAllGlobal').removeClass('d-none');
-            $('#btnClearSelection').addClass('d-none');
+            $btnSelectAllGlobal.removeClass('d-none');
+            $btnClearSelection.addClass('d-none');
         }
     }
 

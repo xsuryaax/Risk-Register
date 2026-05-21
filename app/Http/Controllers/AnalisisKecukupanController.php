@@ -72,7 +72,7 @@ class AnalisisKecukupanController extends Controller
             });
         }
 
-        $data = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $data = $query->orderBy('kode_risiko', 'asc')->paginate(10)->withQueryString();
         $units = Unit::orderBy('nama_unit')->get();
         
         if ($request->ajax()) {
@@ -198,6 +198,7 @@ class AnalisisKecukupanController extends Controller
             }
         }
 
-        return redirect()->route('analisis-kecukupan.index')->with('success', 'Analisis kecukupan berhasil disimpan.');
+        return redirect()->route('analisis-kecukupan.index', ['view_triwulan' => $request->view_triwulan])
+            ->with('success', 'Analisis kecukupan berhasil disimpan.');
     }
 }

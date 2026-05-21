@@ -46,7 +46,7 @@
                         <a href="{{ route('pdf.profile', $item->id) }}?type=identifikasi" class="btn-action bg-info border-0 me-1" title="Cetak Profile PDF" target="_blank" style="background-color: #17a2b8 !important;">
                             <i class="fa fa-file-pdf text-white"></i>
                         </a>
-                        <a href="{{ route('identifikasi-risiko.edit', $item->id) }}" class="btn-action btn-edit me-1" title="Edit Data">
+                        <a href="{{ route('identifikasi-risiko.edit', $item->id) }}?triwulan={{ request('triwulan', 'all') }}" class="btn-action btn-edit me-1" title="Edit Data">
                             <i class="fa fa-edit text-white"></i>
                         </a>
                         <form action="{{ route('identifikasi-risiko.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus identifikasi risiko ini?')">

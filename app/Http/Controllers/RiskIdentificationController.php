@@ -73,7 +73,7 @@ class RiskIdentificationController extends Controller
             });
         }
 
-        $data = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
+        $data = $query->orderBy('kode_risiko', 'asc')->paginate(10)->withQueryString();
         $units = Unit::all();
             
         if ($request->ajax()) {
@@ -165,7 +165,8 @@ class RiskIdentificationController extends Controller
             'user_id' => Auth::id() ?? 1,
         ]);
 
-        return redirect()->route('identifikasi-risiko.index')->with('success', 'Identifikasi risiko berhasil disimpan.');
+        return redirect()->route('identifikasi-risiko.index', ['triwulan' => $request->triwulan])
+            ->with('success', 'Identifikasi risiko berhasil disimpan.');
     }
 
     public function update(Request $request, $id)
@@ -192,7 +193,8 @@ class RiskIdentificationController extends Controller
 
         $risk->update($request->except('unit_id'));
 
-        return redirect()->route('identifikasi-risiko.index')->with('success', 'Identifikasi risiko berhasil diperbarui.');
+        return redirect()->route('identifikasi-risiko.index', ['triwulan' => $request->triwulan])
+            ->with('success', 'Identifikasi risiko berhasil diperbarui.');
     }
 
     public function destroy($id)

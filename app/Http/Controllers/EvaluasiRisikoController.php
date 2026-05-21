@@ -81,7 +81,7 @@ class EvaluasiRisikoController extends Controller
             $query->where('unit_id', $request->unit_id);
         }
 
-        $data = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
+        $data = $query->orderBy('kode_risiko', 'asc')->paginate(10)->withQueryString();
         $units = \App\Models\Unit::orderBy('nama_unit')->get();
 
         if ($request->ajax()) {
@@ -106,12 +106,16 @@ class EvaluasiRisikoController extends Controller
             return redirect()->route('evaluasi-risiko.index')->with('error', 'Selesaikan Analisis Risiko terlebih dahulu.');
         }
 
-        // --- NEW: Forward-Sync UI Clean Slate ---
-        // If we are editing from a fallback (viewing Q2 but record is Q1),
-        // we must not show the Q1 evaluation data in the form.
-        $targetTW = request('view_triwulan');
-        if ($targetTW && $targetTW !== 'all' && $identifikasi->triwulan != $targetTW) {
-            $identifikasi->setRelation('evaluasi', null);
+        // --- UPDATED: Show existing data as template ---
+        if (!$identifikasi->evaluasi) {
+            $template = \App\Models\EvaluasiRisiko::whereHas('identifikasi', function($q) use ($identifikasi) {
+                $q->where('kode_risiko', $identifikasi->kode_risiko)
+                  ->where('periode_id', $identifikasi->periode_id);
+            })->latest()->first();
+            
+            if ($template) {
+                $identifikasi->setRelation('evaluasi', $template);
+            }
         }
 
         $probabilitas = Probabilitas::orderBy('nilai_probabilitas', 'asc')->get();
@@ -222,6 +226,7 @@ class EvaluasiRisikoController extends Controller
             ]
         );
 
-        return redirect()->route('evaluasi-risiko.index')->with('success', 'Evaluasi risiko berhasil disimpan.');
+        return redirect()->route('evaluasi-risiko.index', ['view_triwulan' => $request->view_triwulan])
+            ->with('success', 'Evaluasi risiko berhasil disimpan.');
     }
 }

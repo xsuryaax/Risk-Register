@@ -15,6 +15,7 @@
                 <form action="{{ route('identifikasi-risiko.update', $risk->id) }}" method="POST">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="triwulan" value="{{ request('triwulan', 'all') }}">
                     
                     <div class="table-responsive">
                         <table class="table mb-0 table-form border-bottom">

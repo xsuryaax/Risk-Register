@@ -21,6 +21,7 @@ class IdentifikasiRisiko extends Model
         'dampak',
         'user_id',
         'periode_id',
+        'triwulan',
         'frekuensi_pelaporan'
     ];
 

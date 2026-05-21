@@ -42,13 +42,7 @@
                     @enderror
                 </div>
                 
-                <div class="login-utils">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="remember" id="rememberMe" {{ old('remember') ? 'checked' : '' }}>
-                        <label class="form-check-label text-secondary" for="rememberMe">Remember Me</label>
-                    </div>
-                    <a href="#" class="text-dark font-weight-bold">Forgot Password?</a>
-                </div>
+
                 
                 <button type="submit" class="btn-login">Sign In</button>
             </form>
