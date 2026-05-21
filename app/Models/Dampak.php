@@ -17,5 +17,6 @@ class Dampak extends Model
         'biaya_keuangan',
         'publikasi',
         'reputasi',
+        'status_dampak',
     ];
 }

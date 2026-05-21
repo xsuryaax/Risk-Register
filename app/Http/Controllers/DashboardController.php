@@ -125,8 +125,12 @@ class DashboardController extends Controller
         $trendQuery = IdentifikasiRisiko::whereIn('id', $masterIds);
         if (!in_array($user->role_id, [1, 2])) $trendQuery->where('unit_id', $user->unit_id);
 
-        $isSqlite = DB::getDriverName() === 'sqlite';
-        $monthFormat = $isSqlite ? "strftime('%m', created_at)" : "DATE_FORMAT(created_at, '%m')";
+        $driver = DB::getDriverName();
+        $monthFormat = match($driver) {
+            'sqlite' => "strftime('%m', created_at)",
+            'pgsql'  => "TO_CHAR(created_at, 'MM')",
+            default  => "DATE_FORMAT(created_at, '%m')",
+        };
         $trendData = $trendQuery->select(DB::raw('count(*) as total'), DB::raw("$monthFormat as month_num"), DB::raw('max(created_at) as date'))
             ->groupBy('month_num')->orderBy('date', 'asc')->take(12)->get()->map(function($item) {
                 $months = ['01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr', '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Aug', '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec'];

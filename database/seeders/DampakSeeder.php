@@ -20,6 +20,7 @@ class DampakSeeder extends Seeder
                 'biaya_keuangan' => 'Kerugian kecil',
                 'publikasi' => 'Rumor',
                 'reputasi' => 'Rumor',
+                'status_dampak' => 'aktif',
             ],
             [
                 'nama_dampak' => 'Rendah',
@@ -31,6 +32,7 @@ class DampakSeeder extends Seeder
                 'biaya_keuangan' => 'Kerugian lebih dari 0,1% anggaran',
                 'publikasi' => 'Media lokal, waktu singkat',
                 'reputasi' => 'Dampak kecil terhadap moril karyawan dan kepercayaan masyarakat',
+                'status_dampak' => 'aktif',
             ],
             [
                 'nama_dampak' => 'Sedang',
@@ -42,6 +44,7 @@ class DampakSeeder extends Seeder
                 'biaya_keuangan' => 'Kerugian lebih dari 0,25% anggaran',
                 'publikasi' => 'Media lokal, waktu lama',
                 'reputasi' => 'Dampak bermakna terhadap moril karyawan dan kepercayaan masyarakat',
+                'status_dampak' => 'aktif',
             ],
             [
                 'nama_dampak' => 'Tinggi',
@@ -53,6 +56,7 @@ class DampakSeeder extends Seeder
                 'biaya_keuangan' => 'Kerugian lebih dari 0,5% anggaran',
                 'publikasi' => 'Media nasional kurang dari 3 hari',
                 'reputasi' => 'Dampak serius terhadap moril karyawan dan kepercayaan masyarakat',
+                'status_dampak' => 'aktif',
             ],
             [
                 'nama_dampak' => 'Sangat Tinggi',
@@ -64,6 +68,7 @@ class DampakSeeder extends Seeder
                 'biaya_keuangan' => 'Kerugian lebih dari 1% anggaran',
                 'publikasi' => 'Media nasional lebih dari 3 hari',
                 'reputasi' => 'Menjadi masalah berat bagi public relation (PR)',
+                'status_dampak' => 'aktif',
             ],
         ];
 

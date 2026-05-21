@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('biaya_keuangan')->nullable();
             $table->text('publikasi')->nullable();
             $table->text('reputasi')->nullable();
+            $table->enum('status_dampak', ['aktif', 'non-aktif'])->default('aktif');
             $table->timestamps();
         });
     }
